@@ -9,12 +9,14 @@ import re
 import shutil
 import tempfile
 
-from .document import FIELD, Section, TextDocument
+from .document import FIELD, PrefixedRecord, Section, TextDocument
 from .model import Nation, Ship, ShipDesign, TechnologyState, _integer
 from .validation import SaveValidationError, ValidationReport
 
 NATION = re.compile(r"^Nation(\d+)$", re.I)
 NATION_SHIP = re.compile(r"^Nation(\d+)Ship(\d+)$", re.I)
+NATION_SHIPS = re.compile(r"^Nation(\d+)Ships$", re.I)
+FLAT_SHIP_KEY = re.compile(r"^Ship(?P<slot>\d+)(?P<field>.+)$")
 SHIP = re.compile(r"^Ship(\d+)$", re.I)
 DESIGN = re.compile(r"^ShipDesign(\d+)$", re.I)
 TECH_PREFIXES = ("tech", "research", "unlock")
@@ -64,6 +66,12 @@ class RTW3Save:
                 _integer(values, "BudgetModifier"), TechnologyState(tech)))
         by_index = {nation.index: nation for nation in self.nations}
         for section in main.sections:
+            roster = NATION_SHIPS.match(section.name)
+            if roster:
+                owner = int(roster.group(1))
+                if owner in by_index:
+                    self._parse_flat_ship_roster(section, by_index[owner])
+                continue
             match = NATION_SHIP.match(section.name) or SHIP.match(section.name)
             if not match:
                 continue
@@ -92,6 +100,41 @@ class RTW3Save:
                 if owner in by_index:
                     by_index[owner].designs.append(ShipDesign.from_section(int(match.group(1)), section, filename))
         self._detect_player()
+
+    @staticmethod
+    def _parse_flat_ship_roster(section: Section, nation: Nation) -> None:
+        """Parse every ``ShipN`` record in a real ``[NationNShips]`` section."""
+        slots: dict[int, dict[str, str]] = {}
+        for key, value in section.fields().items():
+            match = FLAT_SHIP_KEY.match(key)
+            if match:
+                slots.setdefault(int(match.group("slot")), {})[match.group("field")] = value
+
+        for slot in sorted(slots):
+            values = slots[slot]
+            ship_id = _integer(values, "Id")
+            if ship_id is None:
+                raise ValueError(
+                    f"Unsupported RTW3 ship record: [{section.name}] Ship{slot} "
+                    "has fields but no integer Id"
+                )
+            design = _integer(values, "DesignRefId")
+            build = _integer(values, "BuildingNationIdx")
+            in_play = str(values.get("InPlay", "1")).casefold() in {"1", "true", "yes"}
+            record = PrefixedRecord(section, f"Ship{slot}")
+            nation.ships.append(Ship(
+                ship_id,
+                nation.index,
+                values.get("Name", f"Ship{ship_id}"),
+                values.get("ShipType") or values.get("Type"),
+                values.get("Classname") or values.get("ClassName") or values.get("Class"),
+                design,
+                build,
+                not in_play,
+                record,
+                local_slot=slot,
+                flattened_record=True,
+            ))
 
     @staticmethod
     def _file_nation_index(filename: str) -> int | None:
@@ -139,6 +182,11 @@ class RTW3Save:
             raise
 
     def transfer_ships(self, ships: list[Ship], destination, *, force_building_nation_to_owner: bool = True) -> None:
+        if any(ship.flattened_record for ship in ships):
+            raise NotImplementedError(
+                "Transfers for flattened [NationNShips] records are disabled until "
+                "physical roster movement and positional .des cloning are implemented"
+            )
         destination = self.nation(destination)
         with self.transaction():
             for ship in list(dict.fromkeys(id(s) for s in ships)):
@@ -180,12 +228,10 @@ class RTW3Save:
         destination.technology = deepcopy(source.technology); self.modified = True
 
     def set_maximum_technology(self, nation, maximum: int = 100) -> None:
-        nation = self.nation(nation)
-        if not nation.technology.fields: raise ValueError("No recognized technology fields exist for this nation")
-        for key, old in nation.technology.fields.items():
-            value = True if isinstance(old, bool) else maximum if isinstance(old, int) else old
-            nation.technology.fields[key] = value; nation.section.set(key, value, self.documents[self.main_file].newline)
-        self.modified = True
+        raise NotImplementedError(
+            "Maximum technology is disabled until an RTW3 format profile defines "
+            "all required fields, valid ranges, and unlock dependencies"
+        )
 
     def validate(self) -> ValidationReport:
         report = ValidationReport(sum(len(n.ships) for n in self.nations))
