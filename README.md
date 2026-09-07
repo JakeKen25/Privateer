@@ -9,11 +9,6 @@ Tkinter front end.
 See **[INSTALL.md](INSTALL.md)** for complete Windows, macOS, and Linux setup,
 launch, validation, testing, updating, and troubleshooting instructions.
 
-Developers and future Codex tasks should begin with the comprehensive
-**[project handoff](docs/CODEX_HANDOFF.md)**. It records the intended product,
-prototype limitations, observed real-save failure, required artifacts, correction
-sequence, acceptance gates, and regression matrix.
-
 Because RTW3 formats have varied, Privateer deliberately accepts only structures
 it can identify. It recognizes `NationN`, `NationNShipM` (or `ShipM` carrying an
 owner field), and `ShipDesignM` sections. Key/value separators, comments, unknown
