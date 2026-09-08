@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from privateer.save import RTW3Save
+from privateer import __version__
+from privateer.save import RTW3Save, parse_positional_designs
 from privateer.validation import SaveValidationError
 
 

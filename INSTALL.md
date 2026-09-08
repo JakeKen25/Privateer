@@ -103,10 +103,29 @@ python -m pytest -q
 
 ## Updating or uninstalling
 
-After downloading a newer source version, activate the environment and run:
+After downloading a newer source version, activate the environment and force a
+reinstall. Privateer is pre-release software, so this avoids accidentally running
+an older installation with the same package metadata:
 
 ```bash
-python -m pip install --upgrade .
+python -m pip install --force-reinstall .
+python -m privateer --version
+```
+
+The current corrected build reports `Privateer 0.1.1`. To confirm which copy is
+being launched, run:
+
+```bash
+python -c "import privateer; print(privateer.__version__, privateer.__file__)"
+```
+
+On Windows, use the virtual environment's interpreter for both commands to avoid
+mixing a global launcher with the updated environment:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install --force-reinstall .
+.\.venv\Scripts\python.exe -m privateer --version
+.\.venv\Scripts\python.exe -m privateer
 ```
 
 To uninstall:
