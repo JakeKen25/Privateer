@@ -70,9 +70,13 @@ class TextDocument:
     preamble: list[str]
     sections: list[Section]
     newline: str = "\n"
+    encoding: str = "utf-8"
+    has_bom: bool = False
 
     @classmethod
-    def parse(cls, text: str) -> "TextDocument":
+    def parse(
+        cls, text: str, *, encoding: str = "utf-8", has_bom: bool = False
+    ) -> "TextDocument":
         newline = "\r\n" if "\r\n" in text else "\n"
         preamble: list[str] = []
         sections: list[Section] = []
@@ -86,10 +90,16 @@ class TextDocument:
                 preamble.append(line)
             else:
                 current.lines.append(line)
-        return cls(preamble, sections, newline)
+        return cls(preamble, sections, newline, encoding, has_bom)
 
     def render(self) -> str:
         return "".join(self.preamble + [part for section in self.sections for part in [section.header, *section.lines]])
+
+    def to_bytes(self) -> bytes:
+        payload = self.render().encode(self.encoding)
+        if self.has_bom and self.encoding.casefold().replace("_", "-") == "utf-8":
+            return b"\xef\xbb\xbf" + payload
+        return payload
 
     def add_section(self, section: Section) -> None:
         if self.sections and self.sections[-1].lines and not self.sections[-1].lines[-1].endswith(("\n", "\r")):

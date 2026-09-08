@@ -19,6 +19,7 @@ NATION_SHIPS = re.compile(r"^Nation(\d+)Ships$", re.I)
 FLAT_SHIP_KEY = re.compile(r"^Ship(?P<slot>\d+)(?P<field>.+)$")
 SHIP = re.compile(r"^Ship(\d+)$", re.I)
 DESIGN = re.compile(r"^ShipDesign(\d+)$", re.I)
+POSITIONAL_DESIGN = re.compile(r"^ShipDesign(\d+)\s*$", re.I)
 TECH_PREFIXES = ("tech", "research", "unlock")
 
 
@@ -44,10 +45,18 @@ class RTW3Save:
         documents: dict[str, TextDocument] = {}
         text_files = [*candidates, *sorted(path.glob("*.des"))]
         for file in dict.fromkeys(text_files):
+            payload = file.read_bytes()
+            has_bom = payload.startswith(b"\xef\xbb\xbf")
             try:
-                documents[file.name] = TextDocument.parse(file.read_text(encoding="utf-8-sig", newline=""))
+                text = payload.decode("utf-8-sig" if has_bom else "utf-8")
+                encoding = "utf-8"
             except UnicodeDecodeError:
-                documents[file.name] = TextDocument.parse(file.read_text(encoding="cp1252", newline=""))
+                text = payload.decode("cp1252")
+                encoding = "cp1252"
+                has_bom = False
+            documents[file.name] = TextDocument.parse(
+                text, encoding=encoding, has_bom=has_bom
+            )
         save = cls(path, documents, candidates[0].name)
         if not save.nations:
             raise ValueError("Unsupported RTW3 save: no [NationN] sections were found")
@@ -91,6 +100,11 @@ class RTW3Save:
         # A DesignFilesN-style filename assigns the library; otherwise use NationIdx.
         for filename, document in self.documents.items():
             file_owner = self._file_nation_index(filename)
+            if file_owner in by_index and filename.casefold().endswith(".des"):
+                positional = self._parse_positional_designs(filename, document)
+                if positional is not None:
+                    by_index[file_owner].designs.extend(positional)
+                    continue
             for section in document.sections:
                 match = DESIGN.match(section.name)
                 if not match:
@@ -241,13 +255,13 @@ class RTW3Save:
             if count is not None and count != len(nation.ships): report.add("ship_count", f"{nation.name}: stored {count}, actual {len(nation.ships)}")
             design_ids: dict[int, ShipDesign] = {}
             for design in nation.designs:
-                if design.record_index != design.internal_design_id:
+                if design.positional_record is None and design.record_index != design.internal_design_id:
                     report.add("internal_design_id", f"{nation.name} design {design.record_index} internally identifies as {design.internal_design_id}")
                     # A mismatched record cannot resolve a reference merely because
                     # its external section label happens to match.
                     continue
-                if design.record_index in design_ids: report.add("duplicate_design_id", f"{nation.name} has duplicate design {design.record_index}")
-                design_ids[design.record_index] = design
+                if design.internal_design_id in design_ids: report.add("duplicate_design_id", f"{nation.name} has duplicate design {design.internal_design_id}")
+                design_ids[design.internal_design_id] = design
             for ship in nation.ships:
                 if ship.record_index in seen: report.add("duplicate_ship_id", f"Duplicate ship ID {ship.record_index}")
                 seen.add(ship.record_index)
@@ -293,5 +307,5 @@ class RTW3Save:
 
     def _write_documents(self, folder: Path) -> None:
         for name, document in self.documents.items():
-            (folder / name).write_text(document.render(), encoding="utf-8", newline="")
+            (folder / name).write_bytes(document.to_bytes())
         (folder / "RTW3_SAVE_EDITOR_LOG.txt").write_text("RTW3 Save Editor\n\n" + "\n".join(self.audit), encoding="utf-8")

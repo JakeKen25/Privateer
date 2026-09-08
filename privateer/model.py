@@ -28,8 +28,9 @@ class ShipDesign:
     internal_design_id: int
     ship_type: str | None
     class_name: str | None
-    section: Section
+    section: Section | None
     source_file: str
+    positional_record: tuple[str, ...] | None = None
 
     @classmethod
     def from_section(cls, record_index: int, section: Section, source_file: str) -> "ShipDesign":
@@ -39,7 +40,36 @@ class ShipDesign:
                    values.get("Type") or values.get("ShipType"),
                    values.get("Class") or values.get("ClassName"), section, source_file)
 
+    @classmethod
+    def from_positional_record(
+        cls, record_index: int, lines: list[str], source_file: str
+    ) -> "ShipDesign":
+        """Build a design from the confirmed v10139 positional record prefix."""
+        if len(lines) < 5:
+            raise ValueError(
+                f"Malformed design record ShipDesign{record_index} in {source_file}: "
+                "expected at least five lines"
+            )
+        try:
+            internal_id = int(lines[4].strip())
+        except ValueError as error:
+            raise ValueError(
+                f"Malformed design record ShipDesign{record_index} in {source_file}: "
+                f"internal design ID is not an integer: {lines[4].strip()!r}"
+            ) from error
+        return cls(
+            record_index,
+            internal_id,
+            lines[3].strip(),
+            lines[1].strip(),
+            None,
+            source_file,
+            tuple(lines),
+        )
+
     def clone(self, new_id: int, newline: str) -> "ShipDesign":
+        if self.section is None:
+            raise NotImplementedError("Positional RTW3 design cloning is not implemented")
         section = deepcopy(self.section)
         section.name = f"ShipDesign{new_id}"
         section.header = f"[{section.name}]{newline}"
@@ -49,6 +79,8 @@ class ShipDesign:
         return ShipDesign.from_section(new_id, section, self.source_file)
 
     def signature(self) -> tuple[tuple[str, str], ...]:
+        if self.section is None:
+            raise NotImplementedError("Positional RTW3 design equivalence is not defined")
         ignored = {"designid", "shipdesignid", "id", "nationidx", "ownernationidx"}
         return tuple(sorted((k.casefold(), v) for k, v in self.section.fields().items() if k.casefold() not in ignored))
 
