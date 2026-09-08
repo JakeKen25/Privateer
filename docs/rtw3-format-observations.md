@@ -73,7 +73,8 @@ All records must be included regardless of `Active` or `InPlay`. In particular,
 | Nation9 | 0 / 0 | 0 / 0 |
 | **Total** | **778 / 778** | **357 / 357** |
 
-The parser now clears this read-only portion of Gate A.
+The parser now clears this read-only portion of Gate A. It does not establish
+design resolution or safe serialization.
 
 ## Confirmed design-container facts
 
@@ -81,9 +82,8 @@ The `.des` files are positional rather than INI/section documents. Every observe
 file starts with `v10139`, then a decimal record count, followed by records headed
 `ShipDesignN`. The declared count equals the number of those headings in all 18
 libraries. A record contains positional lines rather than `key=value` fields.
-Consequently, these records use a dedicated read-only positional parser rather
-than the prototype `TextDocument`/`[ShipDesignN]` model. Design cloning remains
-disabled.
+Consequently, the prototype `TextDocument`/`[ShipDesignN]` parser recognizes none
+of the real designs and must not write or clone them.
 
 The supplied diagnostic identifies one positional value as the internal design
 ID. Its exact schema needs a dedicated codec and regression checks before it is
@@ -92,10 +92,6 @@ used for mutation.
 ## Safety decisions in the first implementation change
 
 - Real flattened rosters are parsed read-only, including unknown fields.
-- Every ship reference in both examples resolves by internal design ID in the
-  positional library belonging to its nation slot.
-- No-op output retains each recognized file's encoding, UTF-8 BOM, line endings,
-  final newline, and bytes.
 - Transfers of those records fail explicitly. Moving a Python object without
   removing, inserting, and renumbering its complete source lines would corrupt
   the save.
@@ -122,7 +118,8 @@ The following are not yet established by the two fixtures:
 
 ## Next implementation slice
 
-Fully map the remaining positional design fields and gate the codec with more
-malformed-record fixtures. Then build an immutable transfer plan and implement
-physical roster serialization plus positional design cloning without changing
-untouched source records.
+Add byte-preserving document metadata and a dedicated positional design-library
+codec. Gate the codec with tests asserting all declared design counts, record
+boundaries, external/internal IDs, and ship-reference resolution. Only after
+those read-only checks pass should work begin on an immutable transfer plan and
+physical roster serialization.

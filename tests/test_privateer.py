@@ -106,34 +106,6 @@ def test_real_rosters_parse_all_stored_ships(game, counts):
     assert any("Mine capacity" in ship.section.fields() for ship in save.nations[0].ships)
 
 
-@pytest.mark.parametrize("game", ["Game4", "Game5"])
-def test_real_design_libraries_resolve_every_ship(game):
-    folder = Path(__file__).parents[1] / "exampleSaves" / game
-    save = RTW3Save.load(folder)
-    report = save.validate()
-    assert report.valid, str(report)
-    assert report.resolved_design_refs == report.total_ships
-    for nation in save.nations:
-        if nation.ships:
-            assert nation.designs
-            assert all(design.positional_record for design in nation.designs)
-
-
-def test_positional_design_ordinal_is_not_internal_id():
-    folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
-    design = RTW3Save.load(folder).nation(0).designs[0]
-    assert design.record_index == 0
-    assert design.internal_design_id == 2
-
-
-def test_real_no_op_save_as_preserves_recognized_files_byte_for_byte(tmp_path):
-    source = Path(__file__).parents[1] / "exampleSaves" / "Game5"
-    destination = tmp_path / "Game5Copy"
-    RTW3Save.load(source).save_as(destination)
-    for source_file in [*source.glob("*.bcs"), *source.glob("*.des")]:
-        assert (destination / source_file.name).read_bytes() == source_file.read_bytes()
-
-
 def test_real_flattened_transfer_is_safely_disabled():
     folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
     save = RTW3Save.load(folder)
