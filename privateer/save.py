@@ -144,7 +144,7 @@ class RTW3Save:
         for filename, document in self.documents.items():
             file_owner = self._file_nation_index(filename)
             if file_owner in by_index and filename.casefold().endswith(".des"):
-                positional = parse_positional_designs(filename, document)
+                positional = self._parse_positional_designs(filename, document)
                 if positional is not None:
                     by_index[file_owner].designs.extend(positional)
                     continue
