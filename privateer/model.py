@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from copy import deepcopy
 from typing import Any
 
-from .document import Section
+from .document import PrefixedRecord, Section
 
 
 def _integer(fields: dict[str, str], *names: str) -> int | None:
@@ -63,7 +63,9 @@ class Ship:
     design_ref_id: int | None
     building_nation_index: int | None
     under_construction: bool
-    section: Section
+    section: Section | PrefixedRecord
+    local_slot: int | None = None
+    flattened_record: bool = False
 
     def set_design(self, design_id: int, newline: str) -> None:
         self.design_ref_id = design_id
