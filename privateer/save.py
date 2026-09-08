@@ -9,15 +9,61 @@ import re
 import shutil
 import tempfile
 
-from .document import FIELD, Section, TextDocument
+from .document import FIELD, PrefixedRecord, Section, TextDocument
 from .model import Nation, Ship, ShipDesign, TechnologyState, _integer
 from .validation import SaveValidationError, ValidationReport
 
 NATION = re.compile(r"^Nation(\d+)$", re.I)
 NATION_SHIP = re.compile(r"^Nation(\d+)Ship(\d+)$", re.I)
+NATION_SHIPS = re.compile(r"^Nation(\d+)Ships$", re.I)
+FLAT_SHIP_KEY = re.compile(r"^Ship(?P<slot>\d+)(?P<field>.+)$")
 SHIP = re.compile(r"^Ship(\d+)$", re.I)
 DESIGN = re.compile(r"^ShipDesign(\d+)$", re.I)
+POSITIONAL_DESIGN = re.compile(r"^ShipDesign(\d+)\s*$", re.I)
 TECH_PREFIXES = ("tech", "research", "unlock")
+
+
+def parse_positional_designs(
+    filename: str, document: TextDocument
+) -> list[ShipDesign] | None:
+    """Parse a v10139 design library without normalizing its source text."""
+    lines = document.render().splitlines(keepends=True)
+    if not lines or lines[0].strip().casefold() != "v10139":
+        return None
+    if len(lines) < 2:
+        raise ValueError(f"Malformed design library {filename}: missing record count")
+    try:
+        declared_count = int(lines[1].strip())
+    except ValueError as error:
+        raise ValueError(
+            f"Malformed design library {filename}: record count is not an integer"
+        ) from error
+
+    starts: list[tuple[int, int]] = []
+    for line_index, line in enumerate(lines[2:], start=2):
+        match = POSITIONAL_DESIGN.fullmatch(line)
+        if match:
+            starts.append((line_index, int(match.group(1))))
+    if len(starts) != declared_count:
+        raise ValueError(
+            f"Malformed design library {filename}: declares {declared_count} records "
+            f"but contains {len(starts)}"
+        )
+    expected_ordinals = list(range(declared_count))
+    ordinals = [ordinal for _, ordinal in starts]
+    if ordinals != expected_ordinals:
+        raise ValueError(
+            f"Malformed design library {filename}: expected ShipDesign ordinals "
+            f"0..{declared_count - 1}, found {ordinals}"
+        )
+
+    designs: list[ShipDesign] = []
+    for position, (start, ordinal) in enumerate(starts):
+        end = starts[position + 1][0] if position + 1 < len(starts) else len(lines)
+        designs.append(
+            ShipDesign.from_positional_record(ordinal, lines[start:end], filename)
+        )
+    return designs
 
 
 class RTW3Save:
@@ -42,10 +88,18 @@ class RTW3Save:
         documents: dict[str, TextDocument] = {}
         text_files = [*candidates, *sorted(path.glob("*.des"))]
         for file in dict.fromkeys(text_files):
+            payload = file.read_bytes()
+            has_bom = payload.startswith(b"\xef\xbb\xbf")
             try:
-                documents[file.name] = TextDocument.parse(file.read_text(encoding="utf-8-sig", newline=""))
+                text = payload.decode("utf-8-sig" if has_bom else "utf-8")
+                encoding = "utf-8"
             except UnicodeDecodeError:
-                documents[file.name] = TextDocument.parse(file.read_text(encoding="cp1252", newline=""))
+                text = payload.decode("cp1252")
+                encoding = "cp1252"
+                has_bom = False
+            documents[file.name] = TextDocument.parse(
+                text, encoding=encoding, has_bom=has_bom
+            )
         save = cls(path, documents, candidates[0].name)
         if not save.nations:
             raise ValueError("Unsupported RTW3 save: no [NationN] sections were found")
@@ -64,6 +118,12 @@ class RTW3Save:
                 _integer(values, "BudgetModifier"), TechnologyState(tech)))
         by_index = {nation.index: nation for nation in self.nations}
         for section in main.sections:
+            roster = NATION_SHIPS.match(section.name)
+            if roster:
+                owner = int(roster.group(1))
+                if owner in by_index:
+                    self._parse_flat_ship_roster(section, by_index[owner])
+                continue
             match = NATION_SHIP.match(section.name) or SHIP.match(section.name)
             if not match:
                 continue
@@ -83,6 +143,11 @@ class RTW3Save:
         # A DesignFilesN-style filename assigns the library; otherwise use NationIdx.
         for filename, document in self.documents.items():
             file_owner = self._file_nation_index(filename)
+            if file_owner in by_index and filename.casefold().endswith(".des"):
+                positional = parse_positional_designs(filename, document)
+                if positional is not None:
+                    by_index[file_owner].designs.extend(positional)
+                    continue
             for section in document.sections:
                 match = DESIGN.match(section.name)
                 if not match:
@@ -92,6 +157,41 @@ class RTW3Save:
                 if owner in by_index:
                     by_index[owner].designs.append(ShipDesign.from_section(int(match.group(1)), section, filename))
         self._detect_player()
+
+    @staticmethod
+    def _parse_flat_ship_roster(section: Section, nation: Nation) -> None:
+        """Parse every ``ShipN`` record in a real ``[NationNShips]`` section."""
+        slots: dict[int, dict[str, str]] = {}
+        for key, value in section.fields().items():
+            match = FLAT_SHIP_KEY.match(key)
+            if match:
+                slots.setdefault(int(match.group("slot")), {})[match.group("field")] = value
+
+        for slot in sorted(slots):
+            values = slots[slot]
+            ship_id = _integer(values, "Id")
+            if ship_id is None:
+                raise ValueError(
+                    f"Unsupported RTW3 ship record: [{section.name}] Ship{slot} "
+                    "has fields but no integer Id"
+                )
+            design = _integer(values, "DesignRefId")
+            build = _integer(values, "BuildingNationIdx")
+            in_play = str(values.get("InPlay", "1")).casefold() in {"1", "true", "yes"}
+            record = PrefixedRecord(section, f"Ship{slot}")
+            nation.ships.append(Ship(
+                ship_id,
+                nation.index,
+                values.get("Name", f"Ship{ship_id}"),
+                values.get("ShipType") or values.get("Type"),
+                values.get("Classname") or values.get("ClassName") or values.get("Class"),
+                design,
+                build,
+                not in_play,
+                record,
+                local_slot=slot,
+                flattened_record=True,
+            ))
 
     @staticmethod
     def _file_nation_index(filename: str) -> int | None:
@@ -139,6 +239,11 @@ class RTW3Save:
             raise
 
     def transfer_ships(self, ships: list[Ship], destination, *, force_building_nation_to_owner: bool = True) -> None:
+        if any(ship.flattened_record for ship in ships):
+            raise NotImplementedError(
+                "Transfers for flattened [NationNShips] records are disabled until "
+                "physical roster movement and positional .des cloning are implemented"
+            )
         destination = self.nation(destination)
         with self.transaction():
             for ship in list(dict.fromkeys(id(s) for s in ships)):
@@ -180,12 +285,10 @@ class RTW3Save:
         destination.technology = deepcopy(source.technology); self.modified = True
 
     def set_maximum_technology(self, nation, maximum: int = 100) -> None:
-        nation = self.nation(nation)
-        if not nation.technology.fields: raise ValueError("No recognized technology fields exist for this nation")
-        for key, old in nation.technology.fields.items():
-            value = True if isinstance(old, bool) else maximum if isinstance(old, int) else old
-            nation.technology.fields[key] = value; nation.section.set(key, value, self.documents[self.main_file].newline)
-        self.modified = True
+        raise NotImplementedError(
+            "Maximum technology is disabled until an RTW3 format profile defines "
+            "all required fields, valid ranges, and unlock dependencies"
+        )
 
     def validate(self) -> ValidationReport:
         report = ValidationReport(sum(len(n.ships) for n in self.nations))
@@ -195,13 +298,13 @@ class RTW3Save:
             if count is not None and count != len(nation.ships): report.add("ship_count", f"{nation.name}: stored {count}, actual {len(nation.ships)}")
             design_ids: dict[int, ShipDesign] = {}
             for design in nation.designs:
-                if design.record_index != design.internal_design_id:
+                if design.positional_record is None and design.record_index != design.internal_design_id:
                     report.add("internal_design_id", f"{nation.name} design {design.record_index} internally identifies as {design.internal_design_id}")
                     # A mismatched record cannot resolve a reference merely because
                     # its external section label happens to match.
                     continue
-                if design.record_index in design_ids: report.add("duplicate_design_id", f"{nation.name} has duplicate design {design.record_index}")
-                design_ids[design.record_index] = design
+                if design.internal_design_id in design_ids: report.add("duplicate_design_id", f"{nation.name} has duplicate design {design.internal_design_id}")
+                design_ids[design.internal_design_id] = design
             for ship in nation.ships:
                 if ship.record_index in seen: report.add("duplicate_ship_id", f"Duplicate ship ID {ship.record_index}")
                 seen.add(ship.record_index)
@@ -247,5 +350,5 @@ class RTW3Save:
 
     def _write_documents(self, folder: Path) -> None:
         for name, document in self.documents.items():
-            (folder / name).write_text(document.render(), encoding="utf-8", newline="")
+            (folder / name).write_bytes(document.to_bytes())
         (folder / "RTW3_SAVE_EDITOR_LOG.txt").write_text("RTW3 Save Editor\n\n" + "\n".join(self.audit), encoding="utf-8")

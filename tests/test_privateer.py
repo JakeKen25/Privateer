@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from privateer.save import RTW3Save
+from privateer import __version__
+from privateer.save import RTW3Save, parse_positional_designs
 from privateer.validation import SaveValidationError
 
 
@@ -87,4 +88,69 @@ def test_save_as_preserves_unknown_files_and_round_trips(tmp_path):
 def test_technology_and_seeded_distribution(tmp_path):
     save = RTW3Save.load(fixture(tmp_path))
     save.copy_technology(1, 0); assert save.nation(0).technology.fields["TechGuns"] == 8
-    save.set_maximum_technology(0); assert save.nation(0).technology.fields["TechGuns"] == 100
+    with pytest.raises(NotImplementedError, match="format profile"):
+        save.set_maximum_technology(0)
+
+
+@pytest.mark.parametrize(
+    ("game", "counts"),
+    [
+        ("Game4", [52, 91, 74, 147, 100, 111, 136, 34, 33, 0]),
+        ("Game5", [36, 51, 46, 37, 50, 40, 49, 22, 26, 0]),
+    ],
+)
+def test_real_rosters_parse_all_stored_ships(game, counts):
+    folder = Path(__file__).parents[1] / "exampleSaves" / game
+    save = RTW3Save.load(folder)
+    assert [len(nation.ships) for nation in save.nations] == counts
+    assert all(ship.record_index != ship.local_slot for ship in save.nations[0].ships)
+    assert any("Mine capacity" in ship.section.fields() for ship in save.nations[0].ships)
+
+
+@pytest.mark.parametrize("game", ["Game4", "Game5"])
+def test_real_design_libraries_resolve_every_ship(game):
+    folder = Path(__file__).parents[1] / "exampleSaves" / game
+    save = RTW3Save.load(folder)
+    report = save.validate()
+    assert report.valid, str(report)
+    assert report.resolved_design_refs == report.total_ships
+    for nation in save.nations:
+        if nation.ships:
+            assert nation.designs
+            assert all(design.positional_record for design in nation.designs)
+
+
+def test_positional_design_ordinal_is_not_internal_id():
+    folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
+    design = RTW3Save.load(folder).nation(0).designs[0]
+    assert design.record_index == 0
+    assert design.internal_design_id == 2
+
+
+def test_release_version_and_design_parser_are_available():
+    assert __version__ == "0.1.1"
+    assert callable(parse_positional_designs)
+
+
+def test_real_no_op_save_as_preserves_recognized_files_byte_for_byte(tmp_path):
+    source = Path(__file__).parents[1] / "exampleSaves" / "Game5"
+    destination = tmp_path / "Game5Copy"
+    RTW3Save.load(source).save_as(destination)
+    for source_file in [*source.glob("*.bcs"), *source.glob("*.des")]:
+        assert (destination / source_file.name).read_bytes() == source_file.read_bytes()
+
+
+def test_real_flattened_transfer_is_safely_disabled():
+    folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
+    save = RTW3Save.load(folder)
+    with pytest.raises(NotImplementedError, match="physical roster movement"):
+        save.transfer_ships([save.nation(1).ships[0]], 0)
+
+
+def test_malformed_flattened_record_is_not_silently_ignored(tmp_path):
+    folder = fixture(tmp_path)
+    main = (folder / "game.bcs").read_text()
+    main += "[Nation0Ships]\nShip0Name=Missing identifier\n"
+    (folder / "game.bcs").write_text(main)
+    with pytest.raises(ValueError, match="fields but no integer Id"):
+        RTW3Save.load(folder)
