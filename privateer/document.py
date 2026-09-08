@@ -37,13 +37,46 @@ class Section:
 
 
 @dataclass
+class PrefixedRecord:
+    """A field view over one flattened record in a section.
+
+    RTW3 stores ships as ``ShipNField=value`` lines inside a nation roster.
+    Keeping the parent section and prefix here means reads retain every unknown
+    field and can still point back to the exact source container.  Moving these
+    records is deliberately not implemented yet.
+    """
+
+    parent: Section
+    prefix: str
+
+    def fields(self) -> dict[str, str]:
+        result: dict[str, str] = {}
+        for line in self.parent.lines:
+            match = FIELD.match(line)
+            if not match:
+                continue
+            key = match.group(2).strip()
+            if key.startswith(self.prefix) and len(key) > len(self.prefix):
+                result[key[len(self.prefix):]] = match.group(4).strip()
+        return result
+
+    def set(self, key: str, value: object, newline: str = "\n") -> None:
+        target = f"{self.prefix}{key}"
+        self.parent.set(target, value, newline)
+
+
+@dataclass
 class TextDocument:
     preamble: list[str]
     sections: list[Section]
     newline: str = "\n"
+    encoding: str = "utf-8"
+    has_bom: bool = False
 
     @classmethod
-    def parse(cls, text: str) -> "TextDocument":
+    def parse(
+        cls, text: str, *, encoding: str = "utf-8", has_bom: bool = False
+    ) -> "TextDocument":
         newline = "\r\n" if "\r\n" in text else "\n"
         preamble: list[str] = []
         sections: list[Section] = []
@@ -57,10 +90,16 @@ class TextDocument:
                 preamble.append(line)
             else:
                 current.lines.append(line)
-        return cls(preamble, sections, newline)
+        return cls(preamble, sections, newline, encoding, has_bom)
 
     def render(self) -> str:
         return "".join(self.preamble + [part for section in self.sections for part in [section.header, *section.lines]])
+
+    def to_bytes(self) -> bytes:
+        payload = self.render().encode(self.encoding)
+        if self.has_bom and self.encoding.casefold().replace("_", "-") == "utf-8":
+            return b"\xef\xbb\xbf" + payload
+        return payload
 
     def add_section(self, section: Section) -> None:
         if self.sections and self.sections[-1].lines and not self.sections[-1].lines[-1].endswith(("\n", "\r")):
