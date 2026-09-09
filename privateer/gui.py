@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import tkinter as tk
-from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from . import __version__
 from .save import RTW3Save
 
 
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title(f"Privateer {__version__} — Rule the Waves 3 Save Editor")
+        self.title("Privateer — Rule the Waves 3 Save Editor")
         self.geometry("900x560")
         self.save_model: RTW3Save | None = None
         bar = ttk.Frame(self, padding=8); bar.pack(fill="x")
@@ -38,13 +36,7 @@ class MainWindow(tk.Tk):
         if not folder: return
         try: self.save_model = RTW3Save.load(folder)
         except Exception as exc:
-            module = Path(__import__("privateer.save", fromlist=["__file__"]).__file__).resolve()
-            messagebox.showerror(
-                "Unable to load save",
-                f"{exc}\n\nPrivateer {__version__}\nLoaded from: {module}"
-                "\n\nThe save has not been modified.",
-            )
-            return
+            messagebox.showerror("Unable to load save", f"{exc}\n\nThe save has not been modified."); return
         self.path.set(folder); self.table.delete(*self.table.get_children())
         for nation in self.save_model.nations:
             self.table.insert("", "end", text=nation.name, values=("Yes" if nation.is_player else "", nation.funds, nation.base_resources, len(nation.ships)))

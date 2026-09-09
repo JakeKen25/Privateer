@@ -23,49 +23,6 @@ POSITIONAL_DESIGN = re.compile(r"^ShipDesign(\d+)\s*$", re.I)
 TECH_PREFIXES = ("tech", "research", "unlock")
 
 
-def parse_positional_designs(
-    filename: str, document: TextDocument
-) -> list[ShipDesign] | None:
-    """Parse a v10139 design library without normalizing its source text."""
-    lines = document.render().splitlines(keepends=True)
-    if not lines or lines[0].strip().casefold() != "v10139":
-        return None
-    if len(lines) < 2:
-        raise ValueError(f"Malformed design library {filename}: missing record count")
-    try:
-        declared_count = int(lines[1].strip())
-    except ValueError as error:
-        raise ValueError(
-            f"Malformed design library {filename}: record count is not an integer"
-        ) from error
-
-    starts: list[tuple[int, int]] = []
-    for line_index, line in enumerate(lines[2:], start=2):
-        match = POSITIONAL_DESIGN.fullmatch(line)
-        if match:
-            starts.append((line_index, int(match.group(1))))
-    if len(starts) != declared_count:
-        raise ValueError(
-            f"Malformed design library {filename}: declares {declared_count} records "
-            f"but contains {len(starts)}"
-        )
-    expected_ordinals = list(range(declared_count))
-    ordinals = [ordinal for _, ordinal in starts]
-    if ordinals != expected_ordinals:
-        raise ValueError(
-            f"Malformed design library {filename}: expected ShipDesign ordinals "
-            f"0..{declared_count - 1}, found {ordinals}"
-        )
-
-    designs: list[ShipDesign] = []
-    for position, (start, ordinal) in enumerate(starts):
-        end = starts[position + 1][0] if position + 1 < len(starts) else len(lines)
-        designs.append(
-            ShipDesign.from_positional_record(ordinal, lines[start:end], filename)
-        )
-    return designs
-
-
 class RTW3Save:
     """In-memory save folder and structured mutation API."""
 
@@ -157,6 +114,49 @@ class RTW3Save:
                 if owner in by_index:
                     by_index[owner].designs.append(ShipDesign.from_section(int(match.group(1)), section, filename))
         self._detect_player()
+
+    @staticmethod
+    def _parse_positional_designs(
+        filename: str, document: TextDocument
+    ) -> list[ShipDesign] | None:
+        """Parse a v10139 design library without normalizing its source text."""
+        lines = document.render().splitlines(keepends=True)
+        if not lines or lines[0].strip().casefold() != "v10139":
+            return None
+        if len(lines) < 2:
+            raise ValueError(f"Malformed design library {filename}: missing record count")
+        try:
+            declared_count = int(lines[1].strip())
+        except ValueError as error:
+            raise ValueError(
+                f"Malformed design library {filename}: record count is not an integer"
+            ) from error
+
+        starts: list[tuple[int, int]] = []
+        for line_index, line in enumerate(lines[2:], start=2):
+            match = POSITIONAL_DESIGN.fullmatch(line)
+            if match:
+                starts.append((line_index, int(match.group(1))))
+        if len(starts) != declared_count:
+            raise ValueError(
+                f"Malformed design library {filename}: declares {declared_count} records "
+                f"but contains {len(starts)}"
+            )
+        expected_ordinals = list(range(declared_count))
+        ordinals = [ordinal for _, ordinal in starts]
+        if ordinals != expected_ordinals:
+            raise ValueError(
+                f"Malformed design library {filename}: expected ShipDesign ordinals "
+                f"0..{declared_count - 1}, found {ordinals}"
+            )
+
+        designs: list[ShipDesign] = []
+        for position, (start, ordinal) in enumerate(starts):
+            end = starts[position + 1][0] if position + 1 < len(starts) else len(lines)
+            designs.append(
+                ShipDesign.from_positional_record(ordinal, lines[start:end], filename)
+            )
+        return designs
 
     @staticmethod
     def _parse_flat_ship_roster(section: Section, nation: Nation) -> None:

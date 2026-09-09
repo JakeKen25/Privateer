@@ -3,13 +3,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from . import __version__
 from .save import RTW3Save
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="privateer", description="Rule the Waves 3 save editor")
-    parser.add_argument("--version", action="version", version=f"Privateer {__version__}")
     parser.add_argument("folder", nargs="?", type=Path)
     parser.add_argument("--validate", action="store_true")
     args = parser.parse_args()
