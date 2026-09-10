@@ -10,7 +10,7 @@ import shutil
 import tempfile
 
 from .document import FIELD, PrefixedRecord, Section, TextDocument
-from .model import Nation, Ship, ShipDesign, TechnologyState, _integer
+from .model import Nation, Ship, ShipDesign, TechnologyState, _integer, adjusted_integer
 from .validation import SaveValidationError, ValidationReport
 
 NATION = re.compile(r"^Nation(\d+)$", re.I)
@@ -283,6 +283,30 @@ class RTW3Save:
         source, destination = self.nation(source), self.nation(destination)
         for key, value in source.technology.fields.items(): destination.section.set(key, value, self.documents[self.main_file].newline)
         destination.technology = deepcopy(source.technology); self.modified = True
+
+    def adjust_economy(
+        self,
+        nation,
+        *,
+        funds: tuple[str, str] | None = None,
+        base_resources: tuple[str, str] | None = None,
+    ) -> None:
+        """Apply optional funds/resource edits as one in-memory transaction."""
+        target = self.nation(nation)
+        newline = self.documents[self.main_file].newline
+        with self.transaction():
+            if funds is not None:
+                previous = target.funds
+                target.set_funds(adjusted_integer(previous, *funds), newline)
+                self.audit.append(f"Changed {target.name} Funds: {previous} -> {target.funds}")
+            if base_resources is not None:
+                previous = target.base_resources
+                target.set_base_resources(adjusted_integer(previous, *base_resources), newline)
+                self.audit.append(
+                    f"Changed {target.name} BaseResources: {previous} -> {target.base_resources}"
+                )
+            self.validate_or_raise()
+            self.modified = True
 
     def set_maximum_technology(self, nation, maximum: int = 100) -> None:
         raise NotImplementedError(

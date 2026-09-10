@@ -2,9 +2,42 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from copy import deepcopy
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Any
 
 from .document import PrefixedRecord, Section
+
+
+ECONOMY_ADJUSTMENTS = ("Set value", "Adjust by amount", "Adjust by percentage")
+
+
+def adjusted_integer(current: int | None, operation: str, amount: str) -> int:
+    """Return an economy value after applying a user-facing adjustment."""
+    cleaned = amount.strip().replace(",", "")
+    if operation == "Adjust by percentage":
+        cleaned = cleaned.removesuffix("%").strip()
+        try:
+            percentage = Decimal(cleaned)
+        except InvalidOperation as error:
+            raise ValueError("Percentage must be a number") from error
+        if current is None:
+            raise ValueError("Cannot adjust a value that is missing from the save")
+        result = (Decimal(current) * (Decimal(100) + percentage) / Decimal(100)).quantize(
+            Decimal(1), rounding=ROUND_HALF_UP
+        )
+        return int(result)
+
+    try:
+        value = int(cleaned)
+    except ValueError as error:
+        raise ValueError("Amount must be a whole number") from error
+    if operation == "Set value":
+        return value
+    if operation == "Adjust by amount":
+        if current is None:
+            raise ValueError("Cannot adjust a value that is missing from the save")
+        return current + value
+    raise ValueError(f"Unknown adjustment: {operation}")
 
 
 def _integer(fields: dict[str, str], *names: str) -> int | None:
