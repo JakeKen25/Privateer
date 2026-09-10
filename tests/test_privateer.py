@@ -51,6 +51,41 @@ def test_load_player_economy_and_unknown_formatting(tmp_path):
     assert "Funds=1000\r\n" in save.documents[save.main_file].render()
 
 
+def test_economy_adjustments_are_applied_together(tmp_path):
+    save = RTW3Save.load(fixture(tmp_path))
+    save.adjust_economy(
+        "Britain",
+        funds=("Adjust by amount", "-25"),
+        base_resources=("Adjust by percentage", "12.5%"),
+    )
+    assert save.nation(0).funds == 75
+    assert save.nation(0).base_resources == 225
+    assert "Funds=75\r\n" in save.documents[save.main_file].render()
+    assert "BaseResources=225\r\n" in save.documents[save.main_file].render()
+
+
+def test_invalid_economy_adjustment_rolls_back_both_fields(tmp_path):
+    save = RTW3Save.load(fixture(tmp_path))
+    with pytest.raises(ValueError, match="Percentage must be a number"):
+        save.adjust_economy(
+            0,
+            funds=("Set value", "500"),
+            base_resources=("Adjust by percentage", "not a number"),
+        )
+    assert (save.nation(0).funds, save.nation(0).base_resources) == (100, 200)
+    assert save.audit == []
+
+
+def test_economy_adjustment_is_not_written_until_save(tmp_path):
+    folder = fixture(tmp_path)
+    save = RTW3Save.load(folder)
+    save.adjust_economy(0, funds=("Set value", "900"))
+    assert b"Funds=100\r\n" in (folder / "game.bcs").read_bytes()
+
+    save.save()
+    assert b"Funds=900\r\n" in (folder / "game.bcs").read_bytes()
+
+
 def test_atomic_transfer_clones_and_remaps_design(tmp_path):
     save = RTW3Save.load(fixture(tmp_path)); donor = save.nation(1); ship = donor.ships[0]
     save.transfer_ships([ship], "Britain")
