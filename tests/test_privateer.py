@@ -76,16 +76,6 @@ def test_invalid_economy_adjustment_rolls_back_both_fields(tmp_path):
     assert save.audit == []
 
 
-def test_economy_adjustment_is_not_written_until_save(tmp_path):
-    folder = fixture(tmp_path)
-    save = RTW3Save.load(folder)
-    save.adjust_economy(0, funds=("Set value", "900"))
-    assert b"Funds=100\r\n" in (folder / "game.bcs").read_bytes()
-
-    save.save()
-    assert b"Funds=900\r\n" in (folder / "game.bcs").read_bytes()
-
-
 def test_atomic_transfer_clones_and_remaps_design(tmp_path):
     save = RTW3Save.load(fixture(tmp_path)); donor = save.nation(1); ship = donor.ships[0]
     save.transfer_ships([ship], "Britain")

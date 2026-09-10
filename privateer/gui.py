@@ -13,7 +13,7 @@ class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Privateer — Rule the Waves 3 Save Editor")
-        self.geometry("900x560")
+        self.geometry("900x650")
         self.save_model: RTW3Save | None = None
         bar = ttk.Frame(self, padding=8); bar.pack(fill="x")
         self.path = tk.StringVar(value="Select Rule the Waves 3 Save Folder")
@@ -25,22 +25,17 @@ class MainWindow(tk.Tk):
         self.table.heading("#0", text="Nation"); self.table.heading("player", text="Player")
         self.table.heading("funds", text="Funds"); self.table.heading("resources", text="Base Resources")
         self.table.heading("ships", text="Ships"); self.table.pack(fill="both", expand=True, padx=8, pady=8)
-        self.table.bind("<Button-3>", self._show_nation_menu)
-        self.nation_menu = tk.Menu(self, tearoff=False)
-        self.nation_menu.add_command(label="Edit Funds", command=lambda: self._edit_economy("funds"))
-        self.nation_menu.add_command(
-            label="Edit Resources", command=lambda: self._edit_economy("base_resources")
+        self.table.bind("<<TreeviewSelect>>", self._select_nation)
+        editor = ttk.LabelFrame(self, text="Edit selected nation's economy", padding=8)
+        editor.pack(fill="x", padx=8)
+        self.funds_operation, self.funds_amount = self._economy_control(editor, "Funds", 0)
+        self.resources_operation, self.resources_amount = self._economy_control(
+            editor, "Base Resources", 1
         )
-        self.nation_menu.add_separator()
-        for label in (
-            "Manage Technology (WIP)",
-            "Manage Colonies (WIP)",
-            "Manage Tension (WIP)",
-            "Manage Ships (WIP)",
-        ):
-            self.nation_menu.add_command(
-                label=label, command=lambda title=label: self._show_coming_soon(title)
-            )
+        ttk.Label(
+            editor,
+            text="Enter a positive or negative amount. Percentage adjustments are rounded to the nearest whole number.",
+        ).grid(row=2, column=0, columnspan=3, sticky="w", pady=(6, 0))
         actions = ttk.Frame(self, padding=8); actions.pack(fill="x")
         self.status = tk.StringVar(value="No save loaded")
         ttk.Label(actions, textvariable=self.status).pack(side="left")
@@ -48,85 +43,21 @@ class MainWindow(tk.Tk):
         ttk.Button(actions, text="Save As…", command=self.save_as).pack(side="right", padx=6)
         ttk.Button(actions, text="Save", command=self.save_changes).pack(side="right")
 
-    def _show_nation_menu(self, event):
-        item = self.table.identify_row(event.y)
-        if not item:
-            return
-        self.table.selection_set(item)
-        self.table.focus(item)
-        self.nation_menu.tk_popup(event.x_root, event.y_root)
-
-    def _edit_economy(self, field: str):
-        if not self.save_model or not self.table.selection():
-            return
-        item = self.table.selection()[0]
-        nation = self.save_model.nation(int(item))
-        label = "Funds" if field == "funds" else "Base Resources"
-        current = getattr(nation, field)
-
-        dialog = tk.Toplevel(self)
-        dialog.title(f"Edit {label} — {nation.name}")
-        dialog.resizable(False, False)
-        dialog.transient(self)
-        body = ttk.Frame(dialog, padding=16)
-        body.pack(fill="both", expand=True)
-        ttk.Label(body, text=f"Nation: {nation.name}").grid(row=0, column=0, columnspan=2, sticky="w")
-        ttk.Label(body, text=f"Current {label}: {current if current is not None else '—'}").grid(
-            row=1, column=0, columnspan=2, sticky="w", pady=(2, 12)
-        )
+    @staticmethod
+    def _economy_control(parent, label: str, row: int):
         operation = tk.StringVar(value=ECONOMY_ADJUSTMENTS[0])
         amount = tk.StringVar()
-        ttk.Label(body, text="Adjustment").grid(row=2, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(parent, text=label, width=18).grid(row=row, column=0, sticky="w", pady=2)
         ttk.Combobox(
-            body, textvariable=operation, values=ECONOMY_ADJUSTMENTS,
+            parent, textvariable=operation, values=ECONOMY_ADJUSTMENTS,
             state="readonly", width=23,
-        ).grid(row=2, column=1, sticky="ew")
-        ttk.Label(body, text="Value").grid(row=3, column=0, sticky="w", padx=(0, 8), pady=(8, 0))
-        entry = ttk.Entry(body, textvariable=amount, width=26)
-        entry.grid(row=3, column=1, sticky="ew", pady=(8, 0))
-        ttk.Label(
-            body, text="Positive and negative values are accepted; percentages are rounded."
-        ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 12))
-        buttons = ttk.Frame(body)
-        buttons.grid(row=5, column=0, columnspan=2, sticky="e")
-        ttk.Button(buttons, text="Cancel", command=dialog.destroy).pack(side="right")
+        ).grid(row=row, column=1, sticky="w", padx=(0, 8), pady=2)
+        ttk.Entry(parent, textvariable=amount, width=24).grid(row=row, column=2, sticky="w", pady=2)
+        return operation, amount
 
-        def apply_change():
-            if not amount.get().strip():
-                messagebox.showerror("Invalid value", "Enter a value to apply.", parent=dialog)
-                return
-            adjustment = (operation.get(), amount.get())
-            try:
-                arguments = {field: adjustment}
-                self.save_model.adjust_economy(nation.index, **arguments)
-            except Exception as exc:
-                messagebox.showerror("Invalid value", str(exc), parent=dialog)
-                return
-            updated_nation = self.save_model.nation(nation.index)
-            self.table.set(item, "funds", updated_nation.funds)
-            self.table.set(item, "resources", updated_nation.base_resources)
-            self.status.set("Unsaved changes")
-            dialog.destroy()
-
-        ttk.Button(buttons, text="OK", command=apply_change).pack(side="right", padx=(0, 6))
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
-        dialog.bind("<Return>", lambda _event: apply_change())
-        dialog.bind("<Escape>", lambda _event: dialog.destroy())
-        dialog.grab_set()
-        entry.focus_set()
-
-    def _show_coming_soon(self, title: str):
-        dialog = tk.Toplevel(self)
-        dialog.title(title)
-        dialog.resizable(False, False)
-        dialog.transient(self)
-        body = ttk.Frame(dialog, padding=20)
-        body.pack(fill="both", expand=True)
-        ttk.Label(body, text="Feature coming soon").pack(pady=(0, 14))
-        ttk.Button(body, text="OK", command=dialog.destroy).pack()
-        dialog.bind("<Return>", lambda _event: dialog.destroy())
-        dialog.bind("<Escape>", lambda _event: dialog.destroy())
-        dialog.grab_set()
+    def _select_nation(self, _event=None):
+        self.funds_amount.set("")
+        self.resources_amount.set("")
 
     def open_folder(self):
         folder = filedialog.askdirectory(title="Select Rule the Waves 3 Save Folder")
@@ -150,10 +81,23 @@ class MainWindow(tk.Tk):
 
     def save_changes(self):
         if not self.save_model: return
-        try: backup = self.save_model.save()
+        selection = self.table.selection()
+        if not selection:
+            messagebox.showerror("Save refused", "Select a nation before editing its economy.")
+            return
+        funds = (self.funds_operation.get(), self.funds_amount.get()) if self.funds_amount.get().strip() else None
+        resources = ((self.resources_operation.get(), self.resources_amount.get())
+                     if self.resources_amount.get().strip() else None)
+        try:
+            if funds is not None or resources is not None:
+                self.save_model.adjust_economy(int(selection[0]), funds=funds, base_resources=resources)
+            backup = self.save_model.save()
         except Exception as exc: messagebox.showerror("Save refused", str(exc))
         else:
-            self.status.set("Saved")
+            nation = self.save_model.nation(int(selection[0]))
+            self.table.set(selection[0], "funds", nation.funds)
+            self.table.set(selection[0], "resources", nation.base_resources)
+            self.funds_amount.set(""); self.resources_amount.set("")
             messagebox.showinfo("Saved", f"Changes saved.\nBackup: {backup}")
 
     def save_as(self):
