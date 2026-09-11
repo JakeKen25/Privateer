@@ -11,6 +11,7 @@ import tempfile
 
 from .document import FIELD, PrefixedRecord, Section, TextDocument
 from .model import Nation, Ship, ShipDesign, TechnologyState, _integer, adjusted_integer
+from .guns import GUN_CALIBERS, GUN_QUALITIES, gun_quality
 from .validation import SaveValidationError, ValidationReport
 
 NATION = re.compile(r"^Nation(\d+)$", re.I)
@@ -307,6 +308,26 @@ class RTW3Save:
                 )
             self.validate_or_raise()
             self.modified = True
+
+    def set_gun_qualities(self, nation, changes):
+        """Validate the complete batch before editing existing gun fields only."""
+        target = self.nation(nation)
+        fields = target.section.fields()
+        for caliber, quality in changes.items():
+            if type(caliber) is not int or caliber not in GUN_CALIBERS:
+                raise ValueError(f"Unsupported gun caliber: {caliber}")
+            if type(quality) is not int or quality not in GUN_QUALITIES:
+                raise ValueError(f"Unsupported gun quality: {quality}")
+            if gun_quality(fields, caliber) is None:
+                raise ValueError(f"Missing or invalid Guns{caliber} field")
+        with self.transaction():
+            for caliber, quality in changes.items():
+                key = f"Guns{caliber}"
+                if gun_quality(fields, caliber) == quality:
+                    continue
+                target.section.set(key, quality, self.documents[self.main_file].newline)
+                self.audit.append(f"Changed {target.name} {key}: {fields[key]} -> {quality}")
+                self.modified = True
 
     def set_technology_flags(self, nation, database, changes):
         """Apply only explicitly edited, defined possession flags atomically."""

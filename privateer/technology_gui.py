@@ -1,4 +1,4 @@
-"""WIP technology editor; pending changes remain local until Apply."""
+"""Technology editor; pending changes remain local until Apply."""
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from .technology import DEFAULT_DATABASE, load_database, AreaTechnologyEdits
@@ -13,7 +13,7 @@ class TechnologyWindow(tk.Toplevel):
         self.variables = {}
         nation = save.nation(nation_index)
         self.original = nation.section.fields()
-        self.title(f'Manage Technology (WIP) — {nation.name}')
+        self.title(f'Manage Technology — {nation.name}')
         self.geometry('1000x720')
         self.minsize(760, 520)
         self.transient(parent)
@@ -34,7 +34,7 @@ class TechnologyWindow(tk.Toplevel):
         self.pending = self.edits.pending
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
-        ttk.Label(body, text=f'{nation.name} (Nation{nation.index}) — Technology (WIP)',
+        ttk.Label(body, text=f'{nation.name} (Nation{nation.index}) — Technology',
                   font=('Segoe UI', 13, 'bold')).pack(anchor='w')
         ttk.Label(body, text='One slider per research area: level 5 unlocks levels 1–5. 0 = None.').pack(anchor='w')
         ttk.Label(body, text='Lowering a slider removes higher levels. Select a slider for its effect and typical year.').pack(anchor='w')
@@ -65,7 +65,7 @@ class TechnologyWindow(tk.Toplevel):
         ttk.Label(body, text='Selected technology', font=('Segoe UI', 10, 'bold')).pack(anchor='w', pady=(10, 4))
         self.details = tk.Text(body, height=6, wrap='word', state='disabled')
         self.details.pack(fill='x')
-        ttk.Label(body, text='WIP: Unlocks may require refits or other game conditions. Naval gun quality is a separate system.').pack(anchor='w', pady=5)
+        ttk.Label(body, text='Unlocks may require refits or other game conditions. Naval gun quality is a separate system.').pack(anchor='w', pady=5)
         buttons = ttk.Frame(body)
         buttons.pack(fill='x')
         self.change_count = tk.StringVar(value='No changes')

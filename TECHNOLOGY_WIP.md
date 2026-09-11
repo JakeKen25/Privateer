@@ -1,7 +1,7 @@
-# Technology window (WIP)
+# Technology and gun caliber windows
 
 Run Launch_Privateer.bat or the installed Privateer launcher. Load a save,
-right-click a nation, and choose Manage Technology (WIP).
+right-click a nation, and choose Manage Technology.
 
 Each research area has one cumulative slider. Displayed levels run from 1 through
 that area's highest defined technology; 0 means none. Selecting level 5 enables
@@ -20,12 +20,19 @@ changes in memory. Use Save or Save As to write through the existing validation
 and backup workflow. Unknown fields, unused level slots, other nations, research
 spending, priorities, progress, and gun values are preserved.
 
-Manage Gun Caliber (WIP) is a separate right-click placeholder. Gun editing is not
-implemented yet. Unlocks do not automatically refit ships; in-game behavior remains
-WIP.
+Manage Gun Calibers opens a separate window with rows for 2-inch through 20-inch
+guns and one radio button per quality: -3, -2, -1, 0, +1, +2, and Unavailable.
+Unavailable corresponds to the game's sentinel value 9. Selecting a quality makes
+that caliber available. Missing or unknown gun fields are visible but disabled.
+Reset and Cancel discard staged gun changes; Apply stages them in the loaded save.
+Only explicitly changed GunsN values are written, preserving research and other
+nations. Existing ships are not automatically rebuilt.
 
 Validation: six technology unittest cases passed, including cumulative increases,
 decreases, no unlocks, maximum level, save/reload, gap preservation, and invalid
 inputs. Tk GUI checks passed for 22 sliders, selected-level details, filtering,
 Reset, Cancel, Apply, and the gun placeholder. The full pytest suite has not run
 because pytest is unavailable in the current runtimes.
+
+Gun validation: three unit tests and GUI checks passed for all quality values,
+19 rows, 133 radio buttons, Reset, Apply, Cancel, and byte-preserving save/reload.

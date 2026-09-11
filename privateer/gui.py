@@ -8,6 +8,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from .model import ECONOMY_ADJUSTMENTS
 from .save import RTW3Save
 from .technology_gui import TechnologyWindow
+from .guns_gui import GunCalibersWindow
 
 
 class MainWindow(tk.Tk):
@@ -33,9 +34,9 @@ class MainWindow(tk.Tk):
             label="Edit Resources", command=lambda: self._edit_economy("base_resources")
         )
         self.nation_menu.add_separator()
-        self.nation_menu.add_command(label="Manage Technology (WIP)", command=self._manage_technology)
+        self.nation_menu.add_command(label="Manage Technology", command=self._manage_technology)
+        self.nation_menu.add_command(label="Manage Gun Calibers", command=self._manage_gun_calibers)
         for label in (
-            "Manage Gun Caliber (WIP)",
             "Manage Colonies (WIP)",
             "Manage Tension (WIP)",
             "Manage Ships (WIP)",
@@ -120,6 +121,10 @@ class MainWindow(tk.Tk):
     def _manage_technology(self):
         if self.save_model and self.table.selection():
             TechnologyWindow(self, self.save_model, int(self.table.selection()[0]))
+
+    def _manage_gun_calibers(self):
+        if self.save_model and self.table.selection():
+            GunCalibersWindow(self, self.save_model, int(self.table.selection()[0]))
 
     def _show_coming_soon(self, title: str):
         dialog = tk.Toplevel(self)
