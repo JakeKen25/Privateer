@@ -58,3 +58,46 @@ def load_database(path):
     if not result:
         raise ValueError('No technologies found in ResearchAreas3.dat')
     return result
+
+class AreaTechnologyEdits:
+    """Stage cumulative area levels; opening the editor never fills save gaps."""
+    def __init__(self, database, fields):
+        self.original = dict(fields)
+        self.areas = {}
+        for tech in database:
+            self.areas.setdefault(tech.area, []).append(tech)
+        for technologies in self.areas.values():
+            technologies.sort(key=lambda tech: tech.level)
+        self.selected = {}
+        self.pending = {}
+
+    def editable(self, area):
+        return all(self.original.get(t.key) in ('0', '1') for t in self.areas[area])
+
+    def current(self, area):
+        if area in self.selected:
+            return self.selected[area]
+        return max((i for i, t in enumerate(self.areas[area], 1)
+                    if self.original.get(t.key) == '1'), default=0)
+
+    def mixed(self, area):
+        return area not in self.selected and any(
+            self.original.get(t.key) != '1' for t in self.areas[area][:self.current(area)])
+
+    def set_level(self, area, level):
+        technologies = self.areas[area]
+        if type(level) is not int or not 0 <= level <= len(technologies):
+            raise ValueError('Technology level is outside this research area')
+        if not self.editable(area):
+            raise ValueError('This area has missing or invalid save fields')
+        self.selected[area] = level
+        for i, tech in enumerate(technologies, 1):
+            value = int(i <= level)
+            if str(value) == self.original[tech.key]:
+                self.pending.pop(tech.key, None)
+            else:
+                self.pending[tech.key] = value
+
+    def reset(self):
+        self.selected.clear()
+        self.pending.clear()

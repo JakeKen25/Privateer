@@ -35,6 +35,7 @@ class MainWindow(tk.Tk):
         self.nation_menu.add_separator()
         self.nation_menu.add_command(label="Manage Technology (WIP)", command=self._manage_technology)
         for label in (
+            "Manage Gun Caliber (WIP)",
             "Manage Colonies (WIP)",
             "Manage Tension (WIP)",
             "Manage Ships (WIP)",

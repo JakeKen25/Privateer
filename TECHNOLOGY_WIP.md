@@ -1,28 +1,31 @@
 # Technology window (WIP)
 
-Double-click Launch_Privateer.bat (requires Python 3.11+ with Tkinter).
-Browse to your save folder, right-click a nation, and choose Manage Technology (WIP).
+Run Launch_Privateer.bat or the installed Privateer launcher. Load a save,
+right-click a nation, and choose Manage Technology (WIP).
 
-The window reads Data/ResearchAreas3.dat from the installed Steam game. If absent,
-it asks you to locate that file. All 572 definitions in the currently installed
-version are searchable and can be filtered by research area.
+Each research area has one cumulative slider. Displayed levels run from 1 through
+that area's highest defined technology; 0 means none. Selecting level 5 enables
+levels 1-5 and disables higher defined levels. Display levels are one-based;
+the underlying save's ResearchXLevelY identifiers remain zero-based.
 
-Each technology uses a 0/1 possession slider because RTW3 saves individual unlocks,
-not a continuous national technology level. Clicking or focusing a slider displays
-the selected technology's effect and typical base year in the bottom text box.
-Missing or invalid save flags remain visible but cannot be edited.
+The window reads the installed Data/ResearchAreas3.dat (or asks you to locate it).
+The current installation defines 22 areas and 572 technologies. Search matches
+area names and the technologies within them. Selecting a slider shows its current
+technology's name, effect, and typical base year in the bottom text box.
 
-Apply stages changes in memory; Cancel discards dialog changes. Use Save or Save As
-in the main window to write changes through the existing backup/validation workflow.
-Normal research progress, priorities, spending, gun quality, and undefined levels
-are preserved. Gun quality editing and broader presets remain future work.
+Existing unlock gaps are marked and preserved until that area's slider changes.
+Missing or invalid save fields disable the corresponding area slider. Reset changes
+restores the original state; Cancel discards all dialog edits. Apply stages the
+changes in memory. Use Save or Save As to write through the existing validation
+and backup workflow. Unknown fields, unused level slots, other nations, research
+spending, priorities, progress, and gun values are preserved.
 
-This project was based on the Downloads copy containing the economy editor, because
-the local GitHub checkout had an older interface. Neither source copy nor any live
-game save was modified during development.
+Manage Gun Caliber (WIP) is a separate right-click placeholder. Gun editing is not
+implemented yet. Unlocks do not automatically refit ships; in-game behavior remains
+WIP.
 
-Validation: new unittest cases pass for parsing, invalid data, atomic rejection,
-byte-preserving edits, and save/reload. A Tk smoke test passed for all 572 rows,
-filtering, sliders, details, and Apply on the included Game5 save in memory.
-The existing pytest suite could not run because pytest is not installed in the
-available Python runtimes. In-game behavior has not been verified; this remains WIP.
+Validation: six technology unittest cases passed, including cumulative increases,
+decreases, no unlocks, maximum level, save/reload, gap preservation, and invalid
+inputs. Tk GUI checks passed for 22 sliders, selected-level details, filtering,
+Reset, Cancel, Apply, and the gun placeholder. The full pytest suite has not run
+because pytest is unavailable in the current runtimes.

@@ -1,7 +1,7 @@
 """WIP technology editor; pending changes remain local until Apply."""
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from .technology import DEFAULT_DATABASE, load_database
+from .technology import DEFAULT_DATABASE, load_database, AreaTechnologyEdits
 
 
 class TechnologyWindow(tk.Toplevel):
@@ -30,12 +30,14 @@ class TechnologyWindow(tk.Toplevel):
             messagebox.showerror('Technology database unavailable', str(exc), parent=self)
             self.destroy()
             return
+        self.edits = AreaTechnologyEdits(self.database, self.original)
+        self.pending = self.edits.pending
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text=f'{nation.name} (Nation{nation.index}) — Technology (WIP)',
                   font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-        ttk.Label(body, text='Each technology is an independent unlock: 0 = Not unlocked, 1 = Unlocked.').pack(anchor='w')
-        ttk.Label(body, text='Select or move a slider to see its effect and typical unlock year below.').pack(anchor='w')
+        ttk.Label(body, text='One slider per research area: level 5 unlocks levels 1–5. 0 = None.').pack(anchor='w')
+        ttk.Label(body, text='Lowering a slider removes higher levels. Select a slider for its effect and typical year.').pack(anchor='w')
         filters = ttk.Frame(body)
         filters.pack(fill='x', pady=8)
         self.search = tk.StringVar()
@@ -68,62 +70,85 @@ class TechnologyWindow(tk.Toplevel):
         buttons.pack(fill='x')
         self.change_count = tk.StringVar(value='No changes')
         ttk.Label(buttons, textvariable=self.change_count).pack(side='left')
+        ttk.Button(buttons, text='Reset changes', command=self.reset_changes).pack(side='left', padx=8)
         ttk.Button(buttons, text='Cancel', command=self.destroy).pack(side='right')
         ttk.Button(buttons, text='Apply', command=self.apply).pack(side='right', padx=8)
         self.search.trace_add('write', lambda *_: self.render_rows())
         self.area.trace_add('write', lambda *_: self.render_rows())
         self.bind('<Escape>', lambda e: self.destroy())
         self.render_rows()
-        self.show_details(self.database[0])
+        self.show_details(self.database[0].area)
         self.grab_set()
 
-    def show_details(self, tech):
-        value = self.pending.get(tech.key, self.original.get(tech.key))
-        state = {'0': 'Not unlocked', '1': 'Unlocked'}.get(str(value), 'Unavailable in this save')
-        text = (f'{tech.area_name} — Level {tech.level}: {tech.name}\n'
-                f'Typical unlock year: {tech.year if tech.year is not None else "Not available"} | {state}\n\n'
-                f'{tech.description or "No effect description available."}')
+    def show_details(self, area):
+        technologies = self.edits.areas[area]
+        level = self.edits.current(area)
+        text = f'{technologies[0].area_name} — Level {level} of {len(technologies)}\n'
+        if level:
+            tech = technologies[level - 1]
+            text += (f'{tech.name} | Typical unlock year: '
+                     f'{tech.year if tech.year is not None else "Not available"}\n\n'
+                     f'{tech.description or "No effect description available."}')
+        else:
+            text += 'None unlocked. No technology effect or unlock year at this setting.'
+        if not self.edits.editable(area):
+            text += '\nThis area cannot be edited: missing or invalid save fields.'
+        elif self.edits.mixed(area):
+            text += '\nExisting unlocks have gaps. Preserved until you move this slider.'
+        elif area in self.edits.selected:
+            text += f'\nLevels 1–{level} enabled; higher levels disabled.' if level else '\nAll defined levels disabled.'
         self.details.configure(state='normal')
         self.details.delete('1.0', 'end')
         self.details.insert('1.0', text)
         self.details.configure(state='disabled')
 
-    def changed(self, tech, variable, label):
-        value = variable.get()
-        if str(value) == self.original.get(tech.key):
-            self.pending.pop(tech.key, None)
-        else:
-            self.pending[tech.key] = value
-        label.configure(text='Unlocked' if value else 'Not unlocked')
-        self.change_count.set(f'{len(self.pending)} pending change(s)')
-        self.show_details(tech)
+    def level_label(self, area):
+        if not self.edits.editable(area):
+            return 'Missing/invalid field'
+        level = self.edits.current(area)
+        suffix = ' (gaps)' if self.edits.mixed(area) else ''
+        return (f'Level {level} / {len(self.edits.areas[area])}' if level else 'None') + suffix
+
+    def changed(self, area, variable, label):
+        self.edits.set_level(area, variable.get())
+        label.configure(text=self.level_label(area))
+        self.change_count.set(f'{len(self.pending)} unlock flag change(s)')
+        self.show_details(area)
+
+    def reset_changes(self):
+        self.edits.reset()
+        self.change_count.set('No changes')
+        self.render_rows()
+        self.show_details(self.database[0].area)
 
     def render_rows(self):
         for widget in self.rows.winfo_children():
             widget.destroy()
         self.variables.clear()
         query = self.search.get().strip().casefold()
-        area = self.areas[self.area.get()]
-        visible = [t for t in self.database if (area is None or t.area == area) and
-                   query in f'{t.area_name} {t.name} {t.description} {t.year}'.casefold()]
-        self.count.set(f'{len(visible)} / {len(self.database)} technologies')
-        self.rows.columnconfigure(0, weight=1)
-        for row, tech in enumerate(visible):
-            name = ttk.Label(self.rows, text=f'{tech.area_name} · Level {tech.level}\n{tech.name}', wraplength=500)
-            name.grid(row=row, column=0, sticky='w', padx=6, pady=6)
-            name.bind('<Button-1>', lambda e, t=tech: self.show_details(t))
-            valid = self.original.get(tech.key) in ('0', '1')
-            variable = tk.IntVar(value=int(self.pending.get(tech.key, self.original.get(tech.key, '0'))) if valid else 0)
-            self.variables[tech.key] = variable
-            label = ttk.Label(self.rows, width=20, text=('Unlocked' if variable.get() else 'Not unlocked') if valid else 'Missing/invalid field')
+        area_filter = self.areas[self.area.get()]
+        visible = [(area, techs) for area, techs in self.edits.areas.items()
+                   if (area_filter is None or area == area_filter) and
+                   any(query in f'{t.area_name} {t.name} {t.description} {t.year}'.casefold()
+                       for t in techs)]
+        self.count.set(f'{len(visible)} / {len(self.edits.areas)} areas')
+        self.rows.columnconfigure(1, weight=1)
+        for row, (area, technologies) in enumerate(visible):
+            name = ttk.Label(self.rows, text=technologies[0].area_name, wraplength=250)
+            name.grid(row=row, column=0, sticky='w', padx=6, pady=12)
+            name.bind('<Button-1>', lambda e, a=area: self.show_details(a))
+            variable = tk.IntVar(value=self.edits.current(area))
+            self.variables[area] = variable
+            label = ttk.Label(self.rows, width=23, text=self.level_label(area))
             label.grid(row=row, column=2, padx=8)
-            slider = tk.Scale(self.rows, from_=0, to=1, resolution=1, orient='horizontal',
-                              variable=variable, length=115, showvalue=True,
-                              state='normal' if valid else 'disabled', takefocus=True)
-            slider.grid(row=row, column=1, padx=6)
-            variable.trace_add('write', lambda *_, t=tech, v=variable, l=label: self.changed(t, v, l))
-            slider.bind('<FocusIn>', lambda e, t=tech: self.show_details(t))
-            slider.bind('<Button-1>', lambda e, t=tech: self.show_details(t))
+            slider = tk.Scale(self.rows, from_=0, to=len(technologies), resolution=1,
+                              orient='horizontal', variable=variable, length=320,
+                              showvalue=True, state='normal' if self.edits.editable(area) else 'disabled',
+                              takefocus=True)
+            slider.grid(row=row, column=1, sticky='ew', padx=6)
+            variable.trace_add('write', lambda *_, a=area, v=variable, l=label: self.changed(a, v, l))
+            slider.bind('<FocusIn>', lambda e, a=area: self.show_details(a))
+            slider.bind('<Button-1>', lambda e, a=area: self.show_details(a))
         self.canvas.yview_moveto(0)
 
     def apply(self):
