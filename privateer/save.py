@@ -308,6 +308,27 @@ class RTW3Save:
             self.validate_or_raise()
             self.modified = True
 
+    def set_technology_flags(self, nation, database, changes):
+        """Apply only explicitly edited, defined possession flags atomically."""
+        target = self.nation(nation)
+        allowed = {tech.key for tech in database}
+        fields = target.section.fields()
+        for key, value in changes.items():
+            if key not in allowed:
+                raise ValueError(f"Undefined technology: {key}")
+            if type(value) is not int or value not in (0, 1):
+                raise ValueError(f"Technology possession must be 0 or 1: {key}")
+            if fields.get(key) not in ("0", "1"):
+                raise ValueError(f"Missing or unsupported save field: {key}")
+        with self.transaction():
+            for key, value in changes.items():
+                if fields[key] == str(value):
+                    continue
+                target.section.set(key, value, self.documents[self.main_file].newline)
+                target.technology.fields[key] = value
+                self.audit.append(f"Changed {target.name} {key}: {fields[key]} -> {value}")
+                self.modified = True
+
     def set_maximum_technology(self, nation, maximum: int = 100) -> None:
         raise NotImplementedError(
             "Maximum technology is disabled until an RTW3 format profile defines "
@@ -337,6 +358,9 @@ class RTW3Save:
                 else:
                     report.resolved_design_refs += 1
                     if ship.ship_type and design.ship_type and ship.ship_type.casefold() != design.ship_type.casefold(): report.add("type_mismatch", f'{ship.name}: {ship.ship_type} ship uses {design.ship_type} design')
+            for key, value in nation.section.fields().items():
+                if re.fullmatch(r"Research\d+Level\d+", key, re.I) and value not in ("0", "1"):
+                    report.add("technology_flag", f"{nation.name} {key} must be 0 or 1")
             for label, value in (("Funds", nation.funds), ("BaseResources", nation.base_resources)):
                 if value is not None and not -(2**31) <= value <= 2**31 - 1: report.add("integer_range", f"{nation.name} {label} exceeds signed 32-bit range")
         return report
