@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
+import hashlib
 import random
 import re
 import shutil
@@ -33,6 +34,8 @@ class RTW3Save:
         self.modified = False
         self.audit: list[str] = []
         self.player_detection_warning: str | None = None
+        self._tension_changes = False
+        self._source_snapshot = None
         self._build_model()
 
     @classmethod
@@ -40,6 +43,7 @@ class RTW3Save:
         path = Path(folder).expanduser().resolve()
         if not path.is_dir():
             raise ValueError(f"Save folder does not exist: {path}")
+        source_snapshot = cls._folder_snapshot(path)
         candidates = sorted(path.glob("*.bcs"))
         if not candidates:
             raise ValueError("Folder is not an RTW3 save: no .bcs main save was found")
@@ -61,7 +65,23 @@ class RTW3Save:
         save = cls(path, documents, candidates[0].name)
         if not save.nations:
             raise ValueError("Unsupported RTW3 save: no [NationN] sections were found")
+        save._source_snapshot = source_snapshot
+        if cls._folder_snapshot(path) != source_snapshot:
+            raise ValueError("Save files changed while loading; reload the save")
         return save
+
+    @staticmethod
+    def _folder_snapshot(folder):
+        return {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in folder.iterdir() if p.is_file()}
+
+    def _check_tension_source(self):
+        if self._tension_changes and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving tension edits.")
+
+    def set_tensions(self, changes):
+        from .diplomacy import set_tensions
+        set_tensions(self, changes)
 
     def _build_model(self) -> None:
         main = self.documents[self.main_file]
@@ -391,6 +411,7 @@ class RTW3Save:
         if not report.valid: raise SaveValidationError(report)
 
     def save_as(self, destination: str | Path) -> Path:
+        self._check_tension_source()
         self.validate_or_raise(); destination = Path(destination).resolve()
         if destination.exists(): raise FileExistsError(f"Destination already exists: {destination}")
         temporary = Path(tempfile.mkdtemp(prefix=f".{destination.name}-", dir=destination.parent))
@@ -398,26 +419,34 @@ class RTW3Save:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True)
             self._write_documents(temporary)
             RTW3Save.load(temporary).validate_or_raise()
+            self._check_tension_source()
             temporary.replace(destination)
         except Exception:
             shutil.rmtree(temporary, ignore_errors=True); raise
         return destination
 
     def save(self) -> Path:
+        self._check_tension_source()
         self.validate_or_raise()
-        stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
         backup = self.folder.with_name(f"{self.folder.name}_backup_{stamp}")
         shutil.copytree(self.folder, backup)
         temporary = Path(tempfile.mkdtemp(prefix=".privateer-", dir=self.folder.parent))
         try:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True); self._write_documents(temporary)
             RTW3Save.load(temporary).validate_or_raise()
+            self._check_tension_source()
             for name in self.documents: (temporary / name).replace(self.folder / name)
+            (temporary / "RTW3_SAVE_EDITOR_LOG.txt").replace(self.folder / "RTW3_SAVE_EDITOR_LOG.txt")
         finally: shutil.rmtree(temporary, ignore_errors=True)
         self.modified = False
+        self._source_snapshot = self._folder_snapshot(self.folder)
         return backup
 
     def _write_documents(self, folder: Path) -> None:
         for name, document in self.documents.items():
-            (folder / name).write_bytes(document.to_bytes())
+            payload = document.to_bytes()
+            (folder / name).write_bytes(payload)
+            if (folder / name).read_bytes() != payload:
+                raise ValueError(f"Written save verification failed: {name}")
         (folder / "RTW3_SAVE_EDITOR_LOG.txt").write_text("RTW3 Save Editor\n\n" + "\n".join(self.audit), encoding="utf-8")

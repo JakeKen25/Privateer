@@ -9,6 +9,7 @@ from .model import ECONOMY_ADJUSTMENTS
 from .save import RTW3Save
 from .technology_gui import TechnologyWindow
 from .guns_gui import GunCalibersWindow
+from .diplomacy_gui import TensionWindow
 
 
 class MainWindow(tk.Tk):
@@ -36,9 +37,9 @@ class MainWindow(tk.Tk):
         self.nation_menu.add_separator()
         self.nation_menu.add_command(label="Manage Technology", command=self._manage_technology)
         self.nation_menu.add_command(label="Manage Gun Calibers", command=self._manage_gun_calibers)
+        self.nation_menu.add_command(label="Manage Relations", command=self._manage_tension)
         for label in (
             "Manage Colonies (WIP)",
-            "Manage Tension (WIP)",
             "Manage Ships (WIP)",
         ):
             self.nation_menu.add_command(
@@ -125,6 +126,10 @@ class MainWindow(tk.Tk):
     def _manage_gun_calibers(self):
         if self.save_model and self.table.selection():
             GunCalibersWindow(self, self.save_model, int(self.table.selection()[0]))
+
+    def _manage_tension(self):
+        if self.save_model and self.table.selection():
+            TensionWindow(self, self.save_model, int(self.table.selection()[0]))
 
     def _show_coming_soon(self, title: str):
         dialog = tk.Toplevel(self)

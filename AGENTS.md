@@ -3,7 +3,7 @@
 The user requires all completed changes to this project to be committed and pushed
 to GitHub so previous versions remain available for reverting.
 
-- Repository: https://github.com/JakeKen25/RTW3_Privateer
+- Repository: https://github.com/JakeKen25/Privateer
 - Continue development on the existing Codex branch unless the user requests another branch.
 - Read the current remote branch before changing it and preserve unrelated work.
 - Make descriptive commits for completed changes, run relevant checks, and push.
