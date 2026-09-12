@@ -35,6 +35,7 @@ class RTW3Save:
         self.audit: list[str] = []
         self.player_detection_warning: str | None = None
         self._tension_changes = False
+        self._colony_changes = False
         self._source_snapshot = None
         self._build_model()
 
@@ -47,8 +48,24 @@ class RTW3Save:
         candidates = sorted(path.glob("*.bcs"))
         if not candidates:
             raise ValueError("Folder is not an RTW3 save: no .bcs main save was found")
+        numbered = [f for f in candidates if re.fullmatch(r"RTWGame\d+\.bcs", f.name, re.I)]
+        preferred = [f for f in numbered if f.stem.casefold() == f"rtw{path.name}".casefold()]
+        if len(preferred) == 1:
+            main = preferred[0]
+        elif len(numbered) == 1:
+            main = numbered[0]
+        elif not numbered and len(candidates) == 1:
+            main = candidates[0]
+        else:
+            raise ValueError("Ambiguous campaign files: select a folder with one numbered RTWGameX.bcs")
         documents: dict[str, TextDocument] = {}
-        text_files = [*candidates, *sorted(path.glob("*.des"))]
+        text_files = [main, *sorted(path.glob("*.des"))]
+        slot = re.fullmatch(r"RTWGame(\d+)\.bcs", main.name, re.I)
+        if slot:
+            maps = [f for f in path.iterdir() if f.is_file() and f.name.casefold() == f"mapdata{slot.group(1)}.dat"]
+            if len(maps) > 1:
+                raise ValueError("Ambiguous map data files")
+            text_files.extend(maps)
         for file in dict.fromkeys(text_files):
             payload = file.read_bytes()
             has_bom = payload.startswith(b"\xef\xbb\xbf")
@@ -62,7 +79,7 @@ class RTW3Save:
             documents[file.name] = TextDocument.parse(
                 text, encoding=encoding, has_bom=has_bom
             )
-        save = cls(path, documents, candidates[0].name)
+        save = cls(path, documents, main.name)
         if not save.nations:
             raise ValueError("Unsupported RTW3 save: no [NationN] sections were found")
         save._source_snapshot = source_snapshot
@@ -76,8 +93,12 @@ class RTW3Save:
                 for p in folder.iterdir() if p.is_file()}
 
     def _check_tension_source(self):
-        if self._tension_changes and self._source_snapshot != self._folder_snapshot(self.folder):
-            raise ValueError("Save files changed on disk since loading. Reload before saving tension edits.")
+        if (self._tension_changes or self._colony_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving relations or colony edits.")
+
+    def set_colony_owners(self, changes):
+        from .colonies import set_owners
+        set_owners(self, changes)
 
     def set_tensions(self, changes):
         from .diplomacy import set_tensions
