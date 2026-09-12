@@ -4,13 +4,15 @@ from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
+import hashlib
 import random
 import re
 import shutil
 import tempfile
 
 from .document import FIELD, PrefixedRecord, Section, TextDocument
-from .model import Nation, Ship, ShipDesign, TechnologyState, _integer
+from .model import Nation, Ship, ShipDesign, TechnologyState, _integer, adjusted_integer
+from .guns import GUN_CALIBERS, GUN_QUALITIES, gun_quality
 from .validation import SaveValidationError, ValidationReport
 
 NATION = re.compile(r"^Nation(\d+)$", re.I)
@@ -32,6 +34,9 @@ class RTW3Save:
         self.modified = False
         self.audit: list[str] = []
         self.player_detection_warning: str | None = None
+        self._tension_changes = False
+        self._colony_changes = False
+        self._source_snapshot = None
         self._build_model()
 
     @classmethod
@@ -39,11 +44,28 @@ class RTW3Save:
         path = Path(folder).expanduser().resolve()
         if not path.is_dir():
             raise ValueError(f"Save folder does not exist: {path}")
+        source_snapshot = cls._folder_snapshot(path)
         candidates = sorted(path.glob("*.bcs"))
         if not candidates:
             raise ValueError("Folder is not an RTW3 save: no .bcs main save was found")
+        numbered = [f for f in candidates if re.fullmatch(r"RTWGame\d+\.bcs", f.name, re.I)]
+        preferred = [f for f in numbered if f.stem.casefold() == f"rtw{path.name}".casefold()]
+        if len(preferred) == 1:
+            main = preferred[0]
+        elif len(numbered) == 1:
+            main = numbered[0]
+        elif not numbered and len(candidates) == 1:
+            main = candidates[0]
+        else:
+            raise ValueError("Ambiguous campaign files: select a folder with one numbered RTWGameX.bcs")
         documents: dict[str, TextDocument] = {}
-        text_files = [*candidates, *sorted(path.glob("*.des"))]
+        text_files = [main, *sorted(path.glob("*.des"))]
+        slot = re.fullmatch(r"RTWGame(\d+)\.bcs", main.name, re.I)
+        if slot:
+            maps = [f for f in path.iterdir() if f.is_file() and f.name.casefold() == f"mapdata{slot.group(1)}.dat"]
+            if len(maps) > 1:
+                raise ValueError("Ambiguous map data files")
+            text_files.extend(maps)
         for file in dict.fromkeys(text_files):
             payload = file.read_bytes()
             has_bom = payload.startswith(b"\xef\xbb\xbf")
@@ -57,10 +79,30 @@ class RTW3Save:
             documents[file.name] = TextDocument.parse(
                 text, encoding=encoding, has_bom=has_bom
             )
-        save = cls(path, documents, candidates[0].name)
+        save = cls(path, documents, main.name)
         if not save.nations:
             raise ValueError("Unsupported RTW3 save: no [NationN] sections were found")
+        save._source_snapshot = source_snapshot
+        if cls._folder_snapshot(path) != source_snapshot:
+            raise ValueError("Save files changed while loading; reload the save")
         return save
+
+    @staticmethod
+    def _folder_snapshot(folder):
+        return {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in folder.iterdir() if p.is_file()}
+
+    def _check_tension_source(self):
+        if (self._tension_changes or self._colony_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving relations or colony edits.")
+
+    def set_colony_owners(self, changes):
+        from .colonies import set_owners
+        set_owners(self, changes)
+
+    def set_tensions(self, changes):
+        from .diplomacy import set_tensions
+        set_tensions(self, changes)
 
     def _build_model(self) -> None:
         main = self.documents[self.main_file]
@@ -284,6 +326,71 @@ class RTW3Save:
         for key, value in source.technology.fields.items(): destination.section.set(key, value, self.documents[self.main_file].newline)
         destination.technology = deepcopy(source.technology); self.modified = True
 
+    def adjust_economy(
+        self,
+        nation,
+        *,
+        funds: tuple[str, str] | None = None,
+        base_resources: tuple[str, str] | None = None,
+    ) -> None:
+        """Apply optional funds/resource edits as one in-memory transaction."""
+        target = self.nation(nation)
+        newline = self.documents[self.main_file].newline
+        with self.transaction():
+            if funds is not None:
+                previous = target.funds
+                target.set_funds(adjusted_integer(previous, *funds), newline)
+                self.audit.append(f"Changed {target.name} Funds: {previous} -> {target.funds}")
+            if base_resources is not None:
+                previous = target.base_resources
+                target.set_base_resources(adjusted_integer(previous, *base_resources), newline)
+                self.audit.append(
+                    f"Changed {target.name} BaseResources: {previous} -> {target.base_resources}"
+                )
+            self.validate_or_raise()
+            self.modified = True
+
+    def set_gun_qualities(self, nation, changes):
+        """Validate the complete batch before editing existing gun fields only."""
+        target = self.nation(nation)
+        fields = target.section.fields()
+        for caliber, quality in changes.items():
+            if type(caliber) is not int or caliber not in GUN_CALIBERS:
+                raise ValueError(f"Unsupported gun caliber: {caliber}")
+            if type(quality) is not int or quality not in GUN_QUALITIES:
+                raise ValueError(f"Unsupported gun quality: {quality}")
+            if gun_quality(fields, caliber) is None:
+                raise ValueError(f"Missing or invalid Guns{caliber} field")
+        with self.transaction():
+            for caliber, quality in changes.items():
+                key = f"Guns{caliber}"
+                if gun_quality(fields, caliber) == quality:
+                    continue
+                target.section.set(key, quality, self.documents[self.main_file].newline)
+                self.audit.append(f"Changed {target.name} {key}: {fields[key]} -> {quality}")
+                self.modified = True
+
+    def set_technology_flags(self, nation, database, changes):
+        """Apply only explicitly edited, defined possession flags atomically."""
+        target = self.nation(nation)
+        allowed = {tech.key for tech in database}
+        fields = target.section.fields()
+        for key, value in changes.items():
+            if key not in allowed:
+                raise ValueError(f"Undefined technology: {key}")
+            if type(value) is not int or value not in (0, 1):
+                raise ValueError(f"Technology possession must be 0 or 1: {key}")
+            if fields.get(key) not in ("0", "1"):
+                raise ValueError(f"Missing or unsupported save field: {key}")
+        with self.transaction():
+            for key, value in changes.items():
+                if fields[key] == str(value):
+                    continue
+                target.section.set(key, value, self.documents[self.main_file].newline)
+                target.technology.fields[key] = value
+                self.audit.append(f"Changed {target.name} {key}: {fields[key]} -> {value}")
+                self.modified = True
+
     def set_maximum_technology(self, nation, maximum: int = 100) -> None:
         raise NotImplementedError(
             "Maximum technology is disabled until an RTW3 format profile defines "
@@ -313,6 +420,9 @@ class RTW3Save:
                 else:
                     report.resolved_design_refs += 1
                     if ship.ship_type and design.ship_type and ship.ship_type.casefold() != design.ship_type.casefold(): report.add("type_mismatch", f'{ship.name}: {ship.ship_type} ship uses {design.ship_type} design')
+            for key, value in nation.section.fields().items():
+                if re.fullmatch(r"Research\d+Level\d+", key, re.I) and value not in ("0", "1"):
+                    report.add("technology_flag", f"{nation.name} {key} must be 0 or 1")
             for label, value in (("Funds", nation.funds), ("BaseResources", nation.base_resources)):
                 if value is not None and not -(2**31) <= value <= 2**31 - 1: report.add("integer_range", f"{nation.name} {label} exceeds signed 32-bit range")
         return report
@@ -322,6 +432,7 @@ class RTW3Save:
         if not report.valid: raise SaveValidationError(report)
 
     def save_as(self, destination: str | Path) -> Path:
+        self._check_tension_source()
         self.validate_or_raise(); destination = Path(destination).resolve()
         if destination.exists(): raise FileExistsError(f"Destination already exists: {destination}")
         temporary = Path(tempfile.mkdtemp(prefix=f".{destination.name}-", dir=destination.parent))
@@ -329,26 +440,34 @@ class RTW3Save:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True)
             self._write_documents(temporary)
             RTW3Save.load(temporary).validate_or_raise()
+            self._check_tension_source()
             temporary.replace(destination)
         except Exception:
             shutil.rmtree(temporary, ignore_errors=True); raise
         return destination
 
     def save(self) -> Path:
+        self._check_tension_source()
         self.validate_or_raise()
-        stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
         backup = self.folder.with_name(f"{self.folder.name}_backup_{stamp}")
         shutil.copytree(self.folder, backup)
         temporary = Path(tempfile.mkdtemp(prefix=".privateer-", dir=self.folder.parent))
         try:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True); self._write_documents(temporary)
             RTW3Save.load(temporary).validate_or_raise()
+            self._check_tension_source()
             for name in self.documents: (temporary / name).replace(self.folder / name)
+            (temporary / "RTW3_SAVE_EDITOR_LOG.txt").replace(self.folder / "RTW3_SAVE_EDITOR_LOG.txt")
         finally: shutil.rmtree(temporary, ignore_errors=True)
         self.modified = False
+        self._source_snapshot = self._folder_snapshot(self.folder)
         return backup
 
     def _write_documents(self, folder: Path) -> None:
         for name, document in self.documents.items():
-            (folder / name).write_bytes(document.to_bytes())
+            payload = document.to_bytes()
+            (folder / name).write_bytes(payload)
+            if (folder / name).read_bytes() != payload:
+                raise ValueError(f"Written save verification failed: {name}")
         (folder / "RTW3_SAVE_EDITOR_LOG.txt").write_text("RTW3 Save Editor\n\n" + "\n".join(self.audit), encoding="utf-8")
