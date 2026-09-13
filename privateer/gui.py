@@ -12,6 +12,7 @@ from .guns_gui import GunCalibersWindow
 from .diplomacy_gui import TensionWindow
 from .colonies_gui import ColoniesWindow
 from .ships_gui import ShipTransfersWindow
+from .busy import run_background, show_while_opening
 
 
 class MainWindow(tk.Tk):
@@ -117,24 +118,29 @@ class MainWindow(tk.Tk):
         entry.focus_set()
 
     def _manage_technology(self):
-        if self.save_model and self.table.selection():
-            TechnologyWindow(self, self.save_model, int(self.table.selection()[0]))
+        self._open_manager(TechnologyWindow, "Loading technology data…")
 
     def _manage_gun_calibers(self):
-        if self.save_model and self.table.selection():
-            GunCalibersWindow(self, self.save_model, int(self.table.selection()[0]))
+        self._open_manager(GunCalibersWindow, "Opening gun caliber manager…")
 
     def _manage_tension(self):
-        if self.save_model and self.table.selection():
-            TensionWindow(self, self.save_model, int(self.table.selection()[0]))
+        self._open_manager(TensionWindow, "Loading relations…")
 
     def _manage_colonies(self):
-        if self.save_model and self.table.selection():
-            ColoniesWindow(self, self.save_model, int(self.table.selection()[0]))
+        self._open_manager(ColoniesWindow, "Loading colonies…")
 
     def _manage_ships(self):
-        if self.save_model and self.table.selection():
-            ShipTransfersWindow(self, self.save_model, int(self.table.selection()[0]))
+        self._open_manager(ShipTransfersWindow, "Preparing ship data…")
+
+    def _open_manager(self, window_class, message):
+        if not self.save_model or not self.table.selection():
+            return
+        nation_index = int(self.table.selection()[0])
+        show_while_opening(
+            self, message,
+            lambda: window_class(self, self.save_model, nation_index),
+            lambda exc: messagebox.showerror("Unable to open window", str(exc), parent=self),
+        )
 
     def _show_coming_soon(self, title: str):
         dialog = tk.Toplevel(self)
@@ -152,9 +158,15 @@ class MainWindow(tk.Tk):
     def open_folder(self):
         folder = filedialog.askdirectory(title="Select Rule the Waves 3 Save Folder")
         if not folder: return
-        try: self.save_model = RTW3Save.load(folder)
-        except Exception as exc:
-            messagebox.showerror("Unable to load save", f"{exc}\n\nThe save has not been modified."); return
+        run_background(
+            self, "Loading and indexing save files…", lambda: RTW3Save.load(folder),
+            lambda save: self._finish_open(folder, save),
+            lambda exc: messagebox.showerror(
+                "Unable to load save", f"{exc}\n\nThe save has not been modified.", parent=self),
+        )
+
+    def _finish_open(self, folder, save):
+        self.save_model = save
         self.path.set(folder); self.table.delete(*self.table.get_children())
         selected = None
         for nation in self.save_model.nations:
@@ -167,24 +179,34 @@ class MainWindow(tk.Tk):
         self.status.set(self.save_model.player_detection_warning or "Loaded")
 
     def validate_save(self):
-        if self.save_model: messagebox.showinfo("Validation", str(self.save_model.validate()))
+        if self.save_model:
+            run_background(
+                self, "Validating save and design references…", self.save_model.validate,
+                lambda report: messagebox.showinfo("Validation", str(report), parent=self),
+                lambda exc: messagebox.showerror("Validation failed", str(exc), parent=self),
+            )
 
     def save_changes(self):
         if not self.save_model: return
-        try: backup = self.save_model.save()
-        except Exception as exc: messagebox.showerror("Save refused", str(exc))
-        else:
+        def saved(backup):
             self.status.set("Saved")
-            messagebox.showinfo("Saved", f"Changes saved.\nBackup: {backup}")
+            messagebox.showinfo("Saved", f"Changes saved.\nBackup: {backup}", parent=self)
+        run_background(
+            self, "Saving and verifying files…", self.save_model.save, saved,
+            lambda exc: messagebox.showerror("Save refused", str(exc), parent=self),
+        )
 
     def save_as(self):
         if not self.save_model: return
         folder = filedialog.askdirectory(title="Choose parent for new save folder")
         name = simpledialog.askstring("Save As", "New folder name:") if folder else None
         if not name: return
-        try: output = self.save_model.save_as(f"{folder}/{name}")
-        except Exception as exc: messagebox.showerror("Save refused", str(exc))
-        else: messagebox.showinfo("Saved", f"New save created: {output}")
+        run_background(
+            self, "Creating and verifying the new save…",
+            lambda: self.save_model.save_as(f"{folder}/{name}"),
+            lambda output: messagebox.showinfo("Saved", f"New save created: {output}", parent=self),
+            lambda exc: messagebox.showerror("Save refused", str(exc), parent=self),
+        )
 
 
 def launch():

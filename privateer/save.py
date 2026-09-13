@@ -240,7 +240,7 @@ class RTW3Save:
             design = _integer(values, "DesignRefId")
             build = _integer(values, "BuildingNationIdx")
             in_play = str(values.get("InPlay", "1")).casefold() in {"1", "true", "yes"}
-            record = PrefixedRecord(section, f"Ship{slot}")
+            record = PrefixedRecord(section, f"Ship{slot}", dict(values))
             nation.ships.append(Ship(
                 ship_id,
                 nation.index,

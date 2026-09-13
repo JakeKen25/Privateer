@@ -42,14 +42,17 @@ class PrefixedRecord:
 
     RTW3 stores ships as ``ShipNField=value`` lines inside a nation roster.
     Keeping the parent section and prefix here means reads retain every unknown
-    field and can still point back to the exact source container.  Moving these
-    records is deliberately not implemented yet.
+    field and can still point back to the exact source container. Parsed fields
+    may be retained so repeated table reads do not rescan the complete roster.
     """
 
     parent: Section
     prefix: str
+    cached_fields: dict[str, str] | None = None
 
     def fields(self) -> dict[str, str]:
+        if self.cached_fields is not None:
+            return dict(self.cached_fields)
         result: dict[str, str] = {}
         for line in self.parent.lines:
             match = FIELD.match(line)
@@ -63,6 +66,10 @@ class PrefixedRecord:
     def set(self, key: str, value: object, newline: str = "\n") -> None:
         target = f"{self.prefix}{key}"
         self.parent.set(target, value, newline)
+        if self.cached_fields is not None:
+            actual = next((name for name in self.cached_fields
+                           if name.casefold() == key.casefold()), key)
+            self.cached_fields[actual] = str(value)
 
 
 @dataclass

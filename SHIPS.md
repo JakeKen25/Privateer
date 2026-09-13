@@ -26,6 +26,11 @@ Click any fleet-table column header to sort by that column. Click the same heade
 again to reverse the order. The arrow in the header shows the active direction;
 saved numeric statistics sort by number and blank values remain at the bottom.
 
+Privateer indexes each hull's fields once when the save loads. The transfer window
+caches its display rows and sort values, and search input is debounced briefly.
+Changing owners, filters, sorting, or staged destinations therefore does not scan
+the complete raw nation roster once per ship.
+
 The manager blocks carriers and other ships with aircraft capacity because their
 air-group dependencies have not been decoded. It also blocks transfers involving
 the player while active campaign divisions are present. These cases must be

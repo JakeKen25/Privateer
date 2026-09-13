@@ -29,3 +29,9 @@ every unknown save-slot file.
 Ship transfers support the confirmed flattened roster and positional `v10139`
 design formats. Transfers involving carrier air groups or active campaign divisions
 are blocked until those linked structures are decoded and validated.
+
+Animated progress windows remain visible while Privateer loads, validates, saves,
+or creates a save copy. Management-window launches use the same progress treatment.
+Flattened ship fields are indexed once during save loading and reused by the fleet
+table, including filtering and sorting, instead of rescanning the full roster for
+every displayed hull.

@@ -8,9 +8,9 @@ from tkinter import messagebox, ttk
 from .table_sort import heading_text, sorted_with_blanks
 
 
-def transfer_block_reason(ship) -> str | None:
+def transfer_block_reason(ship, fields=None) -> str | None:
     """Return a user-facing reason for a dependency we cannot migrate safely."""
-    fields = ship.section.fields()
+    fields = ship.section.fields() if fields is None else fields
     try:
         aircraft_capacity = int(fields.get("AircraftCapacity", "0") or "0")
     except ValueError:
@@ -23,8 +23,8 @@ def transfer_block_reason(ship) -> str | None:
     return None
 
 
-def ship_details(save, ship) -> str:
-    fields = ship.section.fields()
+def ship_details(save, ship, fields=None) -> str:
+    fields = ship.section.fields() if fields is None else fields
     owner = save.nation(ship.owner_index).name
     builder_index = ship.building_nation_index
     try:
@@ -35,7 +35,7 @@ def ship_details(save, ship) -> str:
     location = fields.get("LocationAreaName") or "Unknown"
     commander = fields.get("CommanderId", "Unknown")
     progress = fields.get("BuildProgress", "Unknown")
-    reason = transfer_block_reason(ship)
+    reason = transfer_block_reason(ship, fields)
     eligibility = f"Blocked: {reason}" if reason else "Eligible for an ownership transfer"
     return (
         f"{ship.name} (hull ID {ship.record_index})\n"
@@ -46,9 +46,9 @@ def ship_details(save, ship) -> str:
     )
 
 
-def ship_stats(ship) -> dict[str, str]:
+def ship_stats(ship, fields=None) -> dict[str, str]:
     """Return lossless display values for the saved per-hull statistics."""
-    fields = ship.section.fields()
+    fields = ship.section.fields() if fields is None else fields
     displacement = fields.get("Displacement", "")
     try:
         displacement = f"{int(displacement):,}" if displacement else ""
@@ -86,6 +86,11 @@ class ShipTransfersWindow(tk.Toplevel):
         self.sort_column: str | None = None
         self.sort_reverse = False
         self.ships = {ship.record_index: ship for nation in save.nations for ship in nation.ships}
+        self.ship_fields = {hull: ship.section.fields() for hull, ship in self.ships.items()}
+        self.ship_statistics = {
+            hull: ship_stats(ship, self.ship_fields[hull]) for hull, ship in self.ships.items()
+        }
+        self._search_after = None
         self.nation_values = [f"{nation.index}: {nation.name}" for nation in save.nations]
         self.title("Manage Ship Transfers")
         self.geometry("1120x740")
@@ -173,7 +178,7 @@ class ShipTransfersWindow(tk.Toplevel):
         ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="right")
         ttk.Button(buttons, text="Apply", command=self.apply).pack(side="right", padx=8)
 
-        self.search.trace_add("write", lambda *_: self.render())
+        self.search.trace_add("write", lambda *_: self.schedule_render())
         self.source.trace_add("write", lambda *_: self.render())
         self.type_filter.trace_add("write", lambda *_: self.render())
         self.table.bind("<<TreeviewSelect>>", self.show_details)
@@ -195,8 +200,8 @@ class ShipTransfersWindow(tk.Toplevel):
         source_ships = self.save.nation(source_index).ships
         rows = []
         for ship in source_ships:
-            fields = ship.section.fields()
-            stats = ship_stats(ship)
+            fields = self.ship_fields[ship.record_index]
+            stats = self.ship_statistics[ship.record_index]
             if self.type_filter.get() not in ("All types", ship.ship_type):
                 continue
             haystack = f"{ship.record_index} {ship.name} {ship.class_name} {ship.ship_type} {fields.get('LocationAreaName', '')}".casefold()
@@ -226,6 +231,15 @@ class ShipTransfersWindow(tk.Toplevel):
         self.status.set(f"{len(self.pending)} staged ship transfer(s)")
         self.details.set("Select a ship to see its saved state and transfer eligibility.")
 
+    def schedule_render(self):
+        if self._search_after is not None:
+            self.after_cancel(self._search_after)
+        self._search_after = self.after(150, self._finish_scheduled_render)
+
+    def _finish_scheduled_render(self):
+        self._search_after = None
+        self.render()
+
     def sort_by(self, column):
         if self.sort_column == column:
             self.sort_reverse = not self.sort_reverse
@@ -243,7 +257,8 @@ class ShipTransfersWindow(tk.Toplevel):
     def show_details(self, _event=None):
         selected = self.table.selection()
         if selected:
-            self.details.set(ship_details(self.save, self.ships[int(selected[0])]))
+            hull = int(selected[0])
+            self.details.set(ship_details(self.save, self.ships[hull], self.ship_fields[hull]))
 
     def stage(self):
         selected = self.table.selection()
@@ -254,7 +269,7 @@ class ShipTransfersWindow(tk.Toplevel):
         failures = []
         for item in selected:
             ship = self.ships[int(item)]
-            reason = transfer_block_reason(ship)
+            reason = transfer_block_reason(ship, self.ship_fields[ship.record_index])
             if reason:
                 failures.append(f"{ship.name}: {reason}")
             elif destination == ship.owner_index:
