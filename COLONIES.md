@@ -7,6 +7,10 @@ choose a new owner, and click Stage transfer. The New owner column shows pending
 changes. Apply stages the batch in memory; Reset or Cancel discards dialog edits.
 Save or Save As writes the changes through the backup and validation workflow.
 
+Click any possession-table column header to sort by that column. A second click
+reverses the order, and the header arrow shows the current direction. Map area,
+value, oil, and base fields sort numerically; blank values remain at the bottom.
+
 Game1 was inspected read-only: MapData1.dat has one [MapAreas] section, 16 map areas,
 and 123 possessions. Each MapAreaAPossessionBOwner value is a saved nation name or
 Neutral. Names and the Value, Oil, BaseValue, Rebellion, Invaded, InvasionSupport,

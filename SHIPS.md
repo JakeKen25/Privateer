@@ -22,6 +22,10 @@ status, crew quality, maintenance, and armament description. Status and crew
 quality remain labeled as raw values because their integer-to-text enumerations
 have not been validated.
 
+Click any fleet-table column header to sort by that column. Click the same header
+again to reverse the order. The arrow in the header shows the active direction;
+saved numeric statistics sort by number and blank values remain at the bottom.
+
 The manager blocks carriers and other ships with aircraft capacity because their
 air-group dependencies have not been decoded. It also blocks transfers involving
 the player while active campaign divisions are present. These cases must be

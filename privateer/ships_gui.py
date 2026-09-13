@@ -5,6 +5,8 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from .table_sort import heading_text, sorted_with_blanks
+
 
 def transfer_block_reason(ship) -> str | None:
     """Return a user-facing reason for a dependency we cannot migrate safely."""
@@ -81,6 +83,8 @@ class ShipTransfersWindow(tk.Toplevel):
         super().__init__(parent)
         self.save = save
         self.pending: dict[int, int] = {}
+        self.sort_column: str | None = None
+        self.sort_reverse = False
         self.ships = {ship.record_index: ship for nation in save.nations for ship in nation.ships}
         self.nation_values = [f"{nation.index}: {nation.name}" for nation in save.nations]
         self.title("Manage Ship Transfers")
@@ -121,7 +125,8 @@ class ShipTransfersWindow(tk.Toplevel):
                    "asw", "year", "location", "status", "crew", "maintenance",
                    "description", "destination")
         self.table = ttk.Treeview(frame, columns=columns, show="tree headings", selectmode="extended")
-        self.table.heading("#0", text="Hull ID")
+        self.heading_labels = {"hull": "Hull ID"}
+        self.table.heading("#0", text="Hull ID", command=lambda: self.sort_by("hull"))
         self.table.column("#0", width=70, minwidth=55, stretch=False)
         specs = [
             ("type", "Type", 50), ("name", "Name", 150), ("class", "Class", 145),
@@ -133,7 +138,8 @@ class ShipTransfersWindow(tk.Toplevel):
             ("destination", "Staged destination", 150),
         ]
         for key, label, width in specs:
-            self.table.heading(key, text=label)
+            self.heading_labels[key] = label
+            self.table.heading(key, text=label, command=lambda column=key: self.sort_by(column))
             self.table.column(key, width=width, minwidth=45)
         scroll = ttk.Scrollbar(frame, orient="vertical", command=self.table.yview)
         horizontal = ttk.Scrollbar(frame, orient="horizontal", command=self.table.xview)
@@ -186,8 +192,8 @@ class ShipTransfersWindow(tk.Toplevel):
         self.table.delete(*self.table.get_children())
         source_index = self._nation_index(self.source.get())
         needle = self.search.get().strip().casefold()
-        shown = 0
         source_ships = self.save.nation(source_index).ships
+        rows = []
         for ship in source_ships:
             fields = ship.section.fields()
             stats = ship_stats(ship)
@@ -198,15 +204,41 @@ class ShipTransfersWindow(tk.Toplevel):
                 continue
             pending = self.pending.get(ship.record_index)
             destination = self.save.nation(pending).name if pending is not None else ""
+            rows.append((ship, stats, destination))
+        if self.sort_column:
+            column = self.sort_column
+            rows = sorted_with_blanks(
+                rows,
+                lambda row: (row[0].record_index if column == "hull"
+                             else row[2] if column == "destination"
+                             else row[1][column]),
+                reverse=self.sort_reverse,
+                numeric=column in {"hull", "displacement", "speed", "main_gun", "asw",
+                                   "year", "status", "crew", "maintenance"},
+            )
+        for ship, stats, destination in rows:
             self.table.insert("", "end", iid=str(ship.record_index), text=str(ship.record_index),
                               values=tuple(stats[key] for key in (
                                   "type", "name", "class", "displacement", "speed", "main_gun",
                                   "radar", "asw", "year", "location", "status", "crew",
                                   "maintenance", "description")) + (destination,))
-            shown += 1
-        self.count.set(f"{shown} / {len(source_ships)} ships")
+        self.count.set(f"{len(rows)} / {len(source_ships)} ships")
         self.status.set(f"{len(self.pending)} staged ship transfer(s)")
         self.details.set("Select a ship to see its saved state and transfer eligibility.")
+
+    def sort_by(self, column):
+        if self.sort_column == column:
+            self.sort_reverse = not self.sort_reverse
+        else:
+            self.sort_column = column
+            self.sort_reverse = False
+        self.table.heading("#0", text=heading_text(
+            self.heading_labels["hull"], column == "hull", self.sort_reverse))
+        for key, label in self.heading_labels.items():
+            if key != "hull":
+                self.table.heading(key, text=heading_text(
+                    label, key == column, self.sort_reverse))
+        self.render()
 
     def show_details(self, _event=None):
         selected = self.table.selection()

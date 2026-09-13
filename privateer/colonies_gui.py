@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from .colonies import possessions, map_document
+from .table_sort import heading_text, sorted_with_blanks
 
 
 class ColoniesWindow(tk.Toplevel):
@@ -9,6 +10,8 @@ class ColoniesWindow(tk.Toplevel):
         super().__init__(parent)
         self.save = save
         self.pending = {}
+        self.sort_column = None
+        self.sort_reverse = False
         self.title(f'Manage Colonies - {save.nation(nation_index).name}')
         self.geometry('1000x700')
         self.minsize(800, 550)
@@ -38,8 +41,10 @@ class ColoniesWindow(tk.Toplevel):
         frame = ttk.Frame(body)
         frame.pack(fill='both', expand=True)
         self.table = ttk.Treeview(frame, columns=('name','area','owner','new','value','oil','base'), show='headings', selectmode='extended')
+        self.heading_labels = {}
         for key, label, width in [('name','Possession',210),('area','Map area',65),('owner','Current owner',130),('new','New owner',130),('value','Value',55),('oil','Oil',40),('base','Base',55)]:
-            self.table.heading(key,text=label); self.table.column(key,width=width,minwidth=40)
+            self.heading_labels[key] = label
+            self.table.heading(key,text=label,command=lambda column=key:self.sort_by(column)); self.table.column(key,width=width,minwidth=40)
         scroll=ttk.Scrollbar(frame,orient='vertical',command=self.table.yview)
         self.table.configure(yscrollcommand=scroll.set)
         scroll.pack(side='right',fill='y'); self.table.pack(fill='both',expand=True)
@@ -61,12 +66,29 @@ class ColoniesWindow(tk.Toplevel):
 
     def render(self):
         self.table.delete(*self.table.get_children())
+        rows=[]
         for pair,p in self.records.items():
             if self.owner_filter.get() not in ('All owners',p.owner):continue
             if self.search.get().strip().casefold() not in f'{p.name} {p.owner} {p.area}'.casefold():continue
-            self.table.insert('','end',iid=f'{p.area}:{p.index}',values=(p.name,p.area,p.owner,self.pending.get(pair,''),p.value,p.oil,p.base))
+            values={'name':p.name,'area':p.area,'owner':p.owner,'new':self.pending.get(pair,''),
+                    'value':p.value,'oil':p.oil,'base':p.base}
+            rows.append((pair,values))
+        if self.sort_column:
+            rows=sorted_with_blanks(rows,lambda row:row[1][self.sort_column],
+                                   reverse=self.sort_reverse,
+                                   numeric=self.sort_column in {'area','value','oil','base'})
+        for pair,values in rows:
+            self.table.insert('','end',iid=f'{pair[0]}:{pair[1]}',
+                              values=tuple(values[key] for key in ('name','area','owner','new','value','oil','base')))
         self.count.set(f'{len(self.table.get_children())} / {len(self.records)} possessions')
         self.status.set(f'{len(self.pending)} staged ownership change(s)')
+
+    def sort_by(self,column):
+        if self.sort_column==column:self.sort_reverse=not self.sort_reverse
+        else:self.sort_column,self.sort_reverse=column,False
+        for key,label in self.heading_labels.items():
+            self.table.heading(key,text=heading_text(label,key==column,self.sort_reverse))
+        self.render()
 
     def stage(self):
         if not self.table.selection():
