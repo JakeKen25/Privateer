@@ -136,14 +136,16 @@ def transfer_batch(save, assignments):
             new_blocks.setdefault(target.index,[]).append(block)
             counters[target.index]=new_id;clone_map[key]=new_id
             working.audit.append(f'Copied {source.name} design {ship.design_ref_id} to {target.name}: ordinal {ordinal}, internal ID {new_id}')
-        edits={'DesignRefId':clone_map[key],'BuildingNationIdx':target.index}
+        # BuildingNationIdx is historical builder data, not current ownership.
+        # Ownership is expressed by the containing NationNShips roster.
+        edits={'DesignRefId':clone_map[key]}
         if source.is_player and not target.is_player:edits['CommanderId']=-1
         changes[ship.record_index]=edits
         for index,line in enumerate(raw_by_id[ship.record_index]):
             m=FIELD.match(line);suffix=SHIP_KEY.fullmatch(m.group(2).strip()).group(2)
             if suffix in edits:raw_by_id[ship.record_index][index]=replace_line_value(line,edits[suffix])
         final_ids[source.index].remove(ship.record_index);final_ids[target.index].append(ship.record_index)
-        working.audit.append(f'Transferred hull {ship.record_index} {ship.name}: Nation{source.index} -> Nation{target.index}; design {ship.design_ref_id} -> {edits["DesignRefId"]}; builder {ship.building_nation_index} -> {target.index}; commander {ship.section.fields()["CommanderId"]} -> {edits.get("CommanderId",ship.section.fields()["CommanderId"])}')
+        working.audit.append(f'Transferred hull {ship.record_index} {ship.name}: Nation{source.index} -> Nation{target.index}; design {ship.design_ref_id} -> {edits["DesignRefId"]}; builder {ship.building_nation_index} preserved; commander {ship.section.fields()["CommanderId"]} -> {edits.get("CommanderId",ship.section.fields()["CommanderId"])}')
     for i in affected:
         section,_,others=raw_rosters[i];lines=list(others)
         for slot,hull in enumerate(final_ids[i]):

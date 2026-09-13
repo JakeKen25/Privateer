@@ -90,7 +90,7 @@ def test_atomic_transfer_clones_and_remaps_design(tmp_path):
     save = RTW3Save.load(fixture(tmp_path)); donor = save.nation(1); ship = donor.ships[0]
     save.transfer_ships([ship], "Britain")
     assert donor.designs[0].record_index == 10  # donor copy is retained
-    assert ship.owner_index == 0 and ship.building_nation_index == 0
+    assert ship.owner_index == 0 and ship.building_nation_index == 1
     assert ship.design_ref_id == 3
     copied = save.nation(0).designs[-1]
     assert copied.record_index == copied.internal_design_id == 3
@@ -178,7 +178,7 @@ def test_real_flattened_transfer_moves_hull_and_resolves_copied_design():
     save.transfer_ships([ship], 0)
     moved = next(candidate for candidate in save.nation(0).ships if candidate.record_index == hull_id)
     assert moved.owner_index == 0
-    assert moved.building_nation_index == 0
+    assert moved.building_nation_index == 1
     assert sum(len(nation.ships) for nation in save.nations) == total
     assert save.validate().valid
 

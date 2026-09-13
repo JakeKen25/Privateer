@@ -44,6 +44,38 @@ def ship_details(save, ship) -> str:
     )
 
 
+def ship_stats(ship) -> dict[str, str]:
+    """Return lossless display values for the saved per-hull statistics."""
+    fields = ship.section.fields()
+    displacement = fields.get("Displacement", "")
+    try:
+        displacement = f"{int(displacement):,}" if displacement else ""
+    except ValueError:
+        pass
+    search_radar = fields.get("SearchRadarClass", "")
+    fire_control_radar = fields.get("FCRadarClass", "")
+    if search_radar == fire_control_radar:
+        radar = search_radar
+    else:
+        radar = f"S:{search_radar or '-'} / FC:{fire_control_radar or '-'}"
+    return {
+        "type": ship.ship_type or "",
+        "name": ship.name,
+        "class": ship.class_name or "",
+        "displacement": displacement,
+        "speed": fields.get("Speed", ""),
+        "main_gun": fields.get("MainCalibre", ""),
+        "radar": radar,
+        "asw": fields.get("ASWValue", ""),
+        "year": fields.get("YearBuilt", ""),
+        "location": fields.get("LocationAreaName", ""),
+        "status": fields.get("Status", ""),
+        "crew": fields.get("CrewQuality", ""),
+        "maintenance": fields.get("Maintenance", ""),
+        "description": fields.get("Description", ""),
+    }
+
+
 class ShipTransfersWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
         super().__init__(parent)
@@ -61,8 +93,8 @@ class ShipTransfersWindow(tk.Toplevel):
         ttk.Label(body, text="Ship ownership transfers", font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(
             body,
-            text=("Transfers keep the hull and its state, copy its design to the receiving nation, "
-                  "and update the builder. Carrier/air-group transfers are currently blocked."),
+            text=("Transfers keep the hull, original building nation, and all saved state while "
+                  "copying its design to the receiver. Carrier/air-group transfers are currently blocked."),
             wraplength=1050,
         ).pack(anchor="w")
 
@@ -85,21 +117,29 @@ class ShipTransfersWindow(tk.Toplevel):
 
         frame = ttk.Frame(body)
         frame.pack(fill="both", expand=True)
-        columns = ("name", "type", "class", "state", "location", "destination")
+        columns = ("type", "name", "class", "displacement", "speed", "main_gun", "radar",
+                   "asw", "year", "location", "status", "crew", "maintenance",
+                   "description", "destination")
         self.table = ttk.Treeview(frame, columns=columns, show="tree headings", selectmode="extended")
         self.table.heading("#0", text="Hull ID")
         self.table.column("#0", width=70, minwidth=55, stretch=False)
         specs = [
-            ("name", "Name", 175), ("type", "Type", 55), ("class", "Class", 175),
-            ("state", "State", 115), ("location", "Location", 175),
-            ("destination", "Staged destination", 170),
+            ("type", "Type", 50), ("name", "Name", 150), ("class", "Class", 145),
+            ("displacement", "Displacement", 90), ("speed", "Speed", 55),
+            ("main_gun", "Main gun", 65), ("radar", "Radar", 90), ("asw", "ASW", 50),
+            ("year", "Year", 55), ("location", "Location", 145),
+            ("status", "Status (raw)", 75), ("crew", "Crew quality (raw)", 105),
+            ("maintenance", "Maintenance", 85), ("description", "Description", 220),
+            ("destination", "Staged destination", 150),
         ]
         for key, label, width in specs:
             self.table.heading(key, text=label)
             self.table.column(key, width=width, minwidth=45)
         scroll = ttk.Scrollbar(frame, orient="vertical", command=self.table.yview)
-        self.table.configure(yscrollcommand=scroll.set)
+        horizontal = ttk.Scrollbar(frame, orient="horizontal", command=self.table.xview)
+        self.table.configure(yscrollcommand=scroll.set, xscrollcommand=horizontal.set)
         scroll.pack(side="right", fill="y")
+        horizontal.pack(side="bottom", fill="x")
         self.table.pack(fill="both", expand=True)
 
         editor = ttk.Frame(body)
@@ -150,6 +190,7 @@ class ShipTransfersWindow(tk.Toplevel):
         source_ships = self.save.nation(source_index).ships
         for ship in source_ships:
             fields = ship.section.fields()
+            stats = ship_stats(ship)
             if self.type_filter.get() not in ("All types", ship.ship_type):
                 continue
             haystack = f"{ship.record_index} {ship.name} {ship.class_name} {ship.ship_type} {fields.get('LocationAreaName', '')}".casefold()
@@ -157,12 +198,11 @@ class ShipTransfersWindow(tk.Toplevel):
                 continue
             pending = self.pending.get(ship.record_index)
             destination = self.save.nation(pending).name if pending is not None else ""
-            state = "Under construction" if ship.under_construction else "In service"
-            if transfer_block_reason(ship):
-                state = "Blocked"
             self.table.insert("", "end", iid=str(ship.record_index), text=str(ship.record_index),
-                              values=(ship.name, ship.ship_type or "", ship.class_name or "", state,
-                                      fields.get("LocationAreaName", ""), destination))
+                              values=tuple(stats[key] for key in (
+                                  "type", "name", "class", "displacement", "speed", "main_gun",
+                                  "radar", "asw", "year", "location", "status", "crew",
+                                  "maintenance", "description")) + (destination,))
             shown += 1
         self.count.set(f"{shown} / {len(source_ships)} ships")
         self.status.set(f"{len(self.pending)} staged ship transfer(s)")

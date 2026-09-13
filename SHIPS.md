@@ -11,9 +11,16 @@ the complete opaque design block into the receiver's `DesignFilesN.des`, assigns
 the next valid internal design ID, appends the next record ordinal, and updates
 the receiving hull's `DesignRefId`. The donor design remains in place.
 
-The normal transfer policy changes `BuildingNationIdx` to the receiver. When a
-player ship is transferred to an AI nation, its `CommanderId` is cleared to `-1`;
-the officer record is retained. Ships received by the player remain unassigned.
+`BuildingNationIdx` remains unchanged so the hull retains its original building
+nation. When a player ship is transferred to an AI nation, its `CommanderId` is
+cleared to `-1`; the officer record is retained. Ships received by the player
+remain unassigned.
+
+The transfer window displays the saved type, name, class, displacement, speed,
+main caliber, search/fire-control radar classes, ASW value, build year, location,
+status, crew quality, maintenance, and armament description. Status and crew
+quality remain labeled as raw values because their integer-to-text enumerations
+have not been validated.
 
 The manager blocks carriers and other ships with aircraft capacity because their
 air-group dependencies have not been decoded. It also blocks transfers involving

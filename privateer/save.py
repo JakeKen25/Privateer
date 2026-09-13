@@ -300,12 +300,12 @@ class RTW3Save:
             self.documents, self.nations, self.modified, self.audit = snapshot
             raise
 
-    def transfer_ships(self, ships: list[Ship], destination, *, force_building_nation_to_owner: bool = True) -> None:
+    def transfer_ships(self, ships: list[Ship], destination, *, force_building_nation_to_owner: bool = False) -> None:
         if any(ship.flattened_record for ship in ships):
             if not all(ship.flattened_record for ship in ships):
                 raise ValueError("Mixed roster formats are unsupported")
-            if not force_building_nation_to_owner:
-                raise ValueError("Historical-builder transfer policy is not validated")
+            if force_building_nation_to_owner:
+                raise ValueError("Privateer preserves the ship's original BuildingNationIdx")
             return self.transfer_ship_batch({ship.record_index: self.nation(destination).index for ship in ships})
         destination = self.nation(destination)
         with self.transaction():

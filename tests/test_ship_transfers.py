@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from privateer.save import RTW3Save
-from privateer.ships_gui import ship_details, transfer_block_reason
+from privateer.ships_gui import ship_details, ship_stats, transfer_block_reason
 
 
 SOURCE = Path(__file__).parents[1] / "exampleSaves" / "Game5"
@@ -36,10 +36,10 @@ class ShipTransferTests(unittest.TestCase):
         self.assertEqual(moved.owner_index, 0)
         self.assertEqual(moved.record_index, hull)
         self.assertEqual(sum(len(nation.ships) for nation in self.save.nations), total)
-        self.assertEqual(fields["BuildingNationIdx"], "0")
+        self.assertEqual(fields["BuildingNationIdx"], original_fields["BuildingNationIdx"])
         self.assertNotEqual(fields["DesignRefId"], original_fields["DesignRefId"])
         for key, value in original_fields.items():
-            if key not in {"DesignRefId", "BuildingNationIdx"}:
+            if key != "DesignRefId":
                 self.assertEqual(fields[key], value, key)
         self.assertEqual(source_design.positional_record, source_payload)
         copied_design = next(
@@ -96,7 +96,7 @@ class ShipTransferTests(unittest.TestCase):
                      if candidate.record_index == ship.record_index)
         self.assertEqual(moved.section.fields()["CommanderId"], "-1")
         for key, value in fields.items():
-            if key not in {"DesignRefId", "BuildingNationIdx", "CommanderId"}:
+            if key not in {"DesignRefId", "CommanderId"}:
                 self.assertEqual(moved.section.fields()[key], value, key)
 
     def test_under_construction_ship_keeps_progress_and_cost_state(self):
@@ -106,6 +106,7 @@ class ShipTransferTests(unittest.TestCase):
         moved = next(candidate for candidate in self.save.nation(2).ships
                      if candidate.record_index == ship.record_index)
         self.assertTrue(moved.under_construction)
+        self.assertEqual(moved.section.fields()["BuildingNationIdx"], fields["BuildingNationIdx"])
         for key in ("BuildProgress", "Cost", "MonthlyCost", "Maintenance", "Halted", "Hurry"):
             self.assertEqual(moved.section.fields()[key], fields[key], key)
 
@@ -124,6 +125,11 @@ class ShipTransferTests(unittest.TestCase):
         self.assertIn(ship.name, details)
         self.assertIn(str(ship.record_index), details)
         self.assertIn("Eligible", details)
+        stats = ship_stats(ship)
+        self.assertEqual(stats["type"], ship.ship_type)
+        self.assertEqual(stats["speed"], ship.section.fields()["Speed"])
+        self.assertEqual(stats["main_gun"], ship.section.fields()["MainCalibre"])
+        self.assertEqual(stats["description"], ship.section.fields()["Description"])
         ship.section.set("AircraftCapacity", 20)
         self.assertIn("Carrier", transfer_block_reason(ship))
 

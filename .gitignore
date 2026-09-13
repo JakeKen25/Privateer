@@ -6,3 +6,4 @@ build/
 dist/
 *.egg-info/
 .testdeps/
+test_libs/

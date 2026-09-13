@@ -5,7 +5,7 @@ folders. It currently parses real flattened ship rosters and positional v10139
 design libraries, validates ship/design references, and provides a Tkinter front
 end. Its ship-transfer manager moves complete hull records transactionally, copies
 the referenced design into each receiving nation's library, and preserves permanent
-hull IDs and opaque ship/design data.
+hull IDs, original building nations, and opaque ship/design data.
 
 See **[INSTALL.md](INSTALL.md)** for complete Windows, macOS, and Linux setup,
 launch, validation, testing, updating, and troubleshooting instructions.
