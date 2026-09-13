@@ -1,7 +1,7 @@
 # Technology and gun caliber windows
 
 Run Launch_Privateer.bat or the installed Privateer launcher. Load a save,
-right-click a nation, and choose Manage Technology.
+right-click a nation, and choose Technology Manager.
 
 Each research area has one cumulative slider. Displayed levels run from 1 through
 that area's highest defined technology; 0 means none. Selecting level 5 enables
@@ -20,7 +20,7 @@ changes in memory. Use Save or Save As to write through the existing validation
 and backup workflow. Unknown fields, unused level slots, other nations, research
 spending, priorities, progress, and gun values are preserved.
 
-Manage Gun Calibers opens a separate window with rows for 2-inch through 20-inch
+Caliber Manager opens a separate window with rows for 2-inch through 20-inch
 guns and one radio button per quality: -3, -2, -1, 0, +1, +2, and Unavailable.
 Unavailable corresponds to the game's sentinel value 9. Selecting a quality makes
 that caliber available. Missing or unknown gun fields are visible but disabled.

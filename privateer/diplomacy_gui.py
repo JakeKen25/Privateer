@@ -9,7 +9,7 @@ class TensionWindow(tk.Toplevel):
         super().__init__(parent)
         self.save, self.nation_index = save, nation_index
         self.entries, self.original = {}, {}
-        self.title(f'Manage Relations - {save.nation(nation_index).name}')
+        self.title(f'Relationship Manager — {save.nation(nation_index).name}')
         self.geometry('870x700')
         self.minsize(760, 570)
         self.transient(parent)
@@ -53,7 +53,7 @@ class TensionWindow(tk.Toplevel):
             ttk.Button(rows, text='Details', command=lambda o=other: self.show_details(o)).grid(row=row, column=3, padx=8)
         self.details = tk.Text(body, height=8, wrap='word', state='disabled')
         self.details.pack(fill='both', expand=True)
-        ttk.Label(body, text='War and alliance state are preserved. Apply stages edits; Save writes them with a backup.').pack(anchor='w', pady=8)
+        ttk.Label(body, text='War and alliance state are preserved. Apply stages edits; Save follows the configured backup policy.').pack(anchor='w', pady=8)
         buttons = ttk.Frame(body)
         buttons.pack(fill='x')
         ttk.Button(buttons, text='Reset changes', command=self.reset_changes).pack(side='left')
@@ -63,7 +63,7 @@ class TensionWindow(tk.Toplevel):
         self.bind('<Escape>', lambda e: self.destroy())
         self.grab_set()
         messagebox.showwarning(
-            "Manage Relations - Under Development",
+            "Relationship Manager — Under Development",
             "This section is under development.\n\nOnly numerical Tension Levels can be edited. War and alliance values are preserved.",
             parent=self,
         )

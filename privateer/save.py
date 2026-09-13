@@ -36,6 +36,7 @@ class RTW3Save:
         self.player_detection_warning: str | None = None
         self._tension_changes = False
         self._colony_changes = False
+        self._ship_changes = False
         self._source_snapshot = None
         self._build_model()
 
@@ -93,8 +94,12 @@ class RTW3Save:
                 for p in folder.iterdir() if p.is_file()}
 
     def _check_tension_source(self):
-        if (self._tension_changes or self._colony_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
-            raise ValueError("Save files changed on disk since loading. Reload before saving relations or colony edits.")
+        if (self._tension_changes or self._colony_changes or self._ship_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, or ship edits.")
+
+    def transfer_ship_batch(self, assignments):
+        from .ship_transfers import transfer_batch
+        transfer_batch(self, assignments)
 
     def set_colony_owners(self, changes):
         from .colonies import set_owners
@@ -106,6 +111,13 @@ class RTW3Save:
 
     def _build_model(self) -> None:
         main = self.documents[self.main_file]
+        seen_sections = set()
+        for section in main.sections:
+            if NATION.fullmatch(section.name) or NATION_SHIPS.fullmatch(section.name):
+                key = section.name.casefold()
+                if key in seen_sections:
+                    raise ValueError(f"Duplicate nation or roster section: {section.name}")
+                seen_sections.add(key)
         for section in main.sections:
             match = NATION.match(section.name)
             if not match:
@@ -114,7 +126,8 @@ class RTW3Save:
             tech = {k: self._coerce(v) for k, v in values.items() if k.casefold().startswith(TECH_PREFIXES)}
             self.nations.append(Nation(index, values.get("Name", f"Nation{index}"), section,
                 _integer(values, "Funds"), _integer(values, "BaseResources"),
-                _integer(values, "BudgetModifier"), TechnologyState(tech)))
+                _integer(values, "BudgetModifier"), _integer(values, "DockSize"),
+                TechnologyState(tech)))
         by_index = {nation.index: nation for nation in self.nations}
         for section in main.sections:
             roster = NATION_SHIPS.match(section.name)
@@ -203,6 +216,14 @@ class RTW3Save:
     @staticmethod
     def _parse_flat_ship_roster(section: Section, nation: Nation) -> None:
         """Parse every ``ShipN`` record in a real ``[NationNShips]`` section."""
+        seen_keys = set()
+        for line in section.lines:
+            match = FIELD.match(line)
+            if match and FLAT_SHIP_KEY.fullmatch(match.group(2).strip()):
+                key = match.group(2).strip().casefold()
+                if key in seen_keys:
+                    raise ValueError(f"Duplicate ship field in [{section.name}]: {key}")
+                seen_keys.add(key)
         slots: dict[int, dict[str, str]] = {}
         for key, value in section.fields().items():
             match = FLAT_SHIP_KEY.match(key)
@@ -220,7 +241,7 @@ class RTW3Save:
             design = _integer(values, "DesignRefId")
             build = _integer(values, "BuildingNationIdx")
             in_play = str(values.get("InPlay", "1")).casefold() in {"1", "true", "yes"}
-            record = PrefixedRecord(section, f"Ship{slot}")
+            record = PrefixedRecord(section, f"Ship{slot}", dict(values))
             nation.ships.append(Ship(
                 ship_id,
                 nation.index,
@@ -247,18 +268,12 @@ class RTW3Save:
         except ValueError: return value
 
     def _detect_player(self) -> None:
-        explicit: list[Nation] = []
+        player = next((nation for nation in self.nations if nation.index == 0), None)
+        if player is None:
+            raise ValueError("Unsupported RTW3 save: Nation0 player record is missing")
         for nation in self.nations:
-            fields = {k.casefold(): v.casefold() for k, v in nation.section.fields().items()}
-            if any(fields.get(key) in {"1", "true", "yes"} for key in ("isplayer", "player", "playernation")):
-                explicit.append(nation)
-        if len(explicit) == 1:
-            explicit[0].is_player = True
-        else:
-            fallback = next((n for n in self.nations if n.index == 0), None)
-            if fallback: fallback.is_player = True
-            self.player_detection_warning = ("Multiple player flags found; Nation0 fallback used" if explicit
-                                              else "No explicit player field found; Nation0 fallback used")
+            nation.is_player = nation is player
+        self.player_detection_warning = None
 
     def nation(self, value: str | int | Nation) -> Nation:
         if isinstance(value, Nation): return value
@@ -280,12 +295,13 @@ class RTW3Save:
             self.documents, self.nations, self.modified, self.audit = snapshot
             raise
 
-    def transfer_ships(self, ships: list[Ship], destination, *, force_building_nation_to_owner: bool = True) -> None:
+    def transfer_ships(self, ships: list[Ship], destination, *, force_building_nation_to_owner: bool = False) -> None:
         if any(ship.flattened_record for ship in ships):
-            raise NotImplementedError(
-                "Transfers for flattened [NationNShips] records are disabled until "
-                "physical roster movement and positional .des cloning are implemented"
-            )
+            if not all(ship.flattened_record for ship in ships):
+                raise ValueError("Mixed roster formats are unsupported")
+            if force_building_nation_to_owner:
+                raise ValueError("Privateer preserves the ship's original BuildingNationIdx")
+            return self.transfer_ship_batch({ship.record_index: self.nation(destination).index for ship in ships})
         destination = self.nation(destination)
         with self.transaction():
             for ship in list(dict.fromkeys(id(s) for s in ships)):
@@ -350,6 +366,49 @@ class RTW3Save:
             self.validate_or_raise()
             self.modified = True
 
+    def set_dock_size(self, nation, value: int) -> None:
+        """Set a nation's verified DockSize field in memory."""
+        target = self.nation(nation)
+        if target.dock_size is None:
+            raise ValueError(f"{target.name} has no DockSize field")
+        if type(value) is not int or not 0 <= value <= 2**31 - 1:
+            raise ValueError("Dockyard size must be a whole number from 0 to 2,147,483,647")
+        previous = target.dock_size
+        if previous == value:
+            return
+        target.set_dock_size(value, self.documents[self.main_file].newline)
+        self.audit.append(f"Changed {target.name} DockSize: {previous} -> {value}")
+        self.modified = True
+
+    def set_admiral(self, nation, *, name: str, prestige: int) -> None:
+        """Set the player admiral's stored name and prestige as one transaction."""
+        target = self.nation(nation)
+        if target.index != 0:
+            raise ValueError("The Admiral Manager is available only for the Nation0 player")
+        fields = target.section.fields()
+        missing = [key for key in ("AdmiralName", "Prestige") if key not in fields]
+        if missing:
+            raise ValueError("Missing player admiral field(s): " + ", ".join(missing))
+        name = name.strip()
+        if not name or "\n" in name or "\r" in name:
+            raise ValueError("Admiral name must be a non-empty single line")
+        if type(prestige) is not int or not 0 <= prestige <= 2**31 - 1:
+            raise ValueError("Prestige must be a whole number from 0 to 2,147,483,647")
+        newline = self.documents[self.main_file].newline
+        with self.transaction():
+            if fields["AdmiralName"] != name:
+                target.section.set("AdmiralName", name, newline)
+                self.audit.append(
+                    f"Changed {target.name} AdmiralName: {fields['AdmiralName']} -> {name}"
+                )
+                self.modified = True
+            if fields["Prestige"] != str(prestige):
+                target.section.set("Prestige", prestige, newline)
+                self.audit.append(
+                    f"Changed {target.name} Prestige: {fields['Prestige']} -> {prestige}"
+                )
+                self.modified = True
+
     def set_gun_qualities(self, nation, changes):
         """Validate the complete batch before editing existing gun fields only."""
         target = self.nation(nation)
@@ -412,6 +471,13 @@ class RTW3Save:
                     continue
                 if design.internal_design_id in design_ids: report.add("duplicate_design_id", f"{nation.name} has duplicate design {design.internal_design_id}")
                 design_ids[design.internal_design_id] = design
+            if any(ship.flattened_record for ship in nation.ships):
+                slots = sorted(ship.local_slot for ship in nation.ships if ship.flattened_record)
+                if slots != list(range(len(nation.ships))):
+                    report.add("roster_slots", f"{nation.name}: local slots are not contiguous")
+                allocation = _integer(nation.section.fields(), "DesignIDCount")
+                if allocation is not None and allocation < max(design_ids, default=0):
+                    report.add("design_counter", f"{nation.name}: DesignIDCount is below the largest design ID")
             for ship in nation.ships:
                 if ship.record_index in seen: report.add("duplicate_ship_id", f"Duplicate ship ID {ship.record_index}")
                 seen.add(ship.record_index)
@@ -423,7 +489,8 @@ class RTW3Save:
             for key, value in nation.section.fields().items():
                 if re.fullmatch(r"Research\d+Level\d+", key, re.I) and value not in ("0", "1"):
                     report.add("technology_flag", f"{nation.name} {key} must be 0 or 1")
-            for label, value in (("Funds", nation.funds), ("BaseResources", nation.base_resources)):
+            for label, value in (("Funds", nation.funds), ("BaseResources", nation.base_resources),
+                                 ("DockSize", nation.dock_size)):
                 if value is not None and not -(2**31) <= value <= 2**31 - 1: report.add("integer_range", f"{nation.name} {label} exceeds signed 32-bit range")
         return report
 
@@ -446,20 +513,55 @@ class RTW3Save:
             shutil.rmtree(temporary, ignore_errors=True); raise
         return destination
 
-    def save(self) -> Path:
+    def save(self, *, create_backup: bool = True, backup_directory=None) -> Path | None:
         self._check_tension_source()
         self.validate_or_raise()
         stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
-        backup = self.folder.with_name(f"{self.folder.name}_backup_{stamp}")
-        shutil.copytree(self.folder, backup)
+        backup = None
+        persistent_recovery = bool(create_backup)
+        if create_backup:
+            root = (Path(backup_directory).expanduser().resolve() if backup_directory
+                    else self.folder.parent)
+            if root == self.folder or self.folder in root.parents:
+                raise ValueError("Backup location cannot be inside the save being edited")
+            root.mkdir(parents=True, exist_ok=True)
+            recovery = root / f"{self.folder.name}_backup_{stamp}"
+            shutil.copytree(self.folder, recovery)
+            backup = recovery
+        else:
+            recovery = Path(tempfile.mkdtemp(
+                prefix=f".{self.folder.name}-privateer-recovery-", dir=self.folder.parent))
+            shutil.copytree(self.folder, recovery, dirs_exist_ok=True)
         temporary = Path(tempfile.mkdtemp(prefix=".privateer-", dir=self.folder.parent))
+        cleanup_recovery = not persistent_recovery
         try:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True); self._write_documents(temporary)
             RTW3Save.load(temporary).validate_or_raise()
             self._check_tension_source()
-            for name in self.documents: (temporary / name).replace(self.folder / name)
-            (temporary / "RTW3_SAVE_EDITOR_LOG.txt").replace(self.folder / "RTW3_SAVE_EDITOR_LOG.txt")
-        finally: shutil.rmtree(temporary, ignore_errors=True)
+            names = [*self.documents, "RTW3_SAVE_EDITOR_LOG.txt"]
+            attempted = []
+            try:
+                for name in names:
+                    attempted.append(name)
+                    (temporary / name).replace(self.folder / name)
+            except Exception as commit_error:
+                failures = []
+                for name in attempted:
+                    try:
+                        if (recovery / name).exists():
+                            shutil.copy2(recovery / name, self.folder / name)
+                        elif (self.folder / name).exists():
+                            (self.folder / name).unlink()
+                    except OSError as restore_error:
+                        failures.append(f"{name}: {restore_error}")
+                if failures:
+                    cleanup_recovery = False
+                    raise RuntimeError(f"Save failed; restore from {recovery}. Recovery errors: {failures}") from commit_error
+                raise RuntimeError(f"Save failed; original files restored from {recovery}") from commit_error
+        finally:
+            shutil.rmtree(temporary, ignore_errors=True)
+            if cleanup_recovery:
+                shutil.rmtree(recovery, ignore_errors=True)
         self.modified = False
         self._source_snapshot = self._folder_snapshot(self.folder)
         return backup

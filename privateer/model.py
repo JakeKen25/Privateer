@@ -145,6 +145,7 @@ class Nation:
     funds: int | None
     base_resources: int | None
     budget_modifier: int | None
+    dock_size: int | None
     technology: TechnologyState
     ships: list[Ship] = field(default_factory=list)
     designs: list[ShipDesign] = field(default_factory=list)
@@ -161,6 +162,12 @@ class Nation:
             raise TypeError("BaseResources must be an integer")
         self.base_resources = value
         self.section.set("BaseResources", value, newline)
+
+    def set_dock_size(self, value: int, newline: str = "\n") -> None:
+        if type(value) is not int or value < 0:
+            raise ValueError("Dockyard size must be a non-negative whole number")
+        self.dock_size = value
+        self.section.set("DockSize", value, newline)
 
     def sync_ship_count(self, newline: str = "\n") -> None:
         self.section.set("ShipCount", len(self.ships), newline)

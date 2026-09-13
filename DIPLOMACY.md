@@ -1,6 +1,6 @@
 # Relations manager (under development)
 
-Right-click a nation and choose Manage Relations. The window shows its eight
+Right-click a nation and choose Relationship Manager. The window shows its eight
 relationships in the verified player-slot-0 / AI-slots-1-through-8 layout. Names
 come from the loaded save; NationNumber is never used as an array suffix. Extra
 stored nation records are excluded, regardless of their name or ship count.
@@ -15,7 +15,7 @@ unverified strength or duration meanings. Self-relations cannot be edited.
 
 Reset clears the entries. Cancel discards dialog edits. Apply stages the complete
 validated batch in memory. Save/Save As use the existing validation and temporary
-write workflow; Save creates a full-folder backup. Tension edits additionally check
+write workflow; Save follows the configured retained-backup policy. Tension edits additionally check
 that source files have not changed since loading and before replacing the save.
 Written document bytes are compared against the prepared in-memory payload. Audit
 logs are retained in the saved folder. This does not lock RTW3 against concurrent
@@ -37,5 +37,5 @@ edits, ambiguity rejection, no-op preservation, backup/reload, and source confli
 The six technology and three gun tests also pass, along with all three GUI smoke
 checks. No new in-game turn-progression test has been performed.
 
-Opening Manage Relations displays an under-development warning. Numeric columns
+Opening Relationship Manager displays an under-development warning. Numeric columns
 are labeled Current Tension Level and New Tension Level.

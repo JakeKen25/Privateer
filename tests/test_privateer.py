@@ -9,6 +9,8 @@ from privateer.validation import SaveValidationError
 MAIN = """; keep me\r
 [Nation0]\r
 Name=Britain\r
+AdmiralName=Beatty\r
+Prestige=20\r
 Funds=100\r
 BaseResources=200\r
 ShipCount=0\r
@@ -45,10 +47,24 @@ def fixture(tmp_path: Path) -> Path:
 def test_load_player_economy_and_unknown_formatting(tmp_path):
     save = RTW3Save.load(fixture(tmp_path))
     assert save.nation("Britain").is_player
-    assert save.player_detection_warning
+    assert save.player_detection_warning is None
     save.nation(0).set_funds(1_000, save.documents[save.main_file].newline)
     assert "Unknown = untouched\r\n" in save.documents[save.main_file].render()
     assert "Funds=1000\r\n" in save.documents[save.main_file].render()
+
+
+def test_nation_zero_is_always_player_and_admiral_edits_are_player_only(tmp_path):
+    folder = fixture(tmp_path)
+    text = (folder / "game.bcs").read_text()
+    (folder / "game.bcs").write_text(text.replace(
+        "Name=Germany\n", "Name=Germany\nPlayer=1\nAdmiralName=Tirpitz\nPrestige=10\n"))
+    save = RTW3Save.load(folder)
+    assert [nation.index for nation in save.nations if nation.is_player] == [0]
+    save.set_admiral(0, name="Jellicoe", prestige=35)
+    assert save.nation(0).section.fields()["AdmiralName"] == "Jellicoe"
+    assert save.nation(0).section.fields()["Prestige"] == "35"
+    with pytest.raises(ValueError, match="Nation0 player"):
+        save.set_admiral(1, name="Hipper", prestige=25)
 
 
 def test_economy_adjustments_are_applied_together(tmp_path):
@@ -76,11 +92,21 @@ def test_invalid_economy_adjustment_rolls_back_both_fields(tmp_path):
     assert save.audit == []
 
 
+def test_economy_adjustment_is_not_written_until_save(tmp_path):
+    folder = fixture(tmp_path)
+    save = RTW3Save.load(folder)
+    save.adjust_economy(0, funds=("Set value", "900"))
+    assert b"Funds=100\r\n" in (folder / "game.bcs").read_bytes()
+
+    save.save()
+    assert b"Funds=900\r\n" in (folder / "game.bcs").read_bytes()
+
+
 def test_atomic_transfer_clones_and_remaps_design(tmp_path):
     save = RTW3Save.load(fixture(tmp_path)); donor = save.nation(1); ship = donor.ships[0]
     save.transfer_ships([ship], "Britain")
     assert donor.designs[0].record_index == 10  # donor copy is retained
-    assert ship.owner_index == 0 and ship.building_nation_index == 0
+    assert ship.owner_index == 0 and ship.building_nation_index == 1
     assert ship.design_ref_id == 3
     copied = save.nation(0).designs[-1]
     assert copied.record_index == copied.internal_design_id == 3
@@ -159,11 +185,18 @@ def test_real_no_op_save_as_preserves_recognized_files_byte_for_byte(tmp_path):
         assert (destination / source_file.name).read_bytes() == source_file.read_bytes()
 
 
-def test_real_flattened_transfer_is_safely_disabled():
+def test_real_flattened_transfer_moves_hull_and_resolves_copied_design():
     folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
     save = RTW3Save.load(folder)
-    with pytest.raises(NotImplementedError, match="physical roster movement"):
-        save.transfer_ships([save.nation(1).ships[0]], 0)
+    ship = save.nation(1).ships[0]
+    hull_id = ship.record_index
+    total = sum(len(nation.ships) for nation in save.nations)
+    save.transfer_ships([ship], 0)
+    moved = next(candidate for candidate in save.nation(0).ships if candidate.record_index == hull_id)
+    assert moved.owner_index == 0
+    assert moved.building_nation_index == 1
+    assert sum(len(nation.ships) for nation in save.nations) == total
+    assert save.validate().valid
 
 
 def test_malformed_flattened_record_is_not_silently_ignored(tmp_path):

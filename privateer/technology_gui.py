@@ -13,7 +13,7 @@ class TechnologyWindow(tk.Toplevel):
         self.variables = {}
         nation = save.nation(nation_index)
         self.original = nation.section.fields()
-        self.title(f'Manage Technology — {nation.name}')
+        self.title(f'Technology Manager — {nation.name}')
         self.geometry('1000x720')
         self.minsize(760, 520)
         self.transient(parent)
