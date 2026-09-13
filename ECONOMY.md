@@ -1,6 +1,6 @@
 # Economy and infrastructure managers
 
-Right-click a nation and choose **Manage Economy** to edit Funds and Base Resources
+Right-click a nation and choose **Economy Manager** to edit Funds and Base Resources
 in one window. Each value retains the existing Set value, Adjust by amount, and
 Adjust by percentage operations. Blank rows remain unchanged, and Apply stages both
 validated edits as one transaction.
@@ -19,10 +19,15 @@ per-ship field. The calculator labels its figure **Recorded ship maintenance** a
 states that RTW3 can add engine-calculated expenses. It does not invent or write
 unknown expense fields.
 
+The bottom of the calculator states that all displayed budget numbers are estimates
+and that the underlying math still needs refinement.
+
 Choose **Infrastructure Manager** to edit the selected nation's existing `DockSize`
 field. This controls the maximum displacement that can be built in that nation's
 dockyards. Fortifications remain a disabled placeholder until their storage and
 side effects are verified.
 
-Ship Spawner and Admiral Manager are visible as WIP context-menu placeholders.
+Ship Spawner remains a WIP context-menu placeholder. **Admiral Manager** appears only
+for Nation0, which RTW3 always uses as the player nation, and edits the stored
+`AdmiralName` and `Prestige` fields.
 All edits remain in memory until Save or Save As is selected in the main window.

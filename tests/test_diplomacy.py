@@ -66,8 +66,7 @@ class TensionTests(unittest.TestCase):
     def test_duplicates_missing_and_unsupported_layout(self):
         variants=[self.before.replace(b'Tension = 3  ',b'Tension=3\r\nTension=3',2),
                   self.before+b'[Nation1]\r\nName=Duplicate\r\n',
-                  self.before.replace(b'AITension8=4\r\n',b'',1),
-                  self.before.replace(b'Name=Country 1',b'IsPlayer=1\r\nName=Country 1')]
+                  self.before.replace(b'AITension8=4\r\n',b'',1)]
         for raw in variants:
             (self.folder/'game.bcs').write_bytes(raw)
             try: save=RTW3Save.load(self.folder)
@@ -75,6 +74,13 @@ class TensionTests(unittest.TestCase):
                 continue
             with self.assertRaises(ValueError): save.set_tensions({(0,1):2})
             self.assertEqual(save.documents['game.bcs'].to_bytes(),raw)
+
+    def test_nonzero_player_flags_do_not_override_nation_zero(self):
+        raw=self.before.replace(b'Name=Country 1',b'IsPlayer=1\r\nName=Country 1')
+        (self.folder/'game.bcs').write_bytes(raw)
+        save=RTW3Save.load(self.folder)
+        self.assertEqual([nation.index for nation in save.nations if nation.is_player],[0])
+        save.set_tensions({(0,1):2})
 
     def test_asymmetric_pair_only_normalized_on_explicit_edit(self):
         self.save.nation(7).section.set('AITension6',9)

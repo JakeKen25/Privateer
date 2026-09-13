@@ -1,6 +1,6 @@
 # Relations manager (under development)
 
-Right-click a nation and choose Manage Relations. The window shows its eight
+Right-click a nation and choose Relationship Manager. The window shows its eight
 relationships in the verified player-slot-0 / AI-slots-1-through-8 layout. Names
 come from the loaded save; NationNumber is never used as an array suffix. Extra
 stored nation records are excluded, regardless of their name or ship count.
@@ -37,5 +37,5 @@ edits, ambiguity rejection, no-op preservation, backup/reload, and source confli
 The six technology and three gun tests also pass, along with all three GUI smoke
 checks. No new in-game turn-progression test has been performed.
 
-Opening Manage Relations displays an under-development warning. Numeric columns
+Opening Relationship Manager displays an under-development warning. Numeric columns
 are labeled Current Tension Level and New Tension Level.

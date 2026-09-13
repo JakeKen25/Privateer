@@ -12,7 +12,7 @@ class ColoniesWindow(tk.Toplevel):
         self.pending = {}
         self.sort_column = None
         self.sort_reverse = False
-        self.title(f'Manage Colonies - {save.nation(nation_index).name}')
+        self.title(f'Colony Manager — {save.nation(nation_index).name}')
         self.geometry('1000x700')
         self.minsize(800, 550)
         self.transient(parent)

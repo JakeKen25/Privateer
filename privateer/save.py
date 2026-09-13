@@ -268,18 +268,12 @@ class RTW3Save:
         except ValueError: return value
 
     def _detect_player(self) -> None:
-        explicit: list[Nation] = []
+        player = next((nation for nation in self.nations if nation.index == 0), None)
+        if player is None:
+            raise ValueError("Unsupported RTW3 save: Nation0 player record is missing")
         for nation in self.nations:
-            fields = {k.casefold(): v.casefold() for k, v in nation.section.fields().items()}
-            if any(fields.get(key) in {"1", "true", "yes"} for key in ("isplayer", "player", "playernation")):
-                explicit.append(nation)
-        if len(explicit) == 1:
-            explicit[0].is_player = True
-        else:
-            fallback = next((n for n in self.nations if n.index == 0), None)
-            if fallback: fallback.is_player = True
-            self.player_detection_warning = ("Multiple player flags found; Nation0 fallback used" if explicit
-                                              else "No explicit player field found; Nation0 fallback used")
+            nation.is_player = nation is player
+        self.player_detection_warning = None
 
     def nation(self, value: str | int | Nation) -> Nation:
         if isinstance(value, Nation): return value
@@ -385,6 +379,35 @@ class RTW3Save:
         target.set_dock_size(value, self.documents[self.main_file].newline)
         self.audit.append(f"Changed {target.name} DockSize: {previous} -> {value}")
         self.modified = True
+
+    def set_admiral(self, nation, *, name: str, prestige: int) -> None:
+        """Set the player admiral's stored name and prestige as one transaction."""
+        target = self.nation(nation)
+        if target.index != 0:
+            raise ValueError("The Admiral Manager is available only for the Nation0 player")
+        fields = target.section.fields()
+        missing = [key for key in ("AdmiralName", "Prestige") if key not in fields]
+        if missing:
+            raise ValueError("Missing player admiral field(s): " + ", ".join(missing))
+        name = name.strip()
+        if not name or "\n" in name or "\r" in name:
+            raise ValueError("Admiral name must be a non-empty single line")
+        if type(prestige) is not int or not 0 <= prestige <= 2**31 - 1:
+            raise ValueError("Prestige must be a whole number from 0 to 2,147,483,647")
+        newline = self.documents[self.main_file].newline
+        with self.transaction():
+            if fields["AdmiralName"] != name:
+                target.section.set("AdmiralName", name, newline)
+                self.audit.append(
+                    f"Changed {target.name} AdmiralName: {fields['AdmiralName']} -> {name}"
+                )
+                self.modified = True
+            if fields["Prestige"] != str(prestige):
+                target.section.set("Prestige", prestige, newline)
+                self.audit.append(
+                    f"Changed {target.name} Prestige: {fields['Prestige']} -> {prestige}"
+                )
+                self.modified = True
 
     def set_gun_qualities(self, nation, changes):
         """Validate the complete batch before editing existing gun fields only."""

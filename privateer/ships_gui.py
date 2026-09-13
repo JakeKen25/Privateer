@@ -92,7 +92,7 @@ class ShipTransfersWindow(tk.Toplevel):
         }
         self._search_after = None
         self.nation_values = [f"{nation.index}: {nation.name}" for nation in save.nations]
-        self.title("Manage Ship Transfers")
+        self.title("Transfer Ships")
         self.geometry("1120x740")
         self.minsize(900, 600)
         self.transient(parent)

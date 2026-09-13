@@ -8,6 +8,8 @@ from privateer.save import RTW3Save
 
 MAIN = """[Nation0]\r
 Name=Germany\r
+AdmiralName=Raeder\r
+Prestige=20\r
 DockSize=35000\r
 BaseResources=30000\r
 Funds=100\r

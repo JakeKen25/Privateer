@@ -13,6 +13,7 @@ from .colonies_gui import ColoniesWindow
 from .ships_gui import ShipTransfersWindow
 from .economy_gui import EconomyWindow
 from .infrastructure_gui import InfrastructureWindow
+from .admiral_gui import AdmiralWindow
 from .busy import run_background, show_while_opening
 from .settings import AppSettings
 from .settings_gui import SettingsWindow
@@ -50,19 +51,7 @@ class MainWindow(tk.Tk):
         self.table.pack(fill="both", expand=True, padx=8, pady=8)
         self.table.bind("<Button-3>", self._show_nation_menu)
         self.nation_menu = tk.Menu(self, tearoff=False)
-        self.nation_menu.add_command(label="Manage Economy", command=self._manage_economy)
-        self.nation_menu.add_command(label="Infrastructure Manager", command=self._manage_infrastructure)
-        self.nation_menu.add_separator()
-        self.nation_menu.add_command(label="Manage Technology", command=self._manage_technology)
-        self.nation_menu.add_command(label="Manage Gun Calibers", command=self._manage_gun_calibers)
-        self.nation_menu.add_command(label="Manage Relations", command=self._manage_tension)
-        self.nation_menu.add_command(label="Manage Colonies", command=self._manage_colonies)
-        self.nation_menu.add_command(label="Manage Ship Transfers", command=self._manage_ships)
-        self.nation_menu.add_separator()
-        self.nation_menu.add_command(label="Ship Spawner (WIP)",
-                                     command=lambda: self._show_coming_soon("Ship Spawner (WIP)"))
-        self.nation_menu.add_command(label="Admiral Manager (WIP)",
-                                     command=lambda: self._show_coming_soon("Admiral Manager (WIP)"))
+        self._populate_nation_menu(None)
         actions = ttk.Frame(self, padding=8); actions.pack(fill="x")
         self.status = tk.StringVar(value="No save loaded")
         ttk.Label(actions, textvariable=self.status).pack(side="left")
@@ -77,13 +66,33 @@ class MainWindow(tk.Tk):
             return
         self.table.selection_set(item)
         self.table.focus(item)
+        self._populate_nation_menu(int(item))
         self.nation_menu.tk_popup(event.x_root, event.y_root)
+
+    def _populate_nation_menu(self, nation_index):
+        self.nation_menu.delete(0, "end")
+        self.nation_menu.add_command(label="Economy Manager", command=self._manage_economy)
+        self.nation_menu.add_command(label="Infrastructure Manager", command=self._manage_infrastructure)
+        if nation_index == 0:
+            self.nation_menu.add_command(label="Admiral Manager", command=self._manage_admiral)
+        self.nation_menu.add_separator()
+        self.nation_menu.add_command(label="Technology Manager", command=self._manage_technology)
+        self.nation_menu.add_command(label="Caliber Manager", command=self._manage_gun_calibers)
+        self.nation_menu.add_command(label="Relationship Manager", command=self._manage_tension)
+        self.nation_menu.add_command(label="Colony Manager", command=self._manage_colonies)
+        self.nation_menu.add_command(label="Transfer Ships", command=self._manage_ships)
+        self.nation_menu.add_separator()
+        self.nation_menu.add_command(label="Ship Spawner (WIP)",
+                                     command=lambda: self._show_coming_soon("Ship Spawner (WIP)"))
 
     def _manage_economy(self):
         self._open_manager(EconomyWindow, "Preparing economy data…")
 
     def _manage_infrastructure(self):
         self._open_manager(InfrastructureWindow, "Loading infrastructure…")
+
+    def _manage_admiral(self):
+        self._open_manager(AdmiralWindow, "Loading player admiral…")
 
     def _manage_technology(self):
         self._open_manager(TechnologyWindow, "Loading technology data…")

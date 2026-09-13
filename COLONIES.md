@@ -1,6 +1,6 @@
 # Colony ownership manager
 
-Right-click a nation and choose Manage Colonies. The window initially lists that
+Right-click a nation and choose Colony Manager. The window initially lists that
 nation's possessions. Choose All owners to include other nations and Neutral
 possessions. Search by name, owner, or map-area index. Select one or more rows,
 choose a new owner, and click Stage transfer. The New owner column shows pending

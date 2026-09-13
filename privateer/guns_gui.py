@@ -12,7 +12,7 @@ class GunCalibersWindow(tk.Toplevel):
         self.original = save.nation(nation_index).section.fields()
         self.pending = {}
         self.variables = {}
-        self.title(f'Manage Gun Calibers - {save.nation(nation_index).name}')
+        self.title(f'Caliber Manager — {save.nation(nation_index).name}')
         self.geometry('790x750')
         self.minsize(710, 480)
         self.transient(parent)

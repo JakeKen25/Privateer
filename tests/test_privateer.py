@@ -9,6 +9,8 @@ from privateer.validation import SaveValidationError
 MAIN = """; keep me\r
 [Nation0]\r
 Name=Britain\r
+AdmiralName=Beatty\r
+Prestige=20\r
 Funds=100\r
 BaseResources=200\r
 ShipCount=0\r
@@ -45,10 +47,24 @@ def fixture(tmp_path: Path) -> Path:
 def test_load_player_economy_and_unknown_formatting(tmp_path):
     save = RTW3Save.load(fixture(tmp_path))
     assert save.nation("Britain").is_player
-    assert save.player_detection_warning
+    assert save.player_detection_warning is None
     save.nation(0).set_funds(1_000, save.documents[save.main_file].newline)
     assert "Unknown = untouched\r\n" in save.documents[save.main_file].render()
     assert "Funds=1000\r\n" in save.documents[save.main_file].render()
+
+
+def test_nation_zero_is_always_player_and_admiral_edits_are_player_only(tmp_path):
+    folder = fixture(tmp_path)
+    text = (folder / "game.bcs").read_text()
+    (folder / "game.bcs").write_text(text.replace(
+        "Name=Germany\n", "Name=Germany\nPlayer=1\nAdmiralName=Tirpitz\nPrestige=10\n"))
+    save = RTW3Save.load(folder)
+    assert [nation.index for nation in save.nations if nation.is_player] == [0]
+    save.set_admiral(0, name="Jellicoe", prestige=35)
+    assert save.nation(0).section.fields()["AdmiralName"] == "Jellicoe"
+    assert save.nation(0).section.fields()["Prestige"] == "35"
+    with pytest.raises(ValueError, match="Nation0 player"):
+        save.set_admiral(1, name="Hipper", prestige=25)
 
 
 def test_economy_adjustments_are_applied_together(tmp_path):

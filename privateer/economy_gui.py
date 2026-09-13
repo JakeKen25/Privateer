@@ -11,7 +11,7 @@ class EconomyWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
         super().__init__(parent)
         self.save, self.nation = save, save.nation(nation_index)
-        self.title(f"Manage Economy — {self.nation.name}")
+        self.title(f"Economy Manager — {self.nation.name}")
         self.resizable(False, False)
         self.transient(parent)
         body = ttk.Frame(self, padding=16)
@@ -83,9 +83,9 @@ class EconomyWindow(tk.Toplevel):
                 variable.set(f"{getattr(projection, key):,}")
             self.lines["research"].set(f"{projection.research:,} ({projection.research_percent}%)")
             self.note.set(
-                "Estimate: Game1 confirms yearly budget = base resources × 2.4 and research = the saved "
-                "percentage of monthly budget. RTW3 may add maintenance, aircraft, or training costs that "
-                "do not have a verified save-field mapping."
+                "Disclaimer: These numbers are estimates, and the underlying budget math still needs to "
+                "be refined. RTW3 may add maintenance, aircraft, or training costs that do not have a "
+                "verified save-field mapping."
             )
         except ValueError as exc:
             self.note.set(str(exc))
