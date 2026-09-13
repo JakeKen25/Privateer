@@ -11,6 +11,7 @@ from .technology_gui import TechnologyWindow
 from .guns_gui import GunCalibersWindow
 from .diplomacy_gui import TensionWindow
 from .colonies_gui import ColoniesWindow
+from .ships_gui import ShipTransfersWindow
 
 
 class MainWindow(tk.Tk):
@@ -40,12 +41,7 @@ class MainWindow(tk.Tk):
         self.nation_menu.add_command(label="Manage Gun Calibers", command=self._manage_gun_calibers)
         self.nation_menu.add_command(label="Manage Relations", command=self._manage_tension)
         self.nation_menu.add_command(label="Manage Colonies", command=self._manage_colonies)
-        for label in (
-            "Manage Ships (WIP)",
-        ):
-            self.nation_menu.add_command(
-                label=label, command=lambda title=label: self._show_coming_soon(title)
-            )
+        self.nation_menu.add_command(label="Manage Ship Transfers", command=self._manage_ships)
         actions = ttk.Frame(self, padding=8); actions.pack(fill="x")
         self.status = tk.StringVar(value="No save loaded")
         ttk.Label(actions, textvariable=self.status).pack(side="left")
@@ -135,6 +131,10 @@ class MainWindow(tk.Tk):
     def _manage_colonies(self):
         if self.save_model and self.table.selection():
             ColoniesWindow(self, self.save_model, int(self.table.selection()[0]))
+
+    def _manage_ships(self):
+        if self.save_model and self.table.selection():
+            ShipTransfersWindow(self, self.save_model, int(self.table.selection()[0]))
 
     def _show_coming_soon(self, title: str):
         dialog = tk.Toplevel(self)

@@ -70,7 +70,9 @@ class TensionTests(unittest.TestCase):
                   self.before.replace(b'Name=Country 1',b'IsPlayer=1\r\nName=Country 1')]
         for raw in variants:
             (self.folder/'game.bcs').write_bytes(raw)
-            save=RTW3Save.load(self.folder)
+            try: save=RTW3Save.load(self.folder)
+            except ValueError:
+                continue
             with self.assertRaises(ValueError): save.set_tensions({(0,1):2})
             self.assertEqual(save.documents['game.bcs'].to_bytes(),raw)
 

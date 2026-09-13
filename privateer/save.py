@@ -36,6 +36,7 @@ class RTW3Save:
         self.player_detection_warning: str | None = None
         self._tension_changes = False
         self._colony_changes = False
+        self._ship_changes = False
         self._source_snapshot = None
         self._build_model()
 
@@ -93,8 +94,12 @@ class RTW3Save:
                 for p in folder.iterdir() if p.is_file()}
 
     def _check_tension_source(self):
-        if (self._tension_changes or self._colony_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
-            raise ValueError("Save files changed on disk since loading. Reload before saving relations or colony edits.")
+        if (self._tension_changes or self._colony_changes or self._ship_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, or ship edits.")
+
+    def transfer_ship_batch(self, assignments):
+        from .ship_transfers import transfer_batch
+        transfer_batch(self, assignments)
 
     def set_colony_owners(self, changes):
         from .colonies import set_owners
@@ -106,6 +111,13 @@ class RTW3Save:
 
     def _build_model(self) -> None:
         main = self.documents[self.main_file]
+        seen_sections = set()
+        for section in main.sections:
+            if NATION.fullmatch(section.name) or NATION_SHIPS.fullmatch(section.name):
+                key = section.name.casefold()
+                if key in seen_sections:
+                    raise ValueError(f"Duplicate nation or roster section: {section.name}")
+                seen_sections.add(key)
         for section in main.sections:
             match = NATION.match(section.name)
             if not match:
@@ -203,6 +215,14 @@ class RTW3Save:
     @staticmethod
     def _parse_flat_ship_roster(section: Section, nation: Nation) -> None:
         """Parse every ``ShipN`` record in a real ``[NationNShips]`` section."""
+        seen_keys = set()
+        for line in section.lines:
+            match = FIELD.match(line)
+            if match and FLAT_SHIP_KEY.fullmatch(match.group(2).strip()):
+                key = match.group(2).strip().casefold()
+                if key in seen_keys:
+                    raise ValueError(f"Duplicate ship field in [{section.name}]: {key}")
+                seen_keys.add(key)
         slots: dict[int, dict[str, str]] = {}
         for key, value in section.fields().items():
             match = FLAT_SHIP_KEY.match(key)
@@ -282,10 +302,11 @@ class RTW3Save:
 
     def transfer_ships(self, ships: list[Ship], destination, *, force_building_nation_to_owner: bool = True) -> None:
         if any(ship.flattened_record for ship in ships):
-            raise NotImplementedError(
-                "Transfers for flattened [NationNShips] records are disabled until "
-                "physical roster movement and positional .des cloning are implemented"
-            )
+            if not all(ship.flattened_record for ship in ships):
+                raise ValueError("Mixed roster formats are unsupported")
+            if not force_building_nation_to_owner:
+                raise ValueError("Historical-builder transfer policy is not validated")
+            return self.transfer_ship_batch({ship.record_index: self.nation(destination).index for ship in ships})
         destination = self.nation(destination)
         with self.transaction():
             for ship in list(dict.fromkeys(id(s) for s in ships)):
@@ -412,6 +433,13 @@ class RTW3Save:
                     continue
                 if design.internal_design_id in design_ids: report.add("duplicate_design_id", f"{nation.name} has duplicate design {design.internal_design_id}")
                 design_ids[design.internal_design_id] = design
+            if any(ship.flattened_record for ship in nation.ships):
+                slots = sorted(ship.local_slot for ship in nation.ships if ship.flattened_record)
+                if slots != list(range(len(nation.ships))):
+                    report.add("roster_slots", f"{nation.name}: local slots are not contiguous")
+                allocation = _integer(nation.section.fields(), "DesignIDCount")
+                if allocation is not None and allocation < max(design_ids, default=0):
+                    report.add("design_counter", f"{nation.name}: DesignIDCount is below the largest design ID")
             for ship in nation.ships:
                 if ship.record_index in seen: report.add("duplicate_ship_id", f"Duplicate ship ID {ship.record_index}")
                 seen.add(ship.record_index)
@@ -457,8 +485,25 @@ class RTW3Save:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True); self._write_documents(temporary)
             RTW3Save.load(temporary).validate_or_raise()
             self._check_tension_source()
-            for name in self.documents: (temporary / name).replace(self.folder / name)
-            (temporary / "RTW3_SAVE_EDITOR_LOG.txt").replace(self.folder / "RTW3_SAVE_EDITOR_LOG.txt")
+            names = [*self.documents, "RTW3_SAVE_EDITOR_LOG.txt"]
+            attempted = []
+            try:
+                for name in names:
+                    attempted.append(name)
+                    (temporary / name).replace(self.folder / name)
+            except Exception as commit_error:
+                failures = []
+                for name in attempted:
+                    try:
+                        if (backup / name).exists():
+                            shutil.copy2(backup / name, self.folder / name)
+                        elif (self.folder / name).exists():
+                            (self.folder / name).unlink()
+                    except OSError as restore_error:
+                        failures.append(f"{name}: {restore_error}")
+                if failures:
+                    raise RuntimeError(f"Save failed; restore from {backup}. Recovery errors: {failures}") from commit_error
+                raise RuntimeError(f"Save failed; original files restored from {backup}") from commit_error
         finally: shutil.rmtree(temporary, ignore_errors=True)
         self.modified = False
         self._source_snapshot = self._folder_snapshot(self.folder)

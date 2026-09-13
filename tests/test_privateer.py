@@ -76,6 +76,16 @@ def test_invalid_economy_adjustment_rolls_back_both_fields(tmp_path):
     assert save.audit == []
 
 
+def test_economy_adjustment_is_not_written_until_save(tmp_path):
+    folder = fixture(tmp_path)
+    save = RTW3Save.load(folder)
+    save.adjust_economy(0, funds=("Set value", "900"))
+    assert b"Funds=100\r\n" in (folder / "game.bcs").read_bytes()
+
+    save.save()
+    assert b"Funds=900\r\n" in (folder / "game.bcs").read_bytes()
+
+
 def test_atomic_transfer_clones_and_remaps_design(tmp_path):
     save = RTW3Save.load(fixture(tmp_path)); donor = save.nation(1); ship = donor.ships[0]
     save.transfer_ships([ship], "Britain")
@@ -159,11 +169,18 @@ def test_real_no_op_save_as_preserves_recognized_files_byte_for_byte(tmp_path):
         assert (destination / source_file.name).read_bytes() == source_file.read_bytes()
 
 
-def test_real_flattened_transfer_is_safely_disabled():
+def test_real_flattened_transfer_moves_hull_and_resolves_copied_design():
     folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
     save = RTW3Save.load(folder)
-    with pytest.raises(NotImplementedError, match="physical roster movement"):
-        save.transfer_ships([save.nation(1).ships[0]], 0)
+    ship = save.nation(1).ships[0]
+    hull_id = ship.record_index
+    total = sum(len(nation.ships) for nation in save.nations)
+    save.transfer_ships([ship], 0)
+    moved = next(candidate for candidate in save.nation(0).ships if candidate.record_index == hull_id)
+    assert moved.owner_index == 0
+    assert moved.building_nation_index == 0
+    assert sum(len(nation.ships) for nation in save.nations) == total
+    assert save.validate().valid
 
 
 def test_malformed_flattened_record_is_not_silently_ignored(tmp_path):

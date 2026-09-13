@@ -56,7 +56,7 @@ class PrefixedRecord:
             if not match:
                 continue
             key = match.group(2).strip()
-            if key.startswith(self.prefix) and len(key) > len(self.prefix):
+            if key.startswith(self.prefix) and len(key) > len(self.prefix) and not key[len(self.prefix)].isdigit():
                 result[key[len(self.prefix):]] = match.group(4).strip()
         return result
 
