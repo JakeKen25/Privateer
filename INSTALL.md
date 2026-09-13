@@ -1,5 +1,14 @@
 # Installing and running Privateer
 
+## End-user Windows package
+
+Download `Privateer-<version>-Windows-x64.zip` from GitHub Releases, extract the
+entire folder, and run `Privateer.exe`. The release contains the application,
+required runtime files, `VERSION.txt`, and a complete `INSTALL.txt`; it omits source,
+tests, example saves, and developer documentation. Python is not required.
+
+The source-based instructions below are intended for developers and contributors.
+
 Privateer runs from source on Python 3.11 or newer. It has no third-party
 runtime dependencies: the desktop interface uses Tkinter, which is included in
 the standard Windows and macOS Python installers.
