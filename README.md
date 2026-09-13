@@ -30,6 +30,12 @@ The Settings button in the lower-right corner controls backup creation and locat
 Preferences persist in the user's application-data directory. All header-based
 tables support ascending and descending sorting by clicking a column heading.
 
+The nation context menu includes a combined economy editor for Funds and Base
+Resources, with a live budget projection based on the verified Game1 relationships.
+The infrastructure manager edits dockyard size and includes a disabled fortification
+placeholder. Ship Spawner and Admiral Manager are present as WIP placeholders. See
+**[ECONOMY.md](ECONOMY.md)** for the calculator's verified inputs and limitations.
+
 Ship transfers support the confirmed flattened roster and positional `v10139`
 design formats. Transfers involving carrier air groups or active campaign divisions
 are blocked until those linked structures are decoded and validated.

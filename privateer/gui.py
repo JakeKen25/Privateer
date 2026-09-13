@@ -5,13 +5,14 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from .model import ECONOMY_ADJUSTMENTS
 from .save import RTW3Save
 from .technology_gui import TechnologyWindow
 from .guns_gui import GunCalibersWindow
 from .diplomacy_gui import TensionWindow
 from .colonies_gui import ColoniesWindow
 from .ships_gui import ShipTransfersWindow
+from .economy_gui import EconomyWindow
+from .infrastructure_gui import InfrastructureWindow
 from .busy import run_background, show_while_opening
 from .settings import AppSettings
 from .settings_gui import SettingsWindow
@@ -49,16 +50,19 @@ class MainWindow(tk.Tk):
         self.table.pack(fill="both", expand=True, padx=8, pady=8)
         self.table.bind("<Button-3>", self._show_nation_menu)
         self.nation_menu = tk.Menu(self, tearoff=False)
-        self.nation_menu.add_command(label="Edit Funds", command=lambda: self._edit_economy("funds"))
-        self.nation_menu.add_command(
-            label="Edit Resources", command=lambda: self._edit_economy("base_resources")
-        )
+        self.nation_menu.add_command(label="Manage Economy", command=self._manage_economy)
+        self.nation_menu.add_command(label="Infrastructure Manager", command=self._manage_infrastructure)
         self.nation_menu.add_separator()
         self.nation_menu.add_command(label="Manage Technology", command=self._manage_technology)
         self.nation_menu.add_command(label="Manage Gun Calibers", command=self._manage_gun_calibers)
         self.nation_menu.add_command(label="Manage Relations", command=self._manage_tension)
         self.nation_menu.add_command(label="Manage Colonies", command=self._manage_colonies)
         self.nation_menu.add_command(label="Manage Ship Transfers", command=self._manage_ships)
+        self.nation_menu.add_separator()
+        self.nation_menu.add_command(label="Ship Spawner (WIP)",
+                                     command=lambda: self._show_coming_soon("Ship Spawner (WIP)"))
+        self.nation_menu.add_command(label="Admiral Manager (WIP)",
+                                     command=lambda: self._show_coming_soon("Admiral Manager (WIP)"))
         actions = ttk.Frame(self, padding=8); actions.pack(fill="x")
         self.status = tk.StringVar(value="No save loaded")
         ttk.Label(actions, textvariable=self.status).pack(side="left")
@@ -75,63 +79,11 @@ class MainWindow(tk.Tk):
         self.table.focus(item)
         self.nation_menu.tk_popup(event.x_root, event.y_root)
 
-    def _edit_economy(self, field: str):
-        if not self.save_model or not self.table.selection():
-            return
-        item = self.table.selection()[0]
-        nation = self.save_model.nation(int(item))
-        label = "Funds" if field == "funds" else "Base Resources"
-        current = getattr(nation, field)
+    def _manage_economy(self):
+        self._open_manager(EconomyWindow, "Preparing economy data…")
 
-        dialog = tk.Toplevel(self)
-        dialog.title(f"Edit {label} — {nation.name}")
-        dialog.resizable(False, False)
-        dialog.transient(self)
-        body = ttk.Frame(dialog, padding=16)
-        body.pack(fill="both", expand=True)
-        ttk.Label(body, text=f"Nation: {nation.name}").grid(row=0, column=0, columnspan=2, sticky="w")
-        ttk.Label(body, text=f"Current {label}: {current if current is not None else '—'}").grid(
-            row=1, column=0, columnspan=2, sticky="w", pady=(2, 12)
-        )
-        operation = tk.StringVar(value=ECONOMY_ADJUSTMENTS[0])
-        amount = tk.StringVar()
-        ttk.Label(body, text="Adjustment").grid(row=2, column=0, sticky="w", padx=(0, 8))
-        ttk.Combobox(
-            body, textvariable=operation, values=ECONOMY_ADJUSTMENTS,
-            state="readonly", width=23,
-        ).grid(row=2, column=1, sticky="ew")
-        ttk.Label(body, text="Value").grid(row=3, column=0, sticky="w", padx=(0, 8), pady=(8, 0))
-        entry = ttk.Entry(body, textvariable=amount, width=26)
-        entry.grid(row=3, column=1, sticky="ew", pady=(8, 0))
-        ttk.Label(
-            body, text="Positive and negative values are accepted; percentages are rounded."
-        ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 12))
-        buttons = ttk.Frame(body)
-        buttons.grid(row=5, column=0, columnspan=2, sticky="e")
-        ttk.Button(buttons, text="Cancel", command=dialog.destroy).pack(side="right")
-
-        def apply_change():
-            if not amount.get().strip():
-                messagebox.showerror("Invalid value", "Enter a value to apply.", parent=dialog)
-                return
-            adjustment = (operation.get(), amount.get())
-            try:
-                arguments = {field: adjustment}
-                self.save_model.adjust_economy(nation.index, **arguments)
-            except Exception as exc:
-                messagebox.showerror("Invalid value", str(exc), parent=dialog)
-                return
-            updated_nation = self.save_model.nation(nation.index)
-            self.render_main_table(item)
-            self.status.set("Unsaved changes")
-            dialog.destroy()
-
-        ttk.Button(buttons, text="OK", command=apply_change).pack(side="right", padx=(0, 6))
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
-        dialog.bind("<Return>", lambda _event: apply_change())
-        dialog.bind("<Escape>", lambda _event: dialog.destroy())
-        dialog.grab_set()
-        entry.focus_set()
+    def _manage_infrastructure(self):
+        self._open_manager(InfrastructureWindow, "Loading infrastructure…")
 
     def _manage_technology(self):
         self._open_manager(TechnologyWindow, "Loading technology data…")

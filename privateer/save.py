@@ -126,7 +126,8 @@ class RTW3Save:
             tech = {k: self._coerce(v) for k, v in values.items() if k.casefold().startswith(TECH_PREFIXES)}
             self.nations.append(Nation(index, values.get("Name", f"Nation{index}"), section,
                 _integer(values, "Funds"), _integer(values, "BaseResources"),
-                _integer(values, "BudgetModifier"), TechnologyState(tech)))
+                _integer(values, "BudgetModifier"), _integer(values, "DockSize"),
+                TechnologyState(tech)))
         by_index = {nation.index: nation for nation in self.nations}
         for section in main.sections:
             roster = NATION_SHIPS.match(section.name)
@@ -371,6 +372,20 @@ class RTW3Save:
             self.validate_or_raise()
             self.modified = True
 
+    def set_dock_size(self, nation, value: int) -> None:
+        """Set a nation's verified DockSize field in memory."""
+        target = self.nation(nation)
+        if target.dock_size is None:
+            raise ValueError(f"{target.name} has no DockSize field")
+        if type(value) is not int or not 0 <= value <= 2**31 - 1:
+            raise ValueError("Dockyard size must be a whole number from 0 to 2,147,483,647")
+        previous = target.dock_size
+        if previous == value:
+            return
+        target.set_dock_size(value, self.documents[self.main_file].newline)
+        self.audit.append(f"Changed {target.name} DockSize: {previous} -> {value}")
+        self.modified = True
+
     def set_gun_qualities(self, nation, changes):
         """Validate the complete batch before editing existing gun fields only."""
         target = self.nation(nation)
@@ -451,7 +466,8 @@ class RTW3Save:
             for key, value in nation.section.fields().items():
                 if re.fullmatch(r"Research\d+Level\d+", key, re.I) and value not in ("0", "1"):
                     report.add("technology_flag", f"{nation.name} {key} must be 0 or 1")
-            for label, value in (("Funds", nation.funds), ("BaseResources", nation.base_resources)):
+            for label, value in (("Funds", nation.funds), ("BaseResources", nation.base_resources),
+                                 ("DockSize", nation.dock_size)):
                 if value is not None and not -(2**31) <= value <= 2**31 - 1: report.add("integer_range", f"{nation.name} {label} exceeds signed 32-bit range")
         return report
 
