@@ -27,7 +27,7 @@ new owners must be a nation in the loaded save or Neutral. No ownership ID is
 inferred from NationNumber. Invasion, settlement, fleet, economy and diplomatic
 side effects are not synthesized. In-game transfer behavior remains to be checked.
 
-Save creates a complete folder backup. Save As leaves the source unchanged. Both
+Save follows the configured retained-backup policy. Save As leaves the source unchanged. Both
 use temporary writes and reload validation; colony edits also check for source
 files changed on disk since loading. Close the game before saving to avoid a
 concurrent game write after the final check.

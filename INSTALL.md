@@ -7,7 +7,7 @@ the standard Windows and macOS Python installers.
 > **Before editing a game:** close Rule the Waves 3 and make sure you know the
 > location of the complete save-slot folder. Select the folder containing the
 > `.bcs`, `.des`, and associated save files—not an individual file. Privateer
-> creates a backup before an in-place save, but testing changes in a separate
+> creates a backup before an in-place save by default, but testing changes in a separate
 > slot with **Save As** is still recommended.
 
 ## Windows installation
@@ -75,7 +75,9 @@ In the desktop application:
 3. Confirm the displayed player nation and nation list.
 4. Select **Validate** before making or saving changes.
 5. Prefer **Save As…** for the first edited copy. **Save** validates the result
-   and creates a timestamped sibling backup before replacing edited files.
+   and creates a retained backup before replacing edited files unless backup
+   creation has been disabled in **Settings**. Settings can also place retained
+   backups in a selected directory.
 
 Validation can also be run without opening the GUI:
 

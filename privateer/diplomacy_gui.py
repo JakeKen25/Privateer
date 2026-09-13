@@ -53,7 +53,7 @@ class TensionWindow(tk.Toplevel):
             ttk.Button(rows, text='Details', command=lambda o=other: self.show_details(o)).grid(row=row, column=3, padx=8)
         self.details = tk.Text(body, height=8, wrap='word', state='disabled')
         self.details.pack(fill='both', expand=True)
-        ttk.Label(body, text='War and alliance state are preserved. Apply stages edits; Save writes them with a backup.').pack(anchor='w', pady=8)
+        ttk.Label(body, text='War and alliance state are preserved. Apply stages edits; Save follows the configured backup policy.').pack(anchor='w', pady=8)
         buttons = ttk.Frame(body)
         buttons.pack(fill='x')
         ttk.Button(buttons, text='Reset changes', command=self.reset_changes).pack(side='left')

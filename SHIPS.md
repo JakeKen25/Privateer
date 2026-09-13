@@ -37,5 +37,5 @@ the player while active campaign divisions are present. These cases must be
 handled in-game until their linked save structures are understood.
 
 Changes are staged in memory. **Save As** is recommended for the first game-level
-test. **Save** creates a complete timestamped sibling backup before replacing the
-changed campaign and destination design-library files.
+test. **Save** follows the configured backup policy before replacing the changed
+campaign and destination design-library files.

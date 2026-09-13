@@ -15,7 +15,7 @@ unverified strength or duration meanings. Self-relations cannot be edited.
 
 Reset clears the entries. Cancel discards dialog edits. Apply stages the complete
 validated batch in memory. Save/Save As use the existing validation and temporary
-write workflow; Save creates a full-folder backup. Tension edits additionally check
+write workflow; Save follows the configured retained-backup policy. Tension edits additionally check
 that source files have not changed since loading and before replacing the save.
 Written document bytes are compared against the prepared in-memory payload. Audit
 logs are retained in the saved folder. This does not lock RTW3 against concurrent

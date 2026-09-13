@@ -301,5 +301,7 @@ class ShipTransfersWindow(tk.Toplevel):
         for nation in self.save.nations:
             if self.master.table.exists(str(nation.index)):
                 self.master.table.set(str(nation.index), "ships", len(nation.ships))
+        if hasattr(self.master, "render_main_table"):
+            self.master.render_main_table()
         self.master.status.set("Unsaved changes")
         self.destroy()

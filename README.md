@@ -23,8 +23,12 @@ pytest
 ```
 
 Treat the application as pre-release software and test output only in a copied
-game slot. `save()` creates a timestamped sibling backup; `save_as()` preserves
-every unknown save-slot file.
+game slot. `save()` creates a retained backup by default; Settings can relocate or
+disable retained backups. `save_as()` preserves every unknown save-slot file.
+
+The Settings button in the lower-right corner controls backup creation and location.
+Preferences persist in the user's application-data directory. All header-based
+tables support ascending and descending sorting by clicking a column heading.
 
 Ship transfers support the confirmed flattened roster and positional `v10139`
 design formats. Transfers involving carrier air groups or active campaign divisions

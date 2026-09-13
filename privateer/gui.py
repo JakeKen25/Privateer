@@ -13,6 +13,9 @@ from .diplomacy_gui import TensionWindow
 from .colonies_gui import ColoniesWindow
 from .ships_gui import ShipTransfersWindow
 from .busy import run_background, show_while_opening
+from .settings import AppSettings
+from .settings_gui import SettingsWindow
+from .table_sort import heading_text, sorted_with_blanks
 
 
 class MainWindow(tk.Tk):
@@ -21,6 +24,14 @@ class MainWindow(tk.Tk):
         self.title("Privateer — Rule the Waves 3 Save Editor")
         self.geometry("900x560")
         self.save_model: RTW3Save | None = None
+        self.main_sort_column = None
+        self.main_sort_reverse = False
+        try:
+            self.settings = AppSettings.load()
+        except ValueError as exc:
+            self.settings = AppSettings()
+            self.after_idle(lambda: messagebox.showwarning(
+                "Settings reset", f"{exc}\n\nDefault settings will be used.", parent=self))
         bar = ttk.Frame(self, padding=8); bar.pack(fill="x")
         self.path = tk.StringVar(value="Select Rule the Waves 3 Save Folder")
         ttk.Label(bar, textvariable=self.path).pack(side="left", fill="x", expand=True)
@@ -28,9 +39,14 @@ class MainWindow(tk.Tk):
         self.player = tk.StringVar(value="Player Nation: —")
         ttk.Label(self, textvariable=self.player, padding=(8, 0)).pack(anchor="w")
         self.table = ttk.Treeview(self, columns=("player", "funds", "resources", "ships"), show="tree headings")
-        self.table.heading("#0", text="Nation"); self.table.heading("player", text="Player")
-        self.table.heading("funds", text="Funds"); self.table.heading("resources", text="Base Resources")
-        self.table.heading("ships", text="Ships"); self.table.pack(fill="both", expand=True, padx=8, pady=8)
+        self.main_heading_labels = {
+            "nation": "Nation", "player": "Player", "funds": "Funds",
+            "resources": "Base Resources", "ships": "Ships"}
+        self.table.heading("#0", text="Nation", command=lambda: self.sort_main_table("nation"))
+        for key in ("player", "funds", "resources", "ships"):
+            self.table.heading(key, text=self.main_heading_labels[key],
+                               command=lambda column=key: self.sort_main_table(column))
+        self.table.pack(fill="both", expand=True, padx=8, pady=8)
         self.table.bind("<Button-3>", self._show_nation_menu)
         self.nation_menu = tk.Menu(self, tearoff=False)
         self.nation_menu.add_command(label="Edit Funds", command=lambda: self._edit_economy("funds"))
@@ -46,7 +62,8 @@ class MainWindow(tk.Tk):
         actions = ttk.Frame(self, padding=8); actions.pack(fill="x")
         self.status = tk.StringVar(value="No save loaded")
         ttk.Label(actions, textvariable=self.status).pack(side="left")
-        ttk.Button(actions, text="Validate", command=self.validate_save).pack(side="right")
+        ttk.Button(actions, text="Settings", command=self.open_settings).pack(side="right")
+        ttk.Button(actions, text="Validate", command=self.validate_save).pack(side="right", padx=6)
         ttk.Button(actions, text="Save As…", command=self.save_as).pack(side="right", padx=6)
         ttk.Button(actions, text="Save", command=self.save_changes).pack(side="right")
 
@@ -105,8 +122,7 @@ class MainWindow(tk.Tk):
                 messagebox.showerror("Invalid value", str(exc), parent=dialog)
                 return
             updated_nation = self.save_model.nation(nation.index)
-            self.table.set(item, "funds", updated_nation.funds)
-            self.table.set(item, "resources", updated_nation.base_resources)
+            self.render_main_table(item)
             self.status.set("Unsaved changes")
             dialog.destroy()
 
@@ -131,6 +147,45 @@ class MainWindow(tk.Tk):
 
     def _manage_ships(self):
         self._open_manager(ShipTransfersWindow, "Preparing ship data…")
+
+    def open_settings(self):
+        SettingsWindow(self, self.settings)
+
+    def sort_main_table(self, column):
+        if self.main_sort_column == column:
+            self.main_sort_reverse = not self.main_sort_reverse
+        else:
+            self.main_sort_column, self.main_sort_reverse = column, False
+        self.table.heading("#0", text=heading_text(
+            self.main_heading_labels["nation"], column == "nation", self.main_sort_reverse))
+        for key in ("player", "funds", "resources", "ships"):
+            self.table.heading(key, text=heading_text(
+                self.main_heading_labels[key], key == column, self.main_sort_reverse))
+        self.render_main_table()
+
+    def render_main_table(self, selected=None):
+        if not self.save_model:
+            return
+        selected = selected or (self.table.selection()[0] if self.table.selection() else None)
+        rows = []
+        for nation in self.save_model.nations:
+            values = {
+                "nation": nation.name, "player": "Yes" if nation.is_player else "",
+                "funds": nation.funds, "resources": nation.base_resources,
+                "ships": len(nation.ships)}
+            rows.append((nation, values))
+        if self.main_sort_column:
+            rows = sorted_with_blanks(
+                rows, lambda row: row[1][self.main_sort_column],
+                reverse=self.main_sort_reverse,
+                numeric=self.main_sort_column in {"funds", "resources", "ships"})
+        self.table.delete(*self.table.get_children())
+        for nation, values in rows:
+            self.table.insert("", "end", iid=str(nation.index), text=nation.name,
+                              values=tuple(values[key] for key in
+                                           ("player", "funds", "resources", "ships")))
+        if selected is not None and self.table.exists(str(selected)):
+            self.table.selection_set(str(selected)); self.table.focus(str(selected))
 
     def _open_manager(self, window_class, message):
         if not self.save_model or not self.table.selection():
@@ -167,13 +222,9 @@ class MainWindow(tk.Tk):
 
     def _finish_open(self, folder, save):
         self.save_model = save
-        self.path.set(folder); self.table.delete(*self.table.get_children())
-        selected = None
-        for nation in self.save_model.nations:
-            item = self.table.insert("", "end", iid=str(nation.index), text=nation.name, values=("Yes" if nation.is_player else "", nation.funds, nation.base_resources, len(nation.ships)))
-            if nation.is_player: selected = item
-        if selected is not None:
-            self.table.selection_set(selected); self.table.focus(selected)
+        self.path.set(folder)
+        player_nation = next((nation for nation in save.nations if nation.is_player), None)
+        self.render_main_table(str(player_nation.index) if player_nation else None)
         player = next((n for n in self.save_model.nations if n.is_player), None)
         self.player.set(f"Player Nation: {player.name} (Nation{player.index})" if player else "Player Nation: ambiguous")
         self.status.set(self.save_model.player_detection_warning or "Loaded")
@@ -190,9 +241,14 @@ class MainWindow(tk.Tk):
         if not self.save_model: return
         def saved(backup):
             self.status.set("Saved")
-            messagebox.showinfo("Saved", f"Changes saved.\nBackup: {backup}", parent=self)
+            detail = f"Backup: {backup}" if backup else "Backups are disabled in Settings."
+            messagebox.showinfo("Saved", f"Changes saved.\n{detail}", parent=self)
         run_background(
-            self, "Saving and verifying files…", self.save_model.save, saved,
+            self, "Saving and verifying files…",
+            lambda: self.save_model.save(
+                create_backup=self.settings.create_backups,
+                backup_directory=self.settings.backup_directory or None),
+            saved,
             lambda exc: messagebox.showerror("Save refused", str(exc), parent=self),
         )
 

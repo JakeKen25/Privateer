@@ -474,13 +474,27 @@ class RTW3Save:
             shutil.rmtree(temporary, ignore_errors=True); raise
         return destination
 
-    def save(self) -> Path:
+    def save(self, *, create_backup: bool = True, backup_directory=None) -> Path | None:
         self._check_tension_source()
         self.validate_or_raise()
         stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
-        backup = self.folder.with_name(f"{self.folder.name}_backup_{stamp}")
-        shutil.copytree(self.folder, backup)
+        backup = None
+        persistent_recovery = bool(create_backup)
+        if create_backup:
+            root = (Path(backup_directory).expanduser().resolve() if backup_directory
+                    else self.folder.parent)
+            if root == self.folder or self.folder in root.parents:
+                raise ValueError("Backup location cannot be inside the save being edited")
+            root.mkdir(parents=True, exist_ok=True)
+            recovery = root / f"{self.folder.name}_backup_{stamp}"
+            shutil.copytree(self.folder, recovery)
+            backup = recovery
+        else:
+            recovery = Path(tempfile.mkdtemp(
+                prefix=f".{self.folder.name}-privateer-recovery-", dir=self.folder.parent))
+            shutil.copytree(self.folder, recovery, dirs_exist_ok=True)
         temporary = Path(tempfile.mkdtemp(prefix=".privateer-", dir=self.folder.parent))
+        cleanup_recovery = not persistent_recovery
         try:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True); self._write_documents(temporary)
             RTW3Save.load(temporary).validate_or_raise()
@@ -495,16 +509,20 @@ class RTW3Save:
                 failures = []
                 for name in attempted:
                     try:
-                        if (backup / name).exists():
-                            shutil.copy2(backup / name, self.folder / name)
+                        if (recovery / name).exists():
+                            shutil.copy2(recovery / name, self.folder / name)
                         elif (self.folder / name).exists():
                             (self.folder / name).unlink()
                     except OSError as restore_error:
                         failures.append(f"{name}: {restore_error}")
                 if failures:
-                    raise RuntimeError(f"Save failed; restore from {backup}. Recovery errors: {failures}") from commit_error
-                raise RuntimeError(f"Save failed; original files restored from {backup}") from commit_error
-        finally: shutil.rmtree(temporary, ignore_errors=True)
+                    cleanup_recovery = False
+                    raise RuntimeError(f"Save failed; restore from {recovery}. Recovery errors: {failures}") from commit_error
+                raise RuntimeError(f"Save failed; original files restored from {recovery}") from commit_error
+        finally:
+            shutil.rmtree(temporary, ignore_errors=True)
+            if cleanup_recovery:
+                shutil.rmtree(recovery, ignore_errors=True)
         self.modified = False
         self._source_snapshot = self._folder_snapshot(self.folder)
         return backup
