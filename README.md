@@ -1,5 +1,7 @@
 # Privateer
 
+**Version 0.9.0 (beta)**
+
 Privateer is a Python 3.11+ prototype for safely inspecting Rule the Waves 3 save
 folders. It currently parses real flattened ship rosters and positional v10139
 design libraries, validates ship/design references, and provides a Tkinter front
@@ -22,7 +24,8 @@ python -m privateer /path/to/Game7 --validate
 pytest
 ```
 
-Treat the application as pre-release software and test output only in a copied
+Version 0.9.0 is the basic-feature beta. Treat the application as pre-release
+software and test output only in a copied
 game slot. `save()` creates a retained backup by default; Settings can relocate or
 disable retained backups. `save_as()` preserves every unknown save-slot file.
 

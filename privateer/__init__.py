@@ -3,5 +3,9 @@
 from .model import Nation, Ship, ShipDesign, TechnologyState
 from .save import RTW3Save
 from .validation import ValidationReport
+from .version import __version__
 
-__all__ = ["Nation", "RTW3Save", "Ship", "ShipDesign", "TechnologyState", "ValidationReport"]
+__all__ = [
+    "Nation", "RTW3Save", "Ship", "ShipDesign", "TechnologyState",
+    "ValidationReport", "__version__",
+]

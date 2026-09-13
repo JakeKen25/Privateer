@@ -39,6 +39,12 @@ the standard Windows and macOS Python installers.
    privateer
    ```
 
+   Confirm the installed release when needed:
+
+   ```powershell
+   privateer --version
+   ```
+
    Alternatively, without activating the environment:
 
    ```powershell
