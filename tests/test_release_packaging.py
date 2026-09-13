@@ -24,6 +24,9 @@ def test_release_workflow_builds_only_the_portable_archive():
     workflow = (ROOT / ".github" / "workflows" / "windows-release.yml").read_text(encoding="utf-8")
     build = (ROOT / "packaging" / "build_windows_release.ps1").read_text(encoding="utf-8")
     assert 'tags:\n      - "v*"' in workflow
+    assert '"packaging/RELEASE_VERSION"' in workflow
+    assert "gh release create" in workflow
+    assert "--prerelease" in workflow
     assert "release/Privateer-*-Windows-x64.zip" in workflow
     assert "END_USER_INSTALL.txt" in build
     assert "--onedir" in build
