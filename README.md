@@ -18,6 +18,9 @@ required. The archive includes `INSTALL.txt` with setup, first-use, update, and
 uninstall instructions. Developers should clone the repository to retain the full
 source, tests, fixtures, technical documentation, and packaging tools.
 
+Development uses `develop` for ongoing work and `main` for tested, published
+releases. See [BRANCHING.md](BRANCHING.md) for the release workflow.
+
 Because RTW3 formats have varied, Privateer deliberately accepts only structures
 it can identify. For supplied RTW3 1.01.44 saves it recognizes `NationN`,
 flattened `NationNShips` rosters, and positional `v10139` design libraries.

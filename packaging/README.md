@@ -2,14 +2,17 @@
 
 The GitHub Actions workflow in `.github/workflows/windows-release.yml` builds
 the end-user Windows package. A manual workflow run saves the ZIP as a workflow
-artifact. Changing `RELEASE_VERSION` on the `Codex` branch creates or updates
-that version's prerelease and attaches the ZIP. Pushing a matching version tag
-also builds and attaches the package.
+artifact. Changing `RELEASE_VERSION` or `RELEASE_CHANNEL` on `main` creates or
+updates that version's stable release and attaches the ZIP. Pushing a matching
+version tag also builds and attaches the package.
 
 `RELEASE_VERSION` and any pushed tag must match
 `privateer.version.__version__`. Update the package version,
 `RELEASE_VERSION`, and the heading and archive name in
 `END_USER_INSTALL.txt` before making a new release.
+
+Release work is prepared and tested on `develop`, then merged into `main`.
+Ordinary pushes to `develop` never publish an end-user release.
 
 To build the same package locally from the repository root:
 

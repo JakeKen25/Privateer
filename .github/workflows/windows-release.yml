@@ -4,11 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "Codex"
+      - "main"
     tags:
       - "v*"
     paths:
       - "packaging/RELEASE_VERSION"
+      - "packaging/RELEASE_CHANNEL"
 
 permissions:
   contents: write
@@ -31,6 +32,10 @@ jobs:
           $releaseVersion = (Get-Content packaging/RELEASE_VERSION -Raw).Trim()
           if ($releaseVersion -ne $version) {
             throw "Release marker $releaseVersion does not match package version $version"
+          }
+          $channel = (Get-Content packaging/RELEASE_CHANNEL -Raw).Trim()
+          if ($channel -ne "stable") {
+            throw "The main branch only publishes the stable channel"
           }
 
       - name: Check tag matches package version
@@ -57,7 +62,7 @@ jobs:
           if-no-files-found: error
 
       - name: Attach package to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'push' && github.ref == 'refs/heads/Codex')
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -66,7 +71,8 @@ jobs:
           $tag = "v$version"
           $archive = Get-ChildItem release/Privateer-*-Windows-x64.zip | Select-Object -First 1
           if (gh release view $tag 2>$null) {
+            gh release edit $tag --prerelease=false --latest --title "Privateer $version"
             gh release upload $tag $archive.FullName --clobber
           } else {
-            gh release create $tag $archive.FullName --target "${{ github.sha }}" --generate-notes --prerelease --title "Privateer $version Beta"
+            gh release create $tag $archive.FullName --target "${{ github.sha }}" --generate-notes --title "Privateer $version"
           }
