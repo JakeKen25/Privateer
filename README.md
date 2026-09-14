@@ -2,59 +2,123 @@
 
 **Version 0.9.0 (beta)**
 
-Privateer is a Python 3.11+ prototype for safely inspecting Rule the Waves 3 save
-folders. It currently parses real flattened ship rosters and positional v10139
-design libraries, validates ship/design references, and provides a Tkinter front
-end. Its ship-transfer manager moves complete hull records transactionally, copies
-the referenced design into each receiving nation's library, and preserves permanent
-hull IDs, original building nations, and opaque ship/design data.
+Privateer is a save editor for **Rule the Waves 3**. It turns many manual,
+error-prone save-file edits into guided tools so players can spend less time
+decoding files and more time experimenting with campaigns. Try a different
+technology path, adjust a nation's resources, transfer ships between nations, or
+set up an unusual alternate-history scenario without editing dozens of raw
+records by hand.
 
-See **[INSTALL.md](INSTALL.md)** for complete Windows, macOS, and Linux setup,
-launch, validation, testing, updating, and troubleshooting instructions.
+Privateer is an unofficial community project and is not affiliated with the
+developers or publisher of Rule the Waves 3. The core software was written with
+**ChatGPT Codex**, guided by human research, examples, testing, and design
+decisions. Contributions from experienced programmers and modders are highly
+welcome for future updates. I still have a lot to learn about the game's file
+formats, and independent review and new discoveries will make the editor safer
+and more capable.
 
-End users should download `Privateer-<version>-Windows-x64.zip` from the GitHub
-Releases page, extract the complete folder, and run `Privateer.exe`; Python is not
-required. The archive includes `INSTALL.txt` with setup, first-use, update, and
-uninstall instructions. Developers should clone the repository to retain the full
-source, tests, fixtures, technical documentation, and packaging tools.
+## Major features
 
-Development uses `develop` for ongoing work and `main` for tested, published
-releases. See [BRANCHING.md](BRANCHING.md) for the release workflow.
+- **Transfer Ships** moves complete ships between nations. The transfer keeps
+  the hull's permanent identity, original building nation, construction state,
+  equipment, crew data, history, and fields Privateer does not yet understand.
+  It also copies and remaps the associated design record into the receiving
+  nation's design library.
+- **Technology Manager** presents each technology area as a level slider. Moving
+  a slider to a level includes all earlier levels and displays the selected
+  technology's effect and typical year when that information is available.
+- **Caliber Manager** provides the available quality setting for each supported
+  gun caliber.
+- **Economy Manager** edits funds and base resources together and shows an
+  estimated in-game budget breakdown as values change. Further refinement is
+  still needed to ensure that the editor's calculator matches in-game statistics.
+- **Infrastructure Manager** edits national dockyard size. Fortification editing
+  is still under development but is planned for a future release.
+- **Relationship Manager** edits the tension level between nations. This area is
+  still under development while alliances and wars are researched.
+- **Colony Manager** changes colony ownership through the campaign's
+  `MapDataX.dat` file.
+- **Admiral Manager** changes the player admiral's name and prestige. It is
+  available only for Nation0, which RTW3 uses as the player nation.
+- **Validation, backups, and Save As** help protect campaigns. Backups are
+  enabled by default, their destination is configurable, and settings persist
+  between sessions.
+- **Sortable tables and progress windows** make larger saves easier to browse
+  and show when loading, validation, or saving is still in progress.
 
-Because RTW3 formats have varied, Privateer deliberately accepts only structures
-it can identify. For supplied RTW3 1.01.44 saves it recognizes `NationN`,
-flattened `NationNShips` rosters, and positional `v10139` design libraries.
-Key/value separators, comments, unknown fields, ordering, encoding, BOM state,
-and line endings are retained.
+Ship Spawner remains a work-in-progress placeholder.
 
-```bash
-python -m privateer                  # GUI
-python -m privateer /path/to/Game7 --validate
-pytest
+## Ship transfers
+
+Ship transfer is one of Privateer's central features and is not covered by most
+editing or modding guides. The transfer window lists type, name, class,
+displacement, speed, main gun caliber, radar, ASW value, build year, location,
+status, crew quality, maintenance, and armament. Every column can be sorted in
+either direction, and the fleet can be filtered without repeatedly rescanning the
+raw save data.
+
+When a ship moves, Privateer transfers its complete ship-instance record and
+copies the referenced design into the destination nation's `DesignFilesN.des`.
+It assigns a valid destination-local design ID and updates the ship's design
+reference while leaving the donor design intact. `BuildingNationIdx` is preserved,
+so a transferred ship continues to show the nation that originally built it.
+
+Transfers involving aircraft carriers are currently blocked because their air
+groups have linked records that are not fully decoded. Transfers involving the
+player are also blocked while active campaign divisions are present. These
+restrictions prevent Privateer from silently producing incomplete save data.
+See [the ship-transfer guide](guides/SHIPS.md) for the technical behavior and
+known limits.
+
+## Installing and running
+
+Windows users can download `Privateer-<version>-Windows-x64.zip` from the GitHub
+Releases page. Extract the complete folder and run `Privateer.exe`; a separate
+Python installation is not required. The archive includes its own `INSTALL.txt`
+with first-use, update, and uninstall instructions.
+
+Close Rule the Waves 3 before editing a campaign. Select the complete `GameX`
+save-slot folder, validate it, and use **Save As** for the first game-level test.
+Keep a known-good backup even when using Privateer's automatic backup feature.
+
+See [INSTALL.md](INSTALL.md) for complete Windows instructions, developer setup,
+validation, updating, and troubleshooting.
+
+## Python project
+
+Privateer is implemented in Python 3.11+ with a Tkinter desktop interface. The
+source preserves key/value separators, comments, unknown fields, ordering,
+encoding, byte-order marks, and line endings wherever the supported save format
+allows it. For the supplied RTW3 1.01.44 saves, it recognizes `NationN`, flattened
+`NationNShips` rosters, positional `v10139` design libraries, and the associated
+map and campaign data used by the current managers.
+
+From a developer checkout:
+
+```powershell
+python -m privateer
+python -m privateer "C:\Users\<name>\Documents\My Games\Rule the Waves 3\Save\Game7" --validate
+python -m pytest
 ```
 
-Version 0.9.0 is the basic-feature beta. Treat the application as pre-release
-software and test output only in a copied
-game slot. `save()` creates a retained backup by default; Settings can relocate or
-disable retained backups. `save_as()` preserves every unknown save-slot file.
+The repository retains the complete source, tests, example fixtures, file-format
+notes, and Windows packaging tools. Privateer intentionally changes only formats
+it can identify and validate; unknown or unresolved structures are preserved or
+the affected operation is blocked.
 
-The Settings button in the lower-right corner controls backup creation and location.
-Preferences persist in the user's application-data directory. All header-based
-tables support ascending and descending sorting by clicking a column heading.
+## Contributing
 
-The nation context menu includes **Economy Manager**, a combined editor for Funds and Base
-Resources, with a live budget projection based on the verified Game1 relationships.
-The infrastructure manager edits dockyard size and includes a disabled fortification
-placeholder. Admiral Manager edits the Nation0 player's name and prestige and is
-hidden for every other nation. Ship Spawner remains a WIP placeholder. See
-**[ECONOMY.md](ECONOMY.md)** for the calculator's verified inputs and limitations.
+Programmers, testers, and RTW3 file-format researchers are encouraged to
+contribute. New format discoveries should include repeatable evidence from test
+saves, and code changes should include focused tests for the behavior they add or
+correct. Do not commit live campaigns, installed game data, credentials, or other
+players' personal files.
 
-Ship transfers support the confirmed flattened roster and positional `v10139`
-design formats. Transfers involving carrier air groups or active campaign divisions
-are blocked until those linked structures are decoded and validated.
+Development takes place on `develop`. The `main` branch contains tested,
+published releases. Create focused `feature/<name>` or `fix/<name>` branches from
+`develop` and submit completed work back to `develop`. See
+[BRANCHING.md](BRANCHING.md) for the complete release flow.
 
-Animated progress windows remain visible while Privateer loads, validates, saves,
-or creates a save copy. Management-window launches use the same progress treatment.
-Flattened ship fields are indexed once during save loading and reused by the fleet
-table, including filtering and sorting, instead of rescanning the full roster for
-every displayed hull.
+Version 0.9.0 is the basic-feature beta. Budget calculations remain estimates,
+and features identified as under development still require additional file-format
+research and in-game validation.

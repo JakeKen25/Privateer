@@ -16,7 +16,9 @@ class ShipFieldCacheTests(unittest.TestCase):
         self.assertEqual(section.lines, ["Ship0Name=Updated\n"])
 
     def test_real_flattened_records_retain_their_parsed_fields(self):
-        save = RTW3Save.load(Path(__file__).parents[1] / "exampleSaves" / "Game5")
+        save = RTW3Save.load(
+            Path(__file__).parents[1] / "developmentResources" / "exampleSaves" / "Game5"
+        )
         records = [ship.section for nation in save.nations for ship in nation.ships]
         self.assertTrue(records)
         self.assertTrue(all(record.cached_fields is not None for record in records))
