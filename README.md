@@ -45,6 +45,12 @@ and more capable.
   between sessions.
 - **Sortable tables and progress windows** make larger saves easier to browse
   and show when loading, validation, or saving is still in progress.
+- **Custom Nation Maker** creates an installable nation package for every RTW3
+  start era. It generates numbered ship names, officer names, four placeholder
+  flags, era-specific nation definitions, and matching WarInfo files while
+  inheriting map-safe possessions and advanced settings from a stock template.
+  See [the custom-nation guide](guides/CUSTOM_NATIONS.md) for installation and
+  current map-editing limits.
 
 Ship Spawner remains a work-in-progress placeholder.
 
@@ -126,3 +132,4 @@ published releases. Create focused `feature/<name>` or `fix/<name>` branches fro
 Version 0.91 is Privateer's first stable release. Budget calculations remain
 estimates, and features identified as under development still require additional
 file-format research and in-game validation.
+

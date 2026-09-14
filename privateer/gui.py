@@ -15,6 +15,7 @@ from .ships_gui import ShipTransfersWindow
 from .economy_gui import EconomyWindow
 from .infrastructure_gui import InfrastructureWindow
 from .admiral_gui import AdmiralWindow
+from .custom_nation_gui import CustomNationWindow
 from .busy import run_background, show_while_opening
 from .settings import AppSettings
 from .settings_gui import SettingsWindow
@@ -58,6 +59,8 @@ class MainWindow(tk.Tk):
         self.status = tk.StringVar(value="No save loaded")
         ttk.Label(actions, textvariable=self.status).pack(side="left")
         ttk.Button(actions, text="Settings", command=self.open_settings).pack(side="right")
+        ttk.Button(actions, text="Custom Nation Maker", command=self.open_custom_nation).pack(
+            side="right", padx=6)
         ttk.Button(actions, text="Validate", command=self.validate_save).pack(side="right", padx=6)
         ttk.Button(actions, text="Save As…", command=self.save_as).pack(side="right", padx=6)
         ttk.Button(actions, text="Save", command=self.save_changes).pack(side="right")
@@ -118,6 +121,14 @@ class MainWindow(tk.Tk):
 
     def open_first_run_configuration(self):
         SettingsWindow(self, self.settings, first_run=True)
+
+    def open_custom_nation(self):
+        show_while_opening(
+            self, "Loading installed nation templates…",
+            lambda: CustomNationWindow(self),
+            lambda exc: messagebox.showerror(
+                "Unable to open Custom Nation Maker", str(exc), parent=self),
+        )
 
     def sort_main_table(self, column):
         if self.main_sort_column == column:
