@@ -12,6 +12,12 @@ hull IDs, original building nations, and opaque ship/design data.
 See **[INSTALL.md](INSTALL.md)** for complete Windows, macOS, and Linux setup,
 launch, validation, testing, updating, and troubleshooting instructions.
 
+End users should download `Privateer-<version>-Windows-x64.zip` from the GitHub
+Releases page, extract the complete folder, and run `Privateer.exe`; Python is not
+required. The archive includes `INSTALL.txt` with setup, first-use, update, and
+uninstall instructions. Developers should clone the repository to retain the full
+source, tests, fixtures, technical documentation, and packaging tools.
+
 Because RTW3 formats have varied, Privateer deliberately accepts only structures
 it can identify. For supplied RTW3 1.01.44 saves it recognizes `NationN`,
 flattened `NationNShips` rosters, and positional `v10139` design libraries.

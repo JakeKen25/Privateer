@@ -1,0 +1,50 @@
+PRIVATEER 0.9.0 BETA - WINDOWS INSTALLATION
+==========================================
+
+SYSTEM REQUIREMENTS
+
+- 64-bit Windows 10 or Windows 11.
+- Rule the Waves 3 installed on this computer.
+- No separate Python installation is required.
+
+INSTALL
+
+1. Right-click Privateer-0.9.0-Windows-x64.zip and choose Extract All.
+2. Keep the entire extracted Privateer folder together. Do not move only
+   Privateer.exe out of the folder, and do not run it from inside the ZIP.
+3. Open the extracted folder and double-click Privateer.exe.
+4. If Windows SmartScreen warns that the unsigned beta is unrecognized, verify
+   that the ZIP came from the JakeKen25/Privateer GitHub Releases page before
+   choosing More info and Run anyway.
+
+FIRST USE
+
+1. Close Rule the Waves 3 before opening or saving a campaign in Privateer.
+2. Select Browse and choose the complete save-slot folder, normally:
+
+   Documents\My Games\Rule the Waves 3\Save\GameX
+
+   Choose the GameX folder containing the .bcs, .des, and associated save files.
+3. Use Validate before saving changes.
+4. Use Save As for the first edited test copy. In-place Save creates a backup by
+   default; its behavior and destination can be changed under Settings.
+
+Technology Manager reads ResearchAreas3.dat from the installed game. The normal
+Steam location is detected automatically. If the game is installed elsewhere,
+Privateer asks you to locate that file.
+
+UPDATING
+
+Download the newer release ZIP, extract it to a new folder, and run its
+Privateer.exe. Settings remain in %APPDATA%\Privateer and carry across versions.
+
+UNINSTALL
+
+Close Privateer and delete its extracted folder. To remove preferences too, delete
+%APPDATA%\Privateer. Privateer does not remove game saves or backup folders.
+
+BETA NOTICE
+
+Privateer 0.9.0 is pre-release software. Keep backups and test edited output in a
+copied save slot. Budget calculations are estimates, and features marked WIP are
+not complete.
