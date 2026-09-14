@@ -16,7 +16,7 @@ The package contains Privateer, its required runtime files, `VERSION.txt`, and a
 copy of the end-user instructions in `INSTALL.txt`. A separate Python
 installation is not required.
 
-If Windows SmartScreen identifies the unsigned beta as an unrecognized app,
+If Windows SmartScreen identifies the unsigned application as unrecognized,
 confirm that the archive came from the `JakeKen25/Privateer` GitHub Releases page
 before selecting **More info** and **Run anyway**.
 
@@ -37,7 +37,7 @@ before selecting **More info** and **Run anyway**.
    the result and creates a retained backup by default.
 
 Backup creation and its destination can be changed under **Settings**. Keep a
-known-good campaign copy while using beta versions.
+known-good campaign copy whenever editing a save.
 
 ## Developer installation from Python source
 

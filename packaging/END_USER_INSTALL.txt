@@ -1,5 +1,5 @@
-PRIVATEER 0.9.0 BETA - WINDOWS INSTALLATION
-==========================================
+PRIVATEER 0.91 - WINDOWS INSTALLATION
+=====================================
 
 SYSTEM REQUIREMENTS
 
@@ -9,11 +9,11 @@ SYSTEM REQUIREMENTS
 
 INSTALL
 
-1. Right-click Privateer-0.9.0-Windows-x64.zip and choose Extract All.
+1. Right-click Privateer-0.91-Windows-x64.zip and choose Extract All.
 2. Keep the entire extracted Privateer folder together. Do not move only
    Privateer.exe out of the folder, and do not run it from inside the ZIP.
 3. Open the extracted folder and double-click Privateer.exe.
-4. If Windows SmartScreen warns that the unsigned beta is unrecognized, verify
+4. If Windows SmartScreen warns that the unsigned application is unrecognized, verify
    that the ZIP came from the JakeKen25/Privateer GitHub Releases page before
    choosing More info and Run anyway.
 
@@ -43,8 +43,8 @@ UNINSTALL
 Close Privateer and delete its extracted folder. To remove preferences too, delete
 %APPDATA%\Privateer. Privateer does not remove game saves or backup folders.
 
-BETA NOTICE
+KNOWN LIMITATIONS
 
-Privateer 0.9.0 is pre-release software. Keep backups and test edited output in a
-copied save slot. Budget calculations are estimates, and features marked WIP are
+Privateer 0.91 is the first stable release. Keep backups and test edited output in
+a copied save slot. Budget calculations are estimates, and features marked WIP are
 not complete.

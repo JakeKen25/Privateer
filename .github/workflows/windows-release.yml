@@ -10,6 +10,7 @@ on:
     paths:
       - "packaging/RELEASE_VERSION"
       - "packaging/RELEASE_CHANNEL"
+      - "packaging/RELEASE_NOTES.md"
 
 permissions:
   contents: write
@@ -71,8 +72,8 @@ jobs:
           $tag = "v$version"
           $archive = Get-ChildItem release/Privateer-*-Windows-x64.zip | Select-Object -First 1
           if (gh release view $tag 2>$null) {
-            gh release edit $tag --prerelease=false --latest --title "Privateer $version"
+            gh release edit $tag --prerelease=false --latest --title "Privateer $version" --notes-file packaging/RELEASE_NOTES.md
             gh release upload $tag $archive.FullName --clobber
           } else {
-            gh release create $tag $archive.FullName --target "${{ github.sha }}" --generate-notes --title "Privateer $version"
+            gh release create $tag $archive.FullName --target "${{ github.sha }}" --notes-file packaging/RELEASE_NOTES.md --title "Privateer $version"
           }

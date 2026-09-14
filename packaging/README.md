@@ -8,7 +8,7 @@ version tag also builds and attaches the package.
 
 `RELEASE_VERSION` and any pushed tag must match
 `privateer.version.__version__`. Update the package version,
-`RELEASE_VERSION`, and the heading and archive name in
+`RELEASE_VERSION`, `RELEASE_NOTES.md`, and the heading and archive name in
 `END_USER_INSTALL.txt` before making a new release.
 
 Release work is prepared and tested on `develop`, then merged into `main`.
