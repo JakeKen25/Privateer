@@ -5,14 +5,14 @@
 Privateer is a save editor for **Rule the Waves 3**. It turns many manual,
 error-prone save-file edits into guided tools so players can spend less time
 decoding files and more time experimenting with campaigns. Try a different
-technology path, adjust a nation's resources, transfer ships between fleets, or
+technology path, adjust a nation's resources, transfer ships between nations, or
 set up an unusual alternate-history scenario without editing dozens of raw
 records by hand.
 
 Privateer is an unofficial community project and is not affiliated with the
 developers or publisher of Rule the Waves 3. The core software was written with
 **ChatGPT Codex**, guided by human research, examples, testing, and design
-decisions. Contributions from programmers are welcome. There is still much to
+decisions. Contributions from experienced programmers and modders are highly welcome for future updates. I still have a lot to
 learn about the game's file formats, and independent review and new discoveries
 will make the editor safer and more capable.
 
@@ -29,11 +29,11 @@ will make the editor safer and more capable.
 - **Caliber Manager** provides the available quality setting for each supported
   gun caliber.
 - **Economy Manager** edits funds and base resources together and shows an
-  estimated in-game budget breakdown as values change.
+  estimated in-game budget breakdown as values change.  Further refinement is still needed to ensure that the calculator presented in the editor matches in-game stats accurately. 
 - **Infrastructure Manager** edits national dockyard size. Fortification editing
-  remains under development.
+  is still under development, but is hoped for a future release.
 - **Relationship Manager** edits the tension level between nations. This area is
-  still under development because parts of the diplomatic model remain unknown.
+  still under development as I research how alliances and wars actually work.
 - **Colony Manager** changes colony ownership through the campaign's
   `MapDataX.dat` file.
 - **Admiral Manager** changes the player admiral's name and prestige. It is
@@ -48,7 +48,7 @@ Ship Spawner remains a work-in-progress placeholder.
 
 ## Ship transfers
 
-Ship transfer is one of Privateer's central features. The transfer window lists
+Ship transfer is one of Privateer's central features and a feature that is not covered by most editing/modding guides. The transfer window lists
 type, name, class, displacement, speed, main gun caliber, radar, ASW value, build
 year, location, status, crew quality, maintenance, and armament. Every column can
 be sorted in either direction, and the fleet can be filtered without repeatedly
@@ -77,7 +77,7 @@ Close Rule the Waves 3 before editing a campaign. Select the complete `GameX`
 save-slot folder, validate it, and use **Save As** for the first game-level test.
 Keep a known-good backup even when using Privateer's automatic backup feature.
 
-See [INSTALL.md](INSTALL.md) for complete Windows, macOS, and Linux instructions,
+See [INSTALL.md](INSTALL.md) for complete Windows instructions,
 developer setup, validation, updating, and troubleshooting.
 
 ## Python project
