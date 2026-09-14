@@ -1,7 +1,8 @@
 # RTW3 format observations
 
 This is the evidence log for the read-only reverse-engineering phase. The files
-under `exampleSaves/Game4` and `exampleSaves/Game5` are treated as immutable
+under `developmentResources/exampleSaves/Game4` and
+`developmentResources/exampleSaves/Game5` are treated as immutable
 reference material. Tests open them only for reading.
 
 ## Provenance and inventory
@@ -15,7 +16,8 @@ Both supplied slots identify themselves as **Rule the Waves III 1.01.44** in the
 - `MapDataN.dat`, `RTWGameN.off`, and `RTWGameN.sta`: associated slot files not
   yet interpreted by Privateer.
 
-`exampleSaves/RTW3_SHIP_PARSER_CODEX_SPEC.md` is repository documentation, not
+`developmentResources/exampleSaves/RTW3_SHIP_PARSER_CODEX_SPEC.md` is repository
+documentation, not
 an RTW3 save file. It must never be required by loading or copied as generated
 save metadata.
 
@@ -26,7 +28,7 @@ codec is supported. File sizes and complete SHA-256 hashes can be reproduced
 with:
 
 ```bash
-sha256sum exampleSaves/Game4/* exampleSaves/Game5/*
+Get-FileHash developmentResources\exampleSaves\Game4\*, developmentResources\exampleSaves\Game5\*
 ```
 
 The source fixtures must not be used as destinations in save or transfer tests.

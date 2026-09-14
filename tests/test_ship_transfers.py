@@ -7,7 +7,7 @@ from privateer.save import RTW3Save
 from privateer.ships_gui import ship_details, ship_stats, transfer_block_reason
 
 
-SOURCE = Path(__file__).parents[1] / "exampleSaves" / "Game5"
+SOURCE = Path(__file__).parents[1] / "developmentResources" / "exampleSaves" / "Game5"
 
 
 def digest(path):

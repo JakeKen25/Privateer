@@ -12,9 +12,10 @@ records by hand.
 Privateer is an unofficial community project and is not affiliated with the
 developers or publisher of Rule the Waves 3. The core software was written with
 **ChatGPT Codex**, guided by human research, examples, testing, and design
-decisions. Contributions from experienced programmers and modders are highly welcome for future updates. I still have a lot to
-learn about the game's file formats, and independent review and new discoveries
-will make the editor safer and more capable.
+decisions. Contributions from experienced programmers and modders are highly
+welcome for future updates. I still have a lot to learn about the game's file
+formats, and independent review and new discoveries will make the editor safer
+and more capable.
 
 ## Major features
 
@@ -29,11 +30,12 @@ will make the editor safer and more capable.
 - **Caliber Manager** provides the available quality setting for each supported
   gun caliber.
 - **Economy Manager** edits funds and base resources together and shows an
-  estimated in-game budget breakdown as values change.  Further refinement is still needed to ensure that the calculator presented in the editor matches in-game stats accurately. 
+  estimated in-game budget breakdown as values change. Further refinement is
+  still needed to ensure that the editor's calculator matches in-game statistics.
 - **Infrastructure Manager** edits national dockyard size. Fortification editing
-  is still under development, but is hoped for a future release.
+  is still under development but is planned for a future release.
 - **Relationship Manager** edits the tension level between nations. This area is
-  still under development as I research how alliances and wars actually work.
+  still under development while alliances and wars are researched.
 - **Colony Manager** changes colony ownership through the campaign's
   `MapDataX.dat` file.
 - **Admiral Manager** changes the player admiral's name and prestige. It is
@@ -48,11 +50,12 @@ Ship Spawner remains a work-in-progress placeholder.
 
 ## Ship transfers
 
-Ship transfer is one of Privateer's central features and a feature that is not covered by most editing/modding guides. The transfer window lists
-type, name, class, displacement, speed, main gun caliber, radar, ASW value, build
-year, location, status, crew quality, maintenance, and armament. Every column can
-be sorted in either direction, and the fleet can be filtered without repeatedly
-rescanning the raw save data.
+Ship transfer is one of Privateer's central features and is not covered by most
+editing or modding guides. The transfer window lists type, name, class,
+displacement, speed, main gun caliber, radar, ASW value, build year, location,
+status, crew quality, maintenance, and armament. Every column can be sorted in
+either direction, and the fleet can be filtered without repeatedly rescanning the
+raw save data.
 
 When a ship moves, Privateer transfers its complete ship-instance record and
 copies the referenced design into the destination nation's `DesignFilesN.des`.
@@ -64,7 +67,8 @@ Transfers involving aircraft carriers are currently blocked because their air
 groups have linked records that are not fully decoded. Transfers involving the
 player are also blocked while active campaign divisions are present. These
 restrictions prevent Privateer from silently producing incomplete save data.
-See [SHIPS.md](SHIPS.md) for the technical behavior and known limits.
+See [the ship-transfer guide](guides/SHIPS.md) for the technical behavior and
+known limits.
 
 ## Installing and running
 
@@ -77,8 +81,8 @@ Close Rule the Waves 3 before editing a campaign. Select the complete `GameX`
 save-slot folder, validate it, and use **Save As** for the first game-level test.
 Keep a known-good backup even when using Privateer's automatic backup feature.
 
-See [INSTALL.md](INSTALL.md) for complete Windows instructions,
-developer setup, validation, updating, and troubleshooting.
+See [INSTALL.md](INSTALL.md) for complete Windows instructions, developer setup,
+validation, updating, and troubleshooting.
 
 ## Python project
 
@@ -91,10 +95,10 @@ map and campaign data used by the current managers.
 
 From a developer checkout:
 
-```bash
-python -m privateer                  # launch the GUI
-python -m privateer /path/to/Game7 --validate
-pytest
+```powershell
+python -m privateer
+python -m privateer "C:\Users\<name>\Documents\My Games\Rule the Waves 3\Save\Game7" --validate
+python -m pytest
 ```
 
 The repository retains the complete source, tests, example fixtures, file-format
@@ -118,4 +122,3 @@ published releases. Create focused `feature/<name>` or `fix/<name>` branches fro
 Version 0.9.0 is the basic-feature beta. Budget calculations remain estimates,
 and features identified as under development still require additional file-format
 research and in-game validation.
-

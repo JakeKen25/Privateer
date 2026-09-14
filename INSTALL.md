@@ -1,32 +1,53 @@
-# Installing and running Privateer
+# Installing and running Privateer on Windows
 
-## End-user Windows package
+Privateer supports 64-bit Windows 10 and Windows 11, the platforms supported by
+Rule the Waves 3. Close Rule the Waves 3 before opening or saving a campaign in
+Privateer.
 
-Download `Privateer-<version>-Windows-x64.zip` from GitHub Releases, extract the
-entire folder, and run `Privateer.exe`. The release contains the application,
-required runtime files, `VERSION.txt`, and a complete `INSTALL.txt`; it omits source,
-tests, example saves, and developer documentation. Python is not required.
+## End-user package
 
-The source-based instructions below are intended for developers and contributors.
+1. Download `Privateer-<version>-Windows-x64.zip` from GitHub Releases.
+2. Right-click the ZIP and select **Extract All**.
+3. Keep every extracted file in the same folder. Do not move `Privateer.exe` by
+   itself, and do not run it from inside the ZIP.
+4. Open the extracted folder and run `Privateer.exe`.
 
-Privateer runs from source on Python 3.11 or newer. It has no third-party
-runtime dependencies: the desktop interface uses Tkinter, which is included in
-the standard Windows and macOS Python installers.
+The package contains Privateer, its required runtime files, `VERSION.txt`, and a
+copy of the end-user instructions in `INSTALL.txt`. A separate Python
+installation is not required.
 
-> **Before editing a game:** close Rule the Waves 3 and make sure you know the
-> location of the complete save-slot folder. Select the folder containing the
-> `.bcs`, `.des`, and associated save files—not an individual file. Privateer
-> creates a backup before an in-place save by default, but testing changes in a separate
-> slot with **Save As** is still recommended.
+If Windows SmartScreen identifies the unsigned beta as an unrecognized app,
+confirm that the archive came from the `JakeKen25/Privateer` GitHub Releases page
+before selecting **More info** and **Run anyway**.
 
-## Windows installation
+## First use
 
-1. Install a 64-bit version of [Python](https://www.python.org/downloads/) that
-   is version 3.11 or newer. In the installer:
-   - enable **Add python.exe to PATH**;
-   - leave **tcl/tk and IDLE** enabled so the desktop interface is available.
-2. Download or clone this repository and open PowerShell in its root directory
-   (the directory containing `pyproject.toml`).
+1. Select **Browse**.
+2. Choose the complete RTW3 save-slot folder, normally:
+
+   ```text
+   C:\Users\<name>\Documents\My Games\Rule the Waves 3\Save\GameX
+   ```
+
+   Choose the `GameX` folder containing the `.bcs`, `.des`, and associated save
+   files rather than an individual file.
+3. Confirm the displayed player nation and nation list.
+4. Select **Validate** before making or saving changes.
+5. Use **Save As** for the first edited test copy. An in-place **Save** validates
+   the result and creates a retained backup by default.
+
+Backup creation and its destination can be changed under **Settings**. Keep a
+known-good campaign copy while using beta versions.
+
+## Developer installation from Python source
+
+The source version requires 64-bit Python 3.11 or newer for Windows. Tkinter is
+included with the standard Python installer when **tcl/tk and IDLE** is enabled.
+
+1. Install Python from [python.org](https://www.python.org/downloads/windows/).
+   Enable **Add python.exe to PATH** and leave **tcl/tk and IDLE** enabled.
+2. Clone or download this repository and open PowerShell in the directory that
+   contains `pyproject.toml`.
 3. Create and activate an isolated environment:
 
    ```powershell
@@ -34,76 +55,33 @@ the standard Windows and macOS Python installers.
    .\.venv\Scripts\Activate.ps1
    ```
 
-   If PowerShell blocks activation, either use Command Prompt with
-   `.venv\Scripts\activate.bat`, or run the virtual-environment Python directly
-   in the commands below.
-4. Install Privateer:
+   If PowerShell blocks activation, use Command Prompt with
+   `.venv\Scripts\activate.bat` or invoke `.venv\Scripts\python.exe` directly.
+4. Install and launch Privateer:
 
    ```powershell
    python -m pip install .
-   ```
-5. Start the desktop application:
-
-   ```powershell
    privateer
    ```
 
-   Confirm the installed release when needed:
+   You can also launch it directly from the repository:
+
+   ```powershell
+   python -m privateer
+   ```
+
+5. Confirm the installed version when needed:
 
    ```powershell
    privateer --version
    ```
 
-   Alternatively, without activating the environment:
+## Command-line validation
 
-   ```powershell
-   .\.venv\Scripts\python.exe -m privateer
-   ```
-
-## macOS or Linux installation
-
-Python must include Tk support. On macOS, the python.org installer includes it.
-Linux distribution packages commonly call it `python3-tk`; for example, on
-Debian or Ubuntu it can be installed with `sudo apt install python3-tk`.
-
-From the repository root, run:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install .
-privateer
-```
-
-If the `privateer` launcher is not on `PATH`, use:
-
-```bash
-python -m privateer
-```
-
-## Loading and validating a save
-
-In the desktop application:
-
-1. Select **Browse…**.
-2. Choose the complete RTW3 save-slot folder.
-3. Confirm the displayed player nation and nation list.
-4. Select **Validate** before making or saving changes.
-5. Prefer **Save As…** for the first edited copy. **Save** validates the result
-   and creates a retained backup before replacing edited files unless backup
-   creation has been disabled in **Settings**. Settings can also place retained
-   backups in a selected directory.
-
-Validation can also be run without opening the GUI:
-
-```bash
-privateer "/path/to/save/Game7" --validate
-```
-
-On Windows, an example is:
+Validate a save without opening the desktop interface:
 
 ```powershell
-privateer "C:\Games\Rule the Waves 3\SaveGames\Game7" --validate
+privateer "C:\Users\<name>\Documents\My Games\Rule the Waves 3\Save\Game7" --validate
 ```
 
 The command exits with status `0` for a valid save and `1` when critical
@@ -111,42 +89,51 @@ validation errors are found.
 
 ## Running the tests
 
-Development tests require pytest, which is not needed to run Privateer:
+Development tests require pytest, which is not needed by the end-user package:
 
-```bash
+```powershell
 python -m pip install pytest
 python -m pytest -q
 ```
 
-## Updating or uninstalling
+The test fixtures are stored under `developmentResources\exampleSaves`.
 
-After downloading a newer source version, activate the environment and run:
+## Updating
 
-```bash
+For the end-user package, download the newer Windows ZIP and extract it to a new
+folder. Privateer settings remain in `%APPDATA%\Privateer` and carry across
+versions.
+
+For a source installation, activate its environment and run:
+
+```powershell
 python -m pip install --upgrade .
 ```
 
-To uninstall:
+## Uninstalling
 
-```bash
+Close Privateer and delete its extracted folder. To remove preferences too,
+delete `%APPDATA%\Privateer`. Privateer does not remove game saves or backup
+folders.
+
+For a Python source installation, run:
+
+```powershell
 python -m pip uninstall privateer-rtw3
 ```
 
-The `.venv` directory can then be deleted. This does not remove or change save
-folders created by Privateer.
+The `.venv` directory can then be deleted.
 
 ## Troubleshooting
 
 - **`python` or `py` is not recognized:** reinstall Python and enable the PATH
   option, or invoke Python using its full path.
-- **`No module named tkinter`:** install a Python build with Tcl/Tk support. On
-  Windows, modify the Python installation and enable **tcl/tk and IDLE**; on
-  Linux, install the distribution's `python3-tk` package.
-- **No `.bcs` main save was found:** choose the save-slot directory rather than
-  the parent `SaveGames` directory or an individual file.
+- **`No module named tkinter`:** modify the Windows Python installation and
+  enable **tcl/tk and IDLE**.
+- **No `.bcs` main save was found:** choose the complete `GameX` save-slot folder.
 - **The save is refused:** read the complete validation report. Privateer will
   not knowingly write a save with unresolved ship designs, conflicting IDs, or
   other critical integrity errors.
 - **Unsupported save structure:** keep the original files unchanged and report
-  the RTW3 version and anonymized section layout. Do not attempt to work around
-  this warning with manual search-and-replace edits.
+  the RTW3 version and anonymized section layout. Do not work around the warning
+  with manual search-and-replace edits.

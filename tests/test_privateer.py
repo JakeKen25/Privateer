@@ -150,7 +150,7 @@ def test_technology_and_seeded_distribution(tmp_path):
     ],
 )
 def test_real_rosters_parse_all_stored_ships(game, counts):
-    folder = Path(__file__).parents[1] / "exampleSaves" / game
+    folder = Path(__file__).parents[1] / "developmentResources" / "exampleSaves" / game
     save = RTW3Save.load(folder)
     assert [len(nation.ships) for nation in save.nations] == counts
     assert all(ship.record_index != ship.local_slot for ship in save.nations[0].ships)
@@ -159,7 +159,7 @@ def test_real_rosters_parse_all_stored_ships(game, counts):
 
 @pytest.mark.parametrize("game", ["Game4", "Game5"])
 def test_real_design_libraries_resolve_every_ship(game):
-    folder = Path(__file__).parents[1] / "exampleSaves" / game
+    folder = Path(__file__).parents[1] / "developmentResources" / "exampleSaves" / game
     save = RTW3Save.load(folder)
     report = save.validate()
     assert report.valid, str(report)
@@ -171,14 +171,14 @@ def test_real_design_libraries_resolve_every_ship(game):
 
 
 def test_positional_design_ordinal_is_not_internal_id():
-    folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
+    folder = Path(__file__).parents[1] / "developmentResources" / "exampleSaves" / "Game5"
     design = RTW3Save.load(folder).nation(0).designs[0]
     assert design.record_index == 0
     assert design.internal_design_id == 2
 
 
 def test_real_no_op_save_as_preserves_recognized_files_byte_for_byte(tmp_path):
-    source = Path(__file__).parents[1] / "exampleSaves" / "Game5"
+    source = Path(__file__).parents[1] / "developmentResources" / "exampleSaves" / "Game5"
     destination = tmp_path / "Game5Copy"
     RTW3Save.load(source).save_as(destination)
     for source_file in [*source.glob("*.bcs"), *source.glob("*.des")]:
@@ -186,7 +186,7 @@ def test_real_no_op_save_as_preserves_recognized_files_byte_for_byte(tmp_path):
 
 
 def test_real_flattened_transfer_moves_hull_and_resolves_copied_design():
-    folder = Path(__file__).parents[1] / "exampleSaves" / "Game5"
+    folder = Path(__file__).parents[1] / "developmentResources" / "exampleSaves" / "Game5"
     save = RTW3Save.load(folder)
     ship = save.nation(1).ships[0]
     hull_id = ship.record_index

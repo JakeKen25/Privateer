@@ -283,7 +283,7 @@ artifacts, and read the diagnostic Markdown before implementation.
    licensing and privacy permit it.
 3. Record filename, encoding, BOM, line endings, size, and whether each file is
    textual or binary.
-4. Produce `docs/rtw3-format-observations.md` with confirmed real excerpts.
+4. Produce `guides/rtw3-format-observations.md` with confirmed real excerpts.
 5. Separate facts from hypotheses and note the exact RTW3 version if available.
 
 ### Phase 2 — Reverse-engineer read-only grammar
@@ -431,7 +431,7 @@ Only after Gates A–E:
 
 ## Suggested first prompt for the next Codex task
 
-> Read `docs/CODEX_HANDOFF.md` and all applicable `AGENTS.md` files. Fetch the
+> Read `developmentResources/CODEX_HANDOFF.md` and all applicable `AGENTS.md` files. Fetch the
 > updated branch containing the recreated RTW3 save-folder structure and the
 > diagnostic Markdown. Do not implement mutations yet. Inventory the files,
 > inspect the Markdown, document the real `.bcs` ship roster and `.des` design
