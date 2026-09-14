@@ -9,7 +9,7 @@ ROOT = Path(__file__).parents[1]
 def test_end_user_instructions_cover_portable_install_and_save_safety():
     instructions = (ROOT / "packaging" / "END_USER_INSTALL.txt").read_text(encoding="utf-8")
     for expected in (
-        f"PRIVATEER {privateer.__version__} BETA",
+        f"PRIVATEER {privateer.__version__}",
         "No separate Python installation is required",
         "Do not move only",
         "Close Rule the Waves 3",
@@ -27,7 +27,9 @@ def test_release_workflow_builds_only_the_portable_archive():
     assert '"packaging/RELEASE_VERSION"' in workflow
     assert '- "main"' in workflow
     assert '"packaging/RELEASE_CHANNEL"' in workflow
+    assert '"packaging/RELEASE_NOTES.md"' in workflow
     assert "gh release create" in workflow
+    assert "--notes-file" in workflow
     assert "--prerelease=false" in workflow
     assert "refs/heads/main" in workflow
     assert "refs/heads/Codex" not in workflow
