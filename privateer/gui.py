@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from .save import RTW3Save
@@ -60,6 +61,8 @@ class MainWindow(tk.Tk):
         ttk.Button(actions, text="Validate", command=self.validate_save).pack(side="right", padx=6)
         ttk.Button(actions, text="Save As…", command=self.save_as).pack(side="right", padx=6)
         ttk.Button(actions, text="Save", command=self.save_changes).pack(side="right")
+        if not self.settings.first_run_complete:
+            self.after_idle(self.open_first_run_configuration)
 
     def _show_nation_menu(self, event):
         item = self.table.identify_row(event.y)
@@ -112,6 +115,9 @@ class MainWindow(tk.Tk):
 
     def open_settings(self):
         SettingsWindow(self, self.settings)
+
+    def open_first_run_configuration(self):
+        SettingsWindow(self, self.settings, first_run=True)
 
     def sort_main_table(self, column):
         if self.main_sort_column == column:
@@ -173,7 +179,10 @@ class MainWindow(tk.Tk):
         dialog.grab_set()
 
     def open_folder(self):
-        folder = filedialog.askdirectory(title="Select Rule the Waves 3 Save Folder")
+        initial = self.settings.save_game_directory
+        options = {"initialdir": initial} if initial and Path(initial).is_dir() else {}
+        folder = filedialog.askdirectory(
+            title="Select Rule the Waves 3 Save Folder", **options)
         if not folder: return
         run_background(
             self, "Loading and indexing save files…", lambda: RTW3Save.load(folder),
@@ -216,7 +225,9 @@ class MainWindow(tk.Tk):
 
     def save_as(self):
         if not self.save_model: return
-        folder = filedialog.askdirectory(title="Choose parent for new save folder")
+        initial = self.settings.save_game_directory
+        options = {"initialdir": initial} if initial and Path(initial).is_dir() else {}
+        folder = filedialog.askdirectory(title="Choose parent for new save folder", **options)
         name = simpledialog.askstring("Save As", "New folder name:") if folder else None
         if not name: return
         run_background(
@@ -229,3 +240,4 @@ class MainWindow(tk.Tk):
 
 def launch():
     MainWindow().mainloop()
+

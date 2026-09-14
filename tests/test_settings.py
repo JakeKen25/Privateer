@@ -23,6 +23,25 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(AppSettings.load(path), settings)
         self.assertIn('"create_backups": false', path.read_text(encoding="utf-8"))
 
+    def test_new_locations_and_first_run_state_round_trip(self):
+        path = self.root / "settings.json"
+        settings = AppSettings(
+            rtw3_install_directory=str(self.root / "RTW3"),
+            save_game_directory=str(self.root / "Save"),
+            first_run_complete=True,
+        )
+        settings.save(path)
+        self.assertEqual(AppSettings.load(path), settings)
+
+    def test_old_settings_file_requires_first_run_configuration(self):
+        path = self.root / "settings.json"
+        path.write_text(
+            '{"create_backups": true, "backup_directory": ""}', encoding="utf-8")
+        settings = AppSettings.load(path)
+        self.assertFalse(settings.first_run_complete)
+        self.assertEqual(settings.rtw3_install_directory, "")
+        self.assertEqual(settings.save_game_directory, "")
+
     def test_invalid_settings_are_rejected(self):
         path = self.root / "settings.json"
         path.write_text('{"create_backups": "yes"}', encoding="utf-8")
@@ -58,3 +77,4 @@ class SettingsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

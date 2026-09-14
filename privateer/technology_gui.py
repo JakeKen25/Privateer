@@ -1,5 +1,6 @@
 """Technology editor; pending changes remain local until Apply."""
 import tkinter as tk
+from pathlib import Path
 from tkinter import ttk, filedialog, messagebox
 from .technology import DEFAULT_DATABASE, load_database, AreaTechnologyEdits
 
@@ -17,7 +18,11 @@ class TechnologyWindow(tk.Toplevel):
         self.geometry('1000x720')
         self.minsize(760, 520)
         self.transient(parent)
-        path = DEFAULT_DATABASE
+        install_directory = getattr(getattr(parent, 'settings', None),
+                                    'rtw3_install_directory', '')
+        configured_database = (Path(install_directory) / 'Data' / 'ResearchAreas3.dat'
+                               if install_directory else None)
+        path = configured_database if configured_database and configured_database.is_file() else DEFAULT_DATABASE
         if not path.is_file():
             path = filedialog.askopenfilename(parent=self, title='Locate ResearchAreas3.dat',
                                              filetypes=[('RTW3 research data', '*.dat')])
@@ -160,3 +165,4 @@ class TechnologyWindow(tk.Toplevel):
         if self.pending:
             self.master.status.set('Unsaved changes')
         self.destroy()
+
