@@ -1,0 +1,46 @@
+name: Bug report
+description: Report incorrect behavior or a failed save operation
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach live saves, installed game data, or personal information.
+  - type: input
+    id: privateer_version
+    attributes:
+      label: Privateer version
+      placeholder: Example: 0.91
+    validations:
+      required: true
+  - type: input
+    id: game_version
+    attributes:
+      label: Rule the Waves 3 version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the actions that consistently reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation output
+      description: Paste anonymized validation messages or error text.

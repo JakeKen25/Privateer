@@ -13,5 +13,10 @@ validate the complete candidate, update the version and release markers, then
 merge `develop` into `main`. The Windows release workflow runs from `main` and
 publishes the matching GitHub Release.
 
+Public contributors should work from forks and propose changes through pull
+requests into `develop`. The project owner retains sole approval, merge, and
+release authority. No contributor should push directly to `main` or publish a
+release.
+
 The former `Codex` branch is retired. New work should target `develop`, and
 release promotion should target `main`.

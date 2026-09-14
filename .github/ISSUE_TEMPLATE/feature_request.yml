@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest an improvement or new editing capability
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for suggesting an improvement to Privateer.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Editing problem
+      description: What RTW3 editing task is difficult or unavailable today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested behavior
+      description: Describe how you would like Privateer to handle it.
+    validations:
+      required: true
+  - type: input
+    id: game_version
+    attributes:
+      label: Rule the Waves 3 version
+      placeholder: Example: 1.01.44
+  - type: textarea
+    id: evidence
+    attributes:
+      label: File-format evidence
+      description: Share anonymized observations only. Do not upload a live campaign or installed game data.

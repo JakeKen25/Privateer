@@ -114,6 +114,10 @@ saves, and code changes should include focused tests for the behavior they add o
 correct. Do not commit live campaigns, installed game data, credentials, or other
 players' personal files.
 
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull
+request. The project owner currently retains sole approval, merge, and release
+authority.
+
 Development takes place on `develop`. The `main` branch contains tested,
 published releases. Create focused `feature/<name>` or `fix/<name>` branches from
 `develop` and submit completed work back to `develop`. See
