@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from privateer.save import RTW3Save
-from privateer.ship_status import ship_status_label
+from privateer.ship_status import appears_in_transfer_window, ship_status_label
 from privateer.ships_gui import ship_details, ship_stats, transfer_block_reason
 
 
@@ -150,6 +150,7 @@ class ShipTransferTests(unittest.TestCase):
             self.assertEqual(ship_status_label(ship, fields), label)
         fields["InPlay"] = "0"
         self.assertEqual(ship_status_label(ship, fields), "Under construction")
+        self.assertTrue(appears_in_transfer_window(fields))
         self.assertIsNone(transfer_block_reason(ship, fields))
 
     def test_final_fates_are_labelled_and_blocked_atomically(self):
@@ -165,6 +166,7 @@ class ShipTransferTests(unittest.TestCase):
             fields = dict(ship.section.fields())
             fields["Fate"] = fate
             self.assertEqual(ship_status_label(ship, fields), label)
+            self.assertFalse(appears_in_transfer_window(fields))
             self.assertIn("cannot be transferred", transfer_block_reason(ship, fields))
 
         ship.section.set("Fate", "Scrapped")
@@ -173,6 +175,22 @@ class ShipTransferTests(unittest.TestCase):
             self.save.transfer_ship_batch({ship.record_index: 0})
         self.assertEqual(original, {name: document.to_bytes() for name, document in self.save.documents.items()})
         self.assertFalse(self.save.modified)
+
+    def test_museum_ship_is_hidden_and_blocked_even_without_final_fate(self):
+        ship = self.save.nation(1).ships[0]
+        fields = dict(ship.section.fields())
+        fields.update({"Fate": "XXX", "InPlay": "1", "Status": "9"})
+        self.assertEqual(ship_status_label(ship, fields), "Museum Ship")
+        self.assertFalse(appears_in_transfer_window(fields))
+        self.assertEqual(transfer_block_reason(ship, fields),
+                         "Museum ships cannot be transferred.")
+
+        ship.section.set("Fate", "XXX")
+        ship.section.set("Status", "9")
+        original = {name: document.to_bytes() for name, document in self.save.documents.items()}
+        with self.assertRaisesRegex(ValueError, "Museum ships cannot be transferred"):
+            self.save.transfer_ship_batch({ship.record_index: 0})
+        self.assertEqual(original, {name: document.to_bytes() for name, document in self.save.documents.items()})
 
     def test_scrapped_slipway_record_is_not_under_construction(self):
         ship = next(ship for ship in self.save.nation(1).ships if ship.under_construction)

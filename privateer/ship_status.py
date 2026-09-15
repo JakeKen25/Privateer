@@ -7,6 +7,7 @@ FLEET_STATUS_NAMES = {
     "6": "Foreign Service",
 }
 _LIVE_FATES = {"", "xxx"}
+MUSEUM_STATUS = "9"
 
 
 def has_final_fate(fields) -> bool:
@@ -18,6 +19,8 @@ def ship_status_label(ship, fields=None) -> str:
     fields = ship.section.fields() if fields is None else fields
     fate = str(fields.get("Fate", "")).strip()
     normalized_fate = fate.casefold()
+    if str(fields.get("Status", "")).strip() == MUSEUM_STATUS:
+        return "Museum Ship"
     if normalized_fate not in _LIVE_FATES:
         if "broken up on slipway" in normalized_fate:
             return "Scrapped on slipway"
@@ -40,10 +43,17 @@ def ship_status_label(ship, fields=None) -> str:
     return f"Unknown status ({raw_status or '?'})"
 
 
+def appears_in_transfer_window(fields) -> bool:
+    """Return whether a hull is current and should appear in Transfer Ships."""
+    return not has_final_fate(fields) and str(fields.get("Status", "")).strip() != MUSEUM_STATUS
+
+
 def final_fate_transfer_block_reason(ship, fields=None) -> str | None:
     """Block historical hull records while allowing live construction transfers."""
     fields = ship.section.fields() if fields is None else fields
-    if not has_final_fate(fields):
+    if appears_in_transfer_window(fields):
         return None
     status = ship_status_label(ship, fields)
+    if status == "Museum Ship":
+        return "Museum ships cannot be transferred."
     return f"{status} ships cannot be transferred."

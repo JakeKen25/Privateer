@@ -5,7 +5,11 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from .ship_status import final_fate_transfer_block_reason, ship_status_label
+from .ship_status import (
+    appears_in_transfer_window,
+    final_fate_transfer_block_reason,
+    ship_status_label,
+)
 from .table_sort import heading_text, sorted_with_blanks
 
 
@@ -91,8 +95,13 @@ class ShipTransfersWindow(tk.Toplevel):
         self.pending: dict[int, int] = {}
         self.sort_column: str | None = None
         self.sort_reverse = False
-        self.ships = {ship.record_index: ship for nation in save.nations for ship in nation.ships}
-        self.ship_fields = {hull: ship.section.fields() for hull, ship in self.ships.items()}
+        all_ships = [ship for nation in save.nations for ship in nation.ships]
+        all_fields = {ship.record_index: ship.section.fields() for ship in all_ships}
+        self.ships = {
+            ship.record_index: ship for ship in all_ships
+            if appears_in_transfer_window(all_fields[ship.record_index])
+        }
+        self.ship_fields = {hull: all_fields[hull] for hull in self.ships}
         self.ship_statistics = {
             hull: ship_stats(ship, self.ship_fields[hull]) for hull, ship in self.ships.items()
         }
@@ -113,8 +122,8 @@ class ShipTransfersWindow(tk.Toplevel):
         ttk.Label(
             body,
             text=("Transfers keep the hull, original building nation, and all saved state while "
-                  "copying its design to the receiver. Sunk and scrapped ships remain visible but "
-                  "are locked; carrier/air-group transfers are also currently blocked."),
+                  "copying its design to the receiver. Historical losses, scrapped ships, and museum "
+                  "ships are omitted; carrier/air-group transfers are currently blocked."),
             wraplength=1050,
         ).pack(anchor="w")
 
@@ -209,7 +218,8 @@ class ShipTransfersWindow(tk.Toplevel):
         self.table.delete(*self.table.get_children())
         source_index = self._nation_index(self.source.get())
         needle = self.search.get().strip().casefold()
-        source_ships = self.save.nation(source_index).ships
+        source_ships = [ship for ship in self.save.nation(source_index).ships
+                        if ship.record_index in self.ships]
         rows = []
         for ship in source_ships:
             fields = self.ship_fields[ship.record_index]
