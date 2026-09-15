@@ -2,14 +2,22 @@ import tempfile
 import unittest
 from pathlib import Path
 from privateer.save import RTW3Save
-from privateer.colonies import possessions, map_document
+from privateer.colonies import (
+    MAP_AREA_NAMES,
+    is_home_area_possession,
+    map_area_name,
+    map_document,
+    nation_home_areas,
+    possessions,
+)
 
 
 class ColonyTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.folder=Path(self.tmp.name)/'Game1';self.folder.mkdir()
-        self.main=b'[Nation0]\r\nName=Italy\r\n[Nation1]\r\nName=France\r\n'
+        self.main=(b'[Nation0]\r\nName=Italy\r\nBuildAreaName=The Mediterranean\r\n'
+                   b'[Nation1]\r\nName=France\r\nBuildAreaName=Northern Europe\r\n')
         (self.folder/'RTWGame1.bcs').write_bytes(self.main)
         (self.folder/'Autosave.bcs').write_bytes(b'[Nation0]\nName=Wrong autosave\n')
         self.map=(b'\xef\xbb\xbf[MapAreas]\r\nMapAreaCount=1\r\nMapArea0PossessionCount=2\r\n'
@@ -61,5 +69,28 @@ class ColonyTests(unittest.TestCase):
         renamed=self.folder.with_name('Game1 backup')
         self.folder.rename(renamed)
         self.assertEqual(map_document(RTW3Save.load(renamed))[0],'MapData1.dat')
+
+    def test_area_names_and_home_area_detection(self):
+        self.assertEqual(len(MAP_AREA_NAMES), 16)
+        self.assertEqual(map_area_name(0), 'Northern Europe')
+        self.assertEqual(map_area_name(15), 'The Baltic')
+        self.assertEqual(map_area_name(99), 'Unknown map area (99)')
+        self.assertEqual(
+            nation_home_areas(self.save),
+            {'Italy': 1, 'France': 0},
+        )
+        test_colony = possessions(self.save)[0]
+        self.assertFalse(is_home_area_possession(self.save, test_colony))
+
+    def test_current_owners_home_area_cannot_be_transferred(self):
+        locked_map = self.map.replace(b'Owner = Italy', b'Owner = France')
+        (self.folder/'MapData1.dat').write_bytes(locked_map)
+        save = RTW3Save.load(self.folder)
+        locked = possessions(save)[0]
+        self.assertTrue(is_home_area_possession(save, locked))
+        with self.assertRaisesRegex(ValueError, 'home area.*cannot be transferred'):
+            save.set_colony_owners({(0, 0): 'Italy'})
+        self.assertFalse(save.modified)
+        self.assertEqual(save.documents['MapData1.dat'].to_bytes(), locked_map)
 
 if __name__=='__main__':unittest.main()
