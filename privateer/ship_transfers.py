@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 from .document import FIELD, TextDocument
 from .diplomacy import unique_section, unique_integer
+from .ship_status import final_fate_transfer_block_reason
 
 SHIP_KEY = re.compile(r'^Ship(\d+)(.+)$')
 
@@ -100,6 +101,8 @@ def transfer_batch(save, assignments):
         if source.index==dest:continue
         if not ship.flattened_record:raise ValueError('This transfer manager supports flattened NationNShips rosters')
         fields=ship.section.fields()
+        if reason := final_fate_transfer_block_reason(ship, fields):
+            raise ValueError(f'{ship.name}: {reason}')
         if int(fields.get('AircraftCapacity','0'))>0 or ship.ship_type in ('CV','CVL','AV'):
             raise ValueError(f'{ship.name}: carrier/air-group migration is not decoded')
         for key in ('DesignRefId','BuildingNationIdx','CommanderId'):

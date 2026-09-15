@@ -5,12 +5,16 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from .ship_status import final_fate_transfer_block_reason, ship_status_label
 from .table_sort import heading_text, sorted_with_blanks
 
 
 def transfer_block_reason(ship, fields=None) -> str | None:
     """Return a user-facing reason for a dependency we cannot migrate safely."""
     fields = ship.section.fields() if fields is None else fields
+    fate_reason = final_fate_transfer_block_reason(ship, fields)
+    if fate_reason:
+        return fate_reason
     try:
         aircraft_capacity = int(fields.get("AircraftCapacity", "0") or "0")
     except ValueError:
@@ -31,16 +35,18 @@ def ship_details(save, ship, fields=None) -> str:
         builder = save.nation(builder_index).name if builder_index is not None else "Unknown"
     except KeyError:
         builder = f"Nation{builder_index}"
-    lifecycle = "Under construction" if ship.under_construction else "In service"
+    lifecycle = ship_status_label(ship, fields)
     location = fields.get("LocationAreaName") or "Unknown"
     commander = fields.get("CommanderId", "Unknown")
     progress = fields.get("BuildProgress", "Unknown")
     reason = transfer_block_reason(ship, fields)
     eligibility = f"Blocked: {reason}" if reason else "Eligible for an ownership transfer"
+    fate = fields.get("Fate", "")
+    fate_line = f"\nFate: {fate}" if fate.strip().casefold() not in {"", "xxx"} else ""
     return (
         f"{ship.name} (hull ID {ship.record_index})\n"
         f"Owner: {owner}    Type: {ship.ship_type or 'Unknown'}    Class: {ship.class_name or 'Unknown'}\n"
-        f"State: {lifecycle}    Location: {location}    Build progress: {progress}\n"
+        f"State: {lifecycle}    Location: {location}    Build progress: {progress}{fate_line}\n"
         f"Design reference: {ship.design_ref_id}    Builder: {builder}    Commander ID: {commander}\n"
         f"{eligibility}"
     )
@@ -71,7 +77,7 @@ def ship_stats(ship, fields=None) -> dict[str, str]:
         "asw": fields.get("ASWValue", ""),
         "year": fields.get("YearBuilt", ""),
         "location": fields.get("LocationAreaName", ""),
-        "status": fields.get("Status", ""),
+        "status": ship_status_label(ship, fields),
         "crew": fields.get("CrewQuality", ""),
         "maintenance": fields.get("Maintenance", ""),
         "description": fields.get("Description", ""),
@@ -90,6 +96,10 @@ class ShipTransfersWindow(tk.Toplevel):
         self.ship_statistics = {
             hull: ship_stats(ship, self.ship_fields[hull]) for hull, ship in self.ships.items()
         }
+        self.transfer_blocks = {
+            hull: transfer_block_reason(ship, self.ship_fields[hull])
+            for hull, ship in self.ships.items()
+        }
         self._search_after = None
         self.nation_values = [f"{nation.index}: {nation.name}" for nation in save.nations]
         self.title("Transfer Ships")
@@ -103,7 +113,8 @@ class ShipTransfersWindow(tk.Toplevel):
         ttk.Label(
             body,
             text=("Transfers keep the hull, original building nation, and all saved state while "
-                  "copying its design to the receiver. Carrier/air-group transfers are currently blocked."),
+                  "copying its design to the receiver. Sunk and scrapped ships remain visible but "
+                  "are locked; carrier/air-group transfers are also currently blocked."),
             wraplength=1050,
         ).pack(anchor="w")
 
@@ -130,6 +141,7 @@ class ShipTransfersWindow(tk.Toplevel):
                    "asw", "year", "location", "status", "crew", "maintenance",
                    "description", "destination")
         self.table = ttk.Treeview(frame, columns=columns, show="tree headings", selectmode="extended")
+        self.table.tag_configure("blocked", foreground="#777777")
         self.heading_labels = {"hull": "Hull ID"}
         self.table.heading("#0", text="Hull ID", command=lambda: self.sort_by("hull"))
         self.table.column("#0", width=70, minwidth=55, stretch=False)
@@ -138,7 +150,7 @@ class ShipTransfersWindow(tk.Toplevel):
             ("displacement", "Displacement", 90), ("speed", "Speed", 55),
             ("main_gun", "Main gun", 65), ("radar", "Radar", 90), ("asw", "ASW", 50),
             ("year", "Year", 55), ("location", "Location", 145),
-            ("status", "Status (raw)", 75), ("crew", "Crew quality (raw)", 105),
+            ("status", "Status", 130), ("crew", "Crew quality (raw)", 105),
             ("maintenance", "Maintenance", 85), ("description", "Description", 220),
             ("destination", "Staged destination", 150),
         ]
@@ -204,7 +216,10 @@ class ShipTransfersWindow(tk.Toplevel):
             stats = self.ship_statistics[ship.record_index]
             if self.type_filter.get() not in ("All types", ship.ship_type):
                 continue
-            haystack = f"{ship.record_index} {ship.name} {ship.class_name} {ship.ship_type} {fields.get('LocationAreaName', '')}".casefold()
+            haystack = " ".join((
+                str(ship.record_index), ship.name, ship.class_name or "", ship.ship_type or "",
+                fields.get("LocationAreaName", ""), stats["status"],
+            )).casefold()
             if needle not in haystack:
                 continue
             pending = self.pending.get(ship.record_index)
@@ -219,14 +234,15 @@ class ShipTransfersWindow(tk.Toplevel):
                              else row[1][column]),
                 reverse=self.sort_reverse,
                 numeric=column in {"hull", "displacement", "speed", "main_gun", "asw",
-                                   "year", "status", "crew", "maintenance"},
+                                   "year", "crew", "maintenance"},
             )
         for ship, stats, destination in rows:
             self.table.insert("", "end", iid=str(ship.record_index), text=str(ship.record_index),
                               values=tuple(stats[key] for key in (
                                   "type", "name", "class", "displacement", "speed", "main_gun",
                                   "radar", "asw", "year", "location", "status", "crew",
-                                  "maintenance", "description")) + (destination,))
+                                  "maintenance", "description")) + (destination,),
+                              tags=("blocked",) if self.transfer_blocks[ship.record_index] else ())
         self.count.set(f"{len(rows)} / {len(source_ships)} ships")
         self.status.set(f"{len(self.pending)} staged ship transfer(s)")
         self.details.set("Select a ship to see its saved state and transfer eligibility.")
@@ -269,7 +285,7 @@ class ShipTransfersWindow(tk.Toplevel):
         failures = []
         for item in selected:
             ship = self.ships[int(item)]
-            reason = transfer_block_reason(ship, self.ship_fields[ship.record_index])
+            reason = self.transfer_blocks[ship.record_index]
             if reason:
                 failures.append(f"{ship.name}: {reason}")
             elif destination == ship.owner_index:

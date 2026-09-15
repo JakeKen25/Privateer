@@ -241,6 +241,7 @@ class RTW3Save:
             design = _integer(values, "DesignRefId")
             build = _integer(values, "BuildingNationIdx")
             in_play = str(values.get("InPlay", "1")).casefold() in {"1", "true", "yes"}
+            live_fate = str(values.get("Fate", "")).strip().casefold() in {"", "xxx"}
             record = PrefixedRecord(section, f"Ship{slot}", dict(values))
             nation.ships.append(Ship(
                 ship_id,
@@ -250,7 +251,7 @@ class RTW3Save:
                 values.get("Classname") or values.get("ClassName") or values.get("Class"),
                 design,
                 build,
-                not in_play,
+                not in_play and live_fate,
                 record,
                 local_slot=slot,
                 flattened_record=True,
