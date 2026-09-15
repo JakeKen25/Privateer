@@ -11,6 +11,7 @@ Name=Germany\r
 AdmiralName=Raeder\r
 Prestige=20\r
 DockSize=35000\r
+UnrestLevel=2\r
 BaseResources=30000\r
 Funds=100\r
 BudgetModifier=3\r
@@ -68,6 +69,33 @@ def test_projection_uses_staged_funds_and_resources(tmp_path):
     projection = project_budget(fixture(tmp_path).nation(0), base_resources=40_000, funds=250)
     assert (projection.yearly_budget, projection.monthly_budget, projection.research) == (96_000, 8_000, 640)
     assert projection.funds == 250
+
+
+def test_economy_and_unrest_edits_are_staged_and_audited(tmp_path):
+    save = fixture(tmp_path)
+    save.adjust_economy(
+        0,
+        funds=("Adjust by amount", "50"),
+        base_resources=("Set value", "40,000"),
+        unrest_level=("Set value", "4"),
+    )
+    nation = save.nation(0)
+    assert (nation.funds, nation.base_resources, nation.unrest_level) == (150, 40_000, 4)
+    rendered = save.documents[save.main_file].render()
+    assert "UnrestLevel=4\r\n" in rendered
+    assert save.audit[-1] == "Changed Germany UnrestLevel: 2 -> 4"
+
+
+def test_invalid_unrest_rolls_back_other_economy_edits(tmp_path):
+    save = fixture(tmp_path)
+    with pytest.raises(ValueError, match="Unrest level"):
+        save.adjust_economy(
+            0,
+            funds=("Set value", "999"),
+            unrest_level=("Set value", "-1"),
+        )
+    assert (save.nation(0).funds, save.nation(0).unrest_level) == (100, 2)
+    assert not save.modified
 
 
 def test_dock_size_edit_is_staged_and_audited(tmp_path):

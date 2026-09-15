@@ -127,6 +127,7 @@ class RTW3Save:
             self.nations.append(Nation(index, values.get("Name", f"Nation{index}"), section,
                 _integer(values, "Funds"), _integer(values, "BaseResources"),
                 _integer(values, "BudgetModifier"), _integer(values, "DockSize"),
+                _integer(values, "UnrestLevel"),
                 TechnologyState(tech)))
         by_index = {nation.index: nation for nation in self.nations}
         for section in main.sections:
@@ -349,8 +350,9 @@ class RTW3Save:
         *,
         funds: tuple[str, str] | None = None,
         base_resources: tuple[str, str] | None = None,
+        unrest_level: tuple[str, str] | None = None,
     ) -> None:
-        """Apply optional funds/resource edits as one in-memory transaction."""
+        """Apply optional economy and unrest edits as one in-memory transaction."""
         target = self.nation(nation)
         newline = self.documents[self.main_file].newline
         with self.transaction():
@@ -363,6 +365,16 @@ class RTW3Save:
                 target.set_base_resources(adjusted_integer(previous, *base_resources), newline)
                 self.audit.append(
                     f"Changed {target.name} BaseResources: {previous} -> {target.base_resources}"
+                )
+            if unrest_level is not None:
+                if target.unrest_level is None:
+                    raise ValueError(f"{target.name} has no UnrestLevel field")
+                previous = target.unrest_level
+                target.set_unrest_level(
+                    adjusted_integer(previous, *unrest_level), newline
+                )
+                self.audit.append(
+                    f"Changed {target.name} UnrestLevel: {previous} -> {target.unrest_level}"
                 )
             self.validate_or_raise()
             self.modified = True

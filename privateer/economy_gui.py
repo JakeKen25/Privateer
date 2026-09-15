@@ -1,4 +1,4 @@
-"""Combined funds, resources, and budget projection window."""
+"""Combined economy and unrest editor with a budget projection."""
 
 import tkinter as tk
 from tkinter import messagebox, ttk
@@ -11,19 +11,20 @@ class EconomyWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
         super().__init__(parent)
         self.save, self.nation = save, save.nation(nation_index)
-        self.title(f"Economy Manager — {self.nation.name}")
+        self.title(f"Economy and Unrest Manager — {self.nation.name}")
         self.resizable(False, False)
         self.transient(parent)
         body = ttk.Frame(self, padding=16)
         body.pack(fill="both", expand=True)
-        ttk.Label(body, text=f"Economy — {self.nation.name}",
+        ttk.Label(body, text=f"Economy and Unrest — {self.nation.name}",
                   font=("Segoe UI", 13, "bold")).grid(row=0, column=0, columnspan=4, sticky="w")
-        ttk.Label(body, text="Funds and base resources are staged together. The budget panel updates as you type.").grid(
+        ttk.Label(body, text="Funds, base resources, and unrest are staged together. The budget panel updates as you type.").grid(
             row=1, column=0, columnspan=4, sticky="w", pady=(2, 12))
         self.operations, self.amounts, self.projected = {}, {}, {}
         for row, (key, label, current) in enumerate((
             ("funds", "Funds", self.nation.funds),
-            ("base_resources", "Base resources", self.nation.base_resources)), start=2):
+            ("base_resources", "Base resources", self.nation.base_resources),
+            ("unrest_level", "Unrest level", self.nation.unrest_level)), start=2):
             ttk.Label(body, text=label).grid(row=row, column=0, sticky="w", padx=(0, 10), pady=4)
             operation = tk.StringVar(value=ECONOMY_ADJUSTMENTS[0])
             amount = tk.StringVar()
@@ -37,7 +38,7 @@ class EconomyWindow(tk.Toplevel):
             amount.trace_add("write", lambda *_: self.refresh())
 
         panel = ttk.LabelFrame(body, text="Estimated monthly budget", padding=10)
-        panel.grid(row=4, column=0, columnspan=4, sticky="ew", pady=(12, 8))
+        panel.grid(row=5, column=0, columnspan=4, sticky="ew", pady=(12, 8))
         self.lines = {}
         labels = (
             ("yearly_budget", "Yearly budget"), ("monthly_budget", "Monthly budget"),
@@ -55,9 +56,9 @@ class EconomyWindow(tk.Toplevel):
                       relief="sunken", padding=(4, 1)).grid(row=row, column=1, sticky="e", pady=2)
         self.note = tk.StringVar()
         ttk.Label(body, textvariable=self.note, wraplength=570, justify="left").grid(
-            row=5, column=0, columnspan=4, sticky="w", pady=(0, 12))
+            row=6, column=0, columnspan=4, sticky="w", pady=(0, 12))
         buttons = ttk.Frame(body)
-        buttons.grid(row=6, column=0, columnspan=4, sticky="e")
+        buttons.grid(row=7, column=0, columnspan=4, sticky="e")
         ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="right")
         ttk.Button(buttons, text="Apply", command=self.apply).pack(side="right", padx=(0, 8))
         self.refresh()
@@ -76,8 +77,10 @@ class EconomyWindow(tk.Toplevel):
         try:
             funds = self._value("funds", self.nation.funds)
             resources = self._value("base_resources", self.nation.base_resources)
+            unrest = self._value("unrest_level", self.nation.unrest_level)
             self.projected["funds"].set(f"Projected: {self._number(funds)}")
             self.projected["base_resources"].set(f"Projected: {self._number(resources)}")
+            self.projected["unrest_level"].set(f"Projected: {self._number(unrest)}")
             projection = project_budget(self.nation, base_resources=resources, funds=funds)
             for key, variable in self.lines.items():
                 variable.set(f"{getattr(projection, key):,}")
@@ -93,7 +96,8 @@ class EconomyWindow(tk.Toplevel):
     def apply(self):
         changes = {}
         for key, current in (("funds", self.nation.funds),
-                             ("base_resources", self.nation.base_resources)):
+                             ("base_resources", self.nation.base_resources),
+                             ("unrest_level", self.nation.unrest_level)):
             raw = self.amounts[key].get().strip()
             if raw:
                 changes[key] = (self.operations[key].get(), raw)

@@ -40,6 +40,9 @@ class MainWindow(tk.Tk):
         self.path = tk.StringVar(value="Select Rule the Waves 3 Save Folder")
         ttk.Label(bar, textvariable=self.path).pack(side="left", fill="x", expand=True)
         ttk.Button(bar, text="Browse…", command=self.open_folder).pack(side="right")
+        self.reload_button = ttk.Button(
+            bar, text="Reload", command=self.reload_save, state="disabled")
+        self.reload_button.pack(side="right", padx=(0, 6))
         self.player = tk.StringVar(value="Player Nation: —")
         ttk.Label(self, textvariable=self.player, padding=(8, 0)).pack(anchor="w")
         self.table = ttk.Treeview(self, columns=("player", "funds", "resources", "ships"), show="tree headings")
@@ -75,8 +78,8 @@ class MainWindow(tk.Tk):
 
     def _populate_nation_menu(self, nation_index):
         self.nation_menu.delete(0, "end")
-        self.nation_menu.add_command(label="Economy Manager", command=self._manage_economy)
-        self.nation_menu.add_command(label="Infrastructure Manager", command=self._manage_infrastructure)
+        self.nation_menu.add_command(label="Economy and Unrest Manager", command=self._manage_economy)
+        self.nation_menu.add_command(label="Infrastructure and Fortifications Manager", command=self._manage_infrastructure)
         if nation_index == 0:
             self.nation_menu.add_command(label="Admiral Manager", command=self._manage_admiral)
         self.nation_menu.add_separator()
@@ -90,10 +93,10 @@ class MainWindow(tk.Tk):
                                      command=lambda: self._show_coming_soon("Ship Spawner (WIP)"))
 
     def _manage_economy(self):
-        self._open_manager(EconomyWindow, "Preparing economy data…")
+        self._open_manager(EconomyWindow, "Preparing economy and unrest data…")
 
     def _manage_infrastructure(self):
-        self._open_manager(InfrastructureWindow, "Loading infrastructure…")
+        self._open_manager(InfrastructureWindow, "Loading infrastructure and fortifications…")
 
     def _manage_admiral(self):
         self._open_manager(AdmiralWindow, "Loading player admiral…")
@@ -184,21 +187,47 @@ class MainWindow(tk.Tk):
         folder = filedialog.askdirectory(
             title="Select Rule the Waves 3 Save Folder", **options)
         if not folder: return
+        self._load_folder(folder)
+
+    def reload_save(self):
+        if not self.save_model:
+            return
+        if self.save_model.modified and not messagebox.askyesno(
+            "Discard unsaved changes?",
+            "Reloading will discard all unsaved changes. Continue?",
+            parent=self,
+        ):
+            return
+        selected = self.table.selection()[0] if self.table.selection() else None
+        self._load_folder(
+            self.save_model.folder,
+            selected=selected,
+            loading_message="Reloading and indexing save files…",
+            loaded_status="Reloaded",
+        )
+
+    def _load_folder(
+        self, folder, *, selected=None,
+        loading_message="Loading and indexing save files…", loaded_status="Loaded"
+    ):
         run_background(
-            self, "Loading and indexing save files…", lambda: RTW3Save.load(folder),
-            lambda save: self._finish_open(folder, save),
+            self, loading_message, lambda: RTW3Save.load(folder),
+            lambda save: self._finish_open(folder, save, selected, loaded_status),
             lambda exc: messagebox.showerror(
                 "Unable to load save", f"{exc}\n\nThe save has not been modified.", parent=self),
         )
 
-    def _finish_open(self, folder, save):
+    def _finish_open(self, folder, save, selected=None, loaded_status="Loaded"):
         self.save_model = save
-        self.path.set(folder)
+        self.path.set(str(folder))
+        self.reload_button.configure(state="normal")
         player_nation = next((nation for nation in save.nations if nation.is_player), None)
-        self.render_main_table(str(player_nation.index) if player_nation else None)
+        if selected is None or not any(str(nation.index) == str(selected) for nation in save.nations):
+            selected = str(player_nation.index) if player_nation else None
+        self.render_main_table(selected)
         player = next((n for n in self.save_model.nations if n.is_player), None)
         self.player.set(f"Player Nation: {player.name} (Nation{player.index})" if player else "Player Nation: ambiguous")
-        self.status.set(self.save_model.player_detection_warning or "Loaded")
+        self.status.set(self.save_model.player_detection_warning or loaded_status)
 
     def validate_save(self):
         if self.save_model:

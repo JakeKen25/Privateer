@@ -29,10 +29,10 @@ and more capable.
   technology's effect and typical year when that information is available.
 - **Caliber Manager** provides the available quality setting for each supported
   gun caliber.
-- **Economy Manager** edits funds and base resources together and shows an
+- **Economy and Unrest Manager** edits funds, base resources, and unrest together and shows an
   estimated in-game budget breakdown as values change. Further refinement is
   still needed to ensure that the editor's calculator matches in-game statistics.
-- **Infrastructure Manager** edits national dockyard size. Fortification editing
+- **Infrastructure and Fortifications Manager** edits national dockyard size. Fortification editing
   is still under development but is planned for a future release.
 - **Relationship Manager** edits the tension level between nations. This area is
   still under development while alliances and wars are researched.
