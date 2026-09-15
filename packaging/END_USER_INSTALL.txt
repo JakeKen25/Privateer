@@ -1,4 +1,4 @@
-PRIVATEER 0.91 - WINDOWS INSTALLATION
+PRIVATEER 0.92 - WINDOWS INSTALLATION
 =====================================
 
 SYSTEM REQUIREMENTS
@@ -9,7 +9,7 @@ SYSTEM REQUIREMENTS
 
 INSTALL
 
-1. Right-click Privateer-0.91-Windows-x64.zip and choose Extract All.
+1. Right-click Privateer-0.92-Windows-x64.zip and choose Extract All.
 2. Keep the entire extracted Privateer folder together. Do not move only
    Privateer.exe out of the folder, and do not run it from inside the ZIP.
 3. Open the extracted folder and double-click Privateer.exe.
@@ -20,13 +20,15 @@ INSTALL
 FIRST USE
 
 1. Close Rule the Waves 3 before opening or saving a campaign in Privateer.
-2. Select Browse and choose the complete save-slot folder, normally:
+2. Complete the First Run Configuration window. Confirm the Rule the Waves 3
+   installation folder, save-game folder, and backup settings.
+3. Select Browse and choose the complete save-slot folder, normally:
 
    Documents\My Games\Rule the Waves 3\Save\GameX
 
    Choose the GameX folder containing the .bcs, .des, and associated save files.
-3. Use Validate before saving changes.
-4. Use Save As for the first edited test copy. In-place Save creates a backup by
+4. Use Validate before saving changes.
+5. Use Save As for the first edited test copy. In-place Save creates a backup by
    default; its behavior and destination can be changed under Settings.
 
 Technology Manager reads ResearchAreas3.dat from the installed game. The normal
@@ -45,6 +47,6 @@ Close Privateer and delete its extracted folder. To remove preferences too, dele
 
 KNOWN LIMITATIONS
 
-Privateer 0.91 is the first stable release. Keep backups and test edited output in
-a copied save slot. Budget calculations are estimates, and features marked WIP are
+Privateer 0.92 is a stable release. Keep backups and test edited output in a
+copied save slot. Budget calculations are estimates, and features marked WIP are
 not complete.
