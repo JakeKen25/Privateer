@@ -47,7 +47,11 @@ if ($LASTEXITCODE -ne 0) {
 
 $app = Join-Path $staging "Privateer"
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "END_USER_INSTALL.txt") -Destination (Join-Path $app "INSTALL.txt")
-Set-Content -LiteralPath (Join-Path $app "VERSION.txt") -Value "Privateer $version (Windows x64)" -Encoding utf8NoBOM
+[IO.File]::WriteAllText(
+    (Join-Path $app "VERSION.txt"),
+    "Privateer $version (Windows x64)$([Environment]::NewLine)",
+    [Text.UTF8Encoding]::new($false)
+)
 
 $archive = Join-Path $output "Privateer-$version-Windows-x64.zip"
 if (Test-Path -LiteralPath $archive) {

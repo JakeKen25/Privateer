@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from privateer.save import RTW3Save
+from privateer.ship_status import appears_in_transfer_window, ship_status_label
 from privateer.ships_gui import ship_details, ship_stats, transfer_block_reason
 
 
@@ -132,6 +133,75 @@ class ShipTransferTests(unittest.TestCase):
         self.assertEqual(stats["description"], ship.section.fields()["Description"])
         ship.section.set("AircraftCapacity", 20)
         self.assertIn("Carrier", transfer_block_reason(ship))
+
+    def test_verified_fleet_status_labels_and_construction(self):
+        ship = self.save.nation(1).ships[0]
+        fields = dict(ship.section.fields())
+        fields.update({"Fate": "XXX", "InPlay": "1"})
+        expected = {
+            "0": "Active Fleet",
+            "1": "Reserve",
+            "2": "Mothballed",
+            "6": "Foreign Service",
+            "10": "Unknown status (10)",
+        }
+        for raw, label in expected.items():
+            fields["Status"] = raw
+            self.assertEqual(ship_status_label(ship, fields), label)
+        fields["InPlay"] = "0"
+        self.assertEqual(ship_status_label(ship, fields), "Under construction")
+        self.assertTrue(appears_in_transfer_window(fields))
+        self.assertIsNone(transfer_block_reason(ship, fields))
+
+    def test_final_fates_are_labelled_and_blocked_atomically(self):
+        ship = self.save.nation(1).ships[0]
+        cases = {
+            "Scrapped": "Scrapped",
+            "Broken up on slipway": "Scrapped on slipway",
+            "Torpedoed and sunk by enemy submarine": "Sunk",
+            "Mined": "Sunk (mined)",
+            "Scuttled": "Scuttled",
+        }
+        for fate, label in cases.items():
+            fields = dict(ship.section.fields())
+            fields["Fate"] = fate
+            self.assertEqual(ship_status_label(ship, fields), label)
+            self.assertFalse(appears_in_transfer_window(fields))
+            self.assertIn("cannot be transferred", transfer_block_reason(ship, fields))
+
+        ship.section.set("Fate", "Scrapped")
+        original = {name: document.to_bytes() for name, document in self.save.documents.items()}
+        with self.assertRaisesRegex(ValueError, "Scrapped ships cannot be transferred"):
+            self.save.transfer_ship_batch({ship.record_index: 0})
+        self.assertEqual(original, {name: document.to_bytes() for name, document in self.save.documents.items()})
+        self.assertFalse(self.save.modified)
+
+    def test_museum_ship_is_hidden_and_blocked_even_without_final_fate(self):
+        ship = self.save.nation(1).ships[0]
+        fields = dict(ship.section.fields())
+        fields.update({"Fate": "XXX", "InPlay": "1", "Status": "9"})
+        self.assertEqual(ship_status_label(ship, fields), "Museum Ship")
+        self.assertFalse(appears_in_transfer_window(fields))
+        self.assertEqual(transfer_block_reason(ship, fields),
+                         "Museum ships cannot be transferred.")
+
+        ship.section.set("Fate", "XXX")
+        ship.section.set("Status", "9")
+        original = {name: document.to_bytes() for name, document in self.save.documents.items()}
+        with self.assertRaisesRegex(ValueError, "Museum ships cannot be transferred"):
+            self.save.transfer_ship_batch({ship.record_index: 0})
+        self.assertEqual(original, {name: document.to_bytes() for name, document in self.save.documents.items()})
+
+    def test_scrapped_slipway_record_is_not_under_construction(self):
+        ship = next(ship for ship in self.save.nation(1).ships if ship.under_construction)
+        hull = ship.record_index
+        ship.section.set("Fate", "Broken up on slipway")
+        self.save.nations = []
+        self.save._build_model()
+        reparsed = next(candidate for nation in self.save.nations for candidate in nation.ships
+                        if candidate.record_index == hull)
+        self.assertFalse(reparsed.under_construction)
+        self.assertEqual(ship_status_label(reparsed), "Scrapped on slipway")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,13 @@
 """Searchable possession ownership editor with staged transfers."""
 import tkinter as tk
 from tkinter import ttk, messagebox
-from .colonies import possessions, map_document
+from .colonies import (
+    is_home_area_possession,
+    map_area_name,
+    map_document,
+    nation_home_areas,
+    possessions,
+)
 from .table_sort import heading_text, sorted_with_blanks
 
 
@@ -18,6 +24,11 @@ class ColoniesWindow(tk.Toplevel):
         self.transient(parent)
         try:
             self.records = {(p.area, p.index): p for p in possessions(save)}
+            self.home_areas = nation_home_areas(save)
+            self.locked = {
+                pair for pair, possession in self.records.items()
+                if is_home_area_possession(save, possession)
+            }
             filename = map_document(save)[0]
         except ValueError as exc:
             messagebox.showerror('Colony data unavailable', str(exc), parent=parent)
@@ -26,7 +37,7 @@ class ColoniesWindow(tk.Toplevel):
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text=f'Possession ownership - {filename}', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-        ttk.Label(body, text='Includes colonies and home territories. Ownership changes do not settle wars or move ships.').pack(anchor='w')
+        ttk.Label(body, text='Home-area possessions are shown but cannot be transferred. Ownership changes do not settle wars or move ships.').pack(anchor='w')
         filters = ttk.Frame(body)
         filters.pack(fill='x', pady=10)
         self.search = tk.StringVar()
@@ -40,11 +51,13 @@ class ColoniesWindow(tk.Toplevel):
         ttk.Label(filters, textvariable=self.count).pack(side='right')
         frame = ttk.Frame(body)
         frame.pack(fill='both', expand=True)
-        self.table = ttk.Treeview(frame, columns=('name','area','owner','new','value','oil','base'), show='headings', selectmode='extended')
+        self.columns = ('name','area','owner','new','status','value','oil','base')
+        self.table = ttk.Treeview(frame, columns=self.columns, show='headings', selectmode='extended')
         self.heading_labels = {}
-        for key, label, width in [('name','Possession',210),('area','Map area',65),('owner','Current owner',130),('new','New owner',130),('value','Value',55),('oil','Oil',40),('base','Base',55)]:
+        for key, label, width in [('name','Possession',190),('area','Map area',190),('owner','Current owner',120),('new','New owner',120),('status','Transfer status',135),('value','Value',55),('oil','Oil',40),('base','Base',55)]:
             self.heading_labels[key] = label
             self.table.heading(key,text=label,command=lambda column=key:self.sort_by(column)); self.table.column(key,width=width,minwidth=40)
+        self.table.tag_configure('home', foreground='#777777')
         scroll=ttk.Scrollbar(frame,orient='vertical',command=self.table.yview)
         self.table.configure(yscrollcommand=scroll.set)
         scroll.pack(side='right',fill='y'); self.table.pack(fill='both',expand=True)
@@ -69,17 +82,21 @@ class ColoniesWindow(tk.Toplevel):
         rows=[]
         for pair,p in self.records.items():
             if self.owner_filter.get() not in ('All owners',p.owner):continue
-            if self.search.get().strip().casefold() not in f'{p.name} {p.owner} {p.area}'.casefold():continue
-            values={'name':p.name,'area':p.area,'owner':p.owner,'new':self.pending.get(pair,''),
+            area_name = map_area_name(p.area)
+            transfer_status = 'Home area (locked)' if pair in self.locked else 'Transferable'
+            if self.search.get().strip().casefold() not in f'{p.name} {p.owner} {area_name} {transfer_status}'.casefold():continue
+            values={'name':p.name,'area':area_name,'owner':p.owner,'new':self.pending.get(pair,''),
+                    'status':transfer_status,
                     'value':p.value,'oil':p.oil,'base':p.base}
             rows.append((pair,values))
         if self.sort_column:
             rows=sorted_with_blanks(rows,lambda row:row[1][self.sort_column],
                                    reverse=self.sort_reverse,
-                                   numeric=self.sort_column in {'area','value','oil','base'})
+                                   numeric=self.sort_column in {'value','oil','base'})
         for pair,values in rows:
             self.table.insert('','end',iid=f'{pair[0]}:{pair[1]}',
-                              values=tuple(values[key] for key in ('name','area','owner','new','value','oil','base')))
+                              values=tuple(values[key] for key in self.columns),
+                              tags=('home',) if pair in self.locked else ())
         self.count.set(f'{len(self.table.get_children())} / {len(self.records)} possessions')
         self.status.set(f'{len(self.pending)} staged ownership change(s)')
 
@@ -93,12 +110,22 @@ class ColoniesWindow(tk.Toplevel):
     def stage(self):
         if not self.table.selection():
             self.status.set('Select one or more possessions first.');return
+        skipped = 0
         for item in self.table.selection():
             pair=tuple(map(int,item.split(':')))
+            if pair in self.locked:
+                self.pending.pop(pair, None)
+                skipped += 1
+                continue
             owner=self.new_owner.get()
             if owner==self.records[pair].owner:self.pending.pop(pair,None)
             else:self.pending[pair]=owner
         self.render()
+        if skipped:
+            self.status.set(
+                f'{len(self.pending)} staged ownership change(s); '
+                f'{skipped} home-area possession(s) skipped'
+            )
 
     def reset_changes(self):
         self.pending.clear();self.render()

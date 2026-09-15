@@ -1,6 +1,6 @@
 # Privateer
 
-**Version 0.91**
+**Version 0.92**
 
 Privateer is a save editor for **Rule the Waves 3**. It turns many manual,
 error-prone save-file edits into guided tools so players can spend less time
@@ -29,15 +29,16 @@ and more capable.
   technology's effect and typical year when that information is available.
 - **Caliber Manager** provides the available quality setting for each supported
   gun caliber.
-- **Economy Manager** edits funds and base resources together and shows an
+- **Economy and Unrest Manager** edits funds, base resources, and unrest together and shows an
   estimated in-game budget breakdown as values change. Further refinement is
   still needed to ensure that the editor's calculator matches in-game statistics.
-- **Infrastructure Manager** edits national dockyard size. Fortification editing
+- **Infrastructure and Fortifications Manager** edits national dockyard size. Fortification editing
   is still under development but is planned for a future release.
 - **Relationship Manager** edits the tension level between nations. This area is
   still under development while alliances and wars are researched.
-- **Colony Manager** changes colony ownership through the campaign's
-  `MapDataX.dat` file.
+- **Colony Manager** identifies colonies by their named map regions and changes
+  ownership through the campaign's `MapDataX.dat` file. National home regions
+  are identified and locked against transfer.
 - **Admiral Manager** changes the player admiral's name and prestige. It is
   available only for Nation0, which RTW3 uses as the player nation.
 - **Validation, backups, and Save As** help protect campaigns. Backups are
@@ -123,6 +124,7 @@ published releases. Create focused `feature/<name>` or `fix/<name>` branches fro
 `develop` and submit completed work back to `develop`. See
 [BRANCHING.md](BRANCHING.md) for the complete release flow.
 
-Version 0.91 is Privateer's first stable release. Budget calculations remain
-estimates, and features identified as under development still require additional
-file-format research and in-game validation.
+Version 0.92 expands colony and ship-state handling, adds unrest editing and
+save reloading, and introduces first-launch configuration. Budget calculations
+remain estimates, and features identified as under development still require
+additional file-format research and in-game validation.

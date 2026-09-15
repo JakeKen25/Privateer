@@ -4,6 +4,50 @@ import re
 from .document import FIELD
 
 
+MAP_AREA_NAMES = (
+    'Northern Europe',
+    'The Mediterranean',
+    'West Africa',
+    'Indian Ocean',
+    'Southeast Asia',
+    'Northeast Asia',
+    'North American East Coast',
+    'The Caribbean',
+    'North American West Coast',
+    'South American East Coast',
+    'South American West Coast (no colonies)',
+    'South Pacific',
+    'Southern Africa',
+    'Central Pacific',
+    'Northern Pacific',
+    'The Baltic',
+)
+_AREA_BY_NAME = {name.casefold(): index for index, name in enumerate(MAP_AREA_NAMES)}
+
+
+def map_area_name(area):
+    """Return the game's display name while remaining safe for future area IDs."""
+    if type(area) is int and 0 <= area < len(MAP_AREA_NAMES):
+        return MAP_AREA_NAMES[area]
+    return f'Unknown map area ({area})'
+
+
+def nation_home_areas(save):
+    """Return each nation's canonical home area from its saved BuildAreaName."""
+    result = {}
+    for nation in save.nations:
+        fields = {key.casefold(): value.strip() for key, value in nation.section.fields().items()}
+        raw_name = fields.get('buildareaname', '')
+        area = _AREA_BY_NAME.get(raw_name.casefold())
+        result[nation.name] = area
+    return result
+
+
+def is_home_area_possession(save, possession):
+    """Whether the current owner holds this possession in its saved home area."""
+    return nation_home_areas(save).get(possession.owner) == possession.area
+
+
 @dataclass(frozen=True)
 class Possession:
     area: int
@@ -90,6 +134,11 @@ def set_owners(save, changes):
             raise ValueError('Choose a nation from the loaded save or Neutral')
         possession = records[pair]
         if possession.owner != owner:
+            if is_home_area_possession(save, possession):
+                raise ValueError(
+                    f'{possession.name} is in {possession.owner}\'s home area '
+                    f'({map_area_name(possession.area)}) and cannot be transferred'
+                )
             writes.append((possession, owner))
     with save.transaction():
         for possession, owner in writes:
@@ -102,7 +151,7 @@ def set_owners(save, changes):
                     start, end = m.span(4)
                     section.lines[index] = line[:start] + leading + owner + trailing + line[end:]
                     break
-            save.audit.append(f'Changed {filename} {possession.name} ({possession.area}/{possession.index}) owner: {possession.owner} -> {owner}')
+            save.audit.append(f'Changed {filename} {possession.name} ({map_area_name(possession.area)}/{possession.index}) owner: {possession.owner} -> {owner}')
         actual = {(p.area, p.index): p.owner for p in possessions(save)}
         if any(actual[(p.area, p.index)] != owner for p, owner in writes):
             raise ValueError('Ownership verification failed')

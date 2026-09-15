@@ -1,6 +1,6 @@
 # Economy and infrastructure managers
 
-Right-click a nation and choose **Economy Manager** to edit Funds and Base Resources
+Right-click a nation and choose **Economy and Unrest Manager** to edit Funds, Base Resources, and Unrest Level
 in one window. Each value retains the existing Set value, Adjust by amount, and
 Adjust by percentage operations. Blank rows remain unchanged, and Apply stages both
 validated edits as one transaction.
@@ -22,7 +22,7 @@ unknown expense fields.
 The bottom of the calculator states that all displayed budget numbers are estimates
 and that the underlying math still needs refinement.
 
-Choose **Infrastructure Manager** to edit the selected nation's existing `DockSize`
+Choose **Infrastructure and Fortifications Manager** to edit the selected nation's existing `DockSize`
 field. This controls the maximum displacement that can be built in that nation's
 dockyards. Fortifications remain a disabled placeholder until their storage and
 side effects are verified.

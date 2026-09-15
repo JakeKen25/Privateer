@@ -25,6 +25,9 @@ def settings_path(config_directory=None) -> Path:
 class AppSettings:
     create_backups: bool = True
     backup_directory: str = ""
+    rtw3_install_directory: str = ""
+    save_game_directory: str = ""
+    first_run_complete: bool = False
 
     @classmethod
     def load(cls, path=None):
@@ -37,10 +40,24 @@ class AppSettings:
             raise ValueError(f"Unable to read settings: {exc}") from exc
         if not isinstance(data, dict) or type(data.get("create_backups", True)) is not bool:
             raise ValueError("Invalid Create backups setting")
-        directory = data.get("backup_directory", "")
-        if not isinstance(directory, str) or "\x00" in directory:
-            raise ValueError("Invalid backup directory setting")
-        return cls(data.get("create_backups", True), directory)
+        if type(data.get("first_run_complete", False)) is not bool:
+            raise ValueError("Invalid first-run setting")
+        paths = {}
+        for key, label in (
+                ("backup_directory", "backup directory"),
+                ("rtw3_install_directory", "Rule the Waves 3 install directory"),
+                ("save_game_directory", "save game directory")):
+            value = data.get(key, "")
+            if not isinstance(value, str) or "\x00" in value:
+                raise ValueError(f"Invalid {label} setting")
+            paths[key] = value
+        return cls(
+            create_backups=data.get("create_backups", True),
+            backup_directory=paths["backup_directory"],
+            rtw3_install_directory=paths["rtw3_install_directory"],
+            save_game_directory=paths["save_game_directory"],
+            first_run_complete=data.get("first_run_complete", False),
+        )
 
     def save(self, path=None):
         target = Path(path).resolve() if path is not None else settings_path()
@@ -56,3 +73,4 @@ class AppSettings:
             if temporary is not None and temporary.exists():
                 temporary.unlink()
         return target
+

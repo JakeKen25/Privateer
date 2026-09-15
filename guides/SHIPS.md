@@ -18,9 +18,19 @@ remain unassigned.
 
 The transfer window displays the saved type, name, class, displacement, speed,
 main caliber, search/fire-control radar classes, ASW value, build year, location,
-status, crew quality, maintenance, and armament description. Status and crew
-quality remain labeled as raw values because their integer-to-text enumerations
-have not been validated.
+status, crew quality, maintenance, and armament description. Verified live-fleet
+status values are shown as Active Fleet, Reserve, Mothballed, and Foreign Service.
+Unverified live codes retain their number and are labelled unknown rather than
+being guessed. Crew quality remains a raw value.
+
+Final disposition is read before interpreting ordinary fleet status. Scrapped,
+broken-up-on-slipway, sunk, mined, scuttled, and other unavailable historical
+hulls are omitted from the transfer window and cannot be transferred through the
+save API. Museum ships are identified by the verified Status value 9 and are also
+omitted and blocked, even if Fate is still XXX. A live record with Fate set to
+XXX and InPlay set to 0 is shown as Under construction; it remains eligible under
+the existing construction-transfer safeguards. This distinction prevents a
+broken-up slipway record from being mistaken for a ship still being built.
 
 Click any fleet-table column header to sort by that column. Click the same header
 again to reverse the order. The arrow in the header shows the active direction;
