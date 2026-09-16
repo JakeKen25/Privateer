@@ -37,6 +37,7 @@ class RTW3Save:
         self._tension_changes = False
         self._colony_changes = False
         self._ship_changes = False
+        self._aircraft_changes = False
         self._source_snapshot = None
         self._build_model()
 
@@ -94,8 +95,8 @@ class RTW3Save:
                 for p in folder.iterdir() if p.is_file()}
 
     def _check_tension_source(self):
-        if (self._tension_changes or self._colony_changes or self._ship_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
-            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, or ship edits.")
+        if (self._tension_changes or self._colony_changes or self._ship_changes or self._aircraft_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, ship, or aircraft edits.")
 
     def transfer_ship_batch(self, assignments):
         from .ship_transfers import transfer_batch
@@ -108,6 +109,10 @@ class RTW3Save:
     def set_tensions(self, changes):
         from .diplomacy import set_tensions
         set_tensions(self, changes)
+
+    def create_aircraft_type(self, nation, template_slot: int, changes: dict[str, str]):
+        from .aircraft import create_aircraft_type
+        return create_aircraft_type(self, nation, template_slot, changes)
 
     def _build_model(self) -> None:
         main = self.documents[self.main_file]

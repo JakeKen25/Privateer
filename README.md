@@ -41,6 +41,9 @@ and more capable.
   are identified and locked against transfer.
 - **Admiral Manager** changes the player admiral's name and prestige. It is
   available only for Nation0, which RTW3 uses as the player nation.
+- **Aircraft Manager** creates aircraft models for a selected nation by copying
+  a saved model as a template. You can edit its name, performance, armament,
+  carrier capability, and available aircraft stock before staging the new model.
 - **Validation, backups, and Save As** help protect campaigns. Backups are
   enabled by default, their destination is configurable, and settings persist
   between sessions.
