@@ -141,7 +141,7 @@ class AircraftWindow(tk.Toplevel):
 
     def change_role(self):
         purpose = self._purpose()
-        defaults, used_fallback = average_defaults(purpose, self.year)
+        defaults, source_span = average_defaults(purpose, self.year)
         applicable = set(APPLICABLE_FIELDS[purpose])
         for key, value in defaults.items():
             self.stats[key].set(value if key in applicable else ("-1" if key == "Radar" else "0"))
@@ -164,10 +164,17 @@ class AircraftWindow(tk.Toplevel):
         if self.table.exists(str(self.template.slot)):
             self.table.selection_set(str(self.template.slot))
             self.table.see(str(self.template.slot))
-        note = ("No Game 6 models exist for this type in the campaign year; "
-                "each stat uses the lowest year-average value for this type. "
-                if used_fallback else
-                f"Defaults use Game 6 {self.role.get().lower()} averages for {self.year}. ")
+        if source_span is None:
+            note = ("This year is earlier than every Game 6 model for this type; "
+                    "each stat uses the lowest observed yearly average as an early-design default. ")
+        elif source_span[0] < self.year < source_span[1]:
+            note = (f"No Game 6 {self.role.get().lower()} models exist for {self.year}; "
+                    f"defaults interpolate between {source_span[0]} and {source_span[1]}. ")
+        elif source_span[0] < self.year:
+            note = (f"No later Game 6 {self.role.get().lower()} data exists for {self.year}; "
+                    f"defaults carry forward the latest averages from {source_span[0]}. ")
+        else:
+            note = f"Defaults use Game 6 {self.role.get().lower()} averages for {self.year}. "
         self.status.set(note + "All shown values can be edited before Apply.")
 
     def render(self):
