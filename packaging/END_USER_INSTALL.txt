@@ -1,4 +1,4 @@
-PRIVATEER 0.931 BETA - WINDOWS INSTALLATION
+PRIVATEER 0.932 BETA - WINDOWS INSTALLATION
 =====================================
 
 SYSTEM REQUIREMENTS
@@ -9,7 +9,7 @@ SYSTEM REQUIREMENTS
 
 INSTALL
 
-1. Right-click Privateer-0.931-Windows-x64.zip and choose Extract All.
+1. Right-click Privateer-0.932-Windows-x64.zip and choose Extract All.
 2. Keep the entire extracted Privateer folder together. Do not move only
    Privateer.exe out of the folder, and do not run it from inside the ZIP.
 3. Open the extracted folder and double-click Privateer.exe.
@@ -47,6 +47,6 @@ Close Privateer and delete its extracted folder. To remove preferences too, dele
 
 KNOWN LIMITATIONS
 
-Privateer 0.931 Beta is a prerelease. Keep backups and test edited output in a
+Privateer 0.932 Beta is a prerelease. Keep backups and test edited output in a
 copied save slot. Budget calculations are estimates, and features marked WIP are
 not complete.
