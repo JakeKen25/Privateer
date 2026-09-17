@@ -20,13 +20,13 @@ from .busy import run_background, show_while_opening
 from .settings import AppSettings
 from .settings_gui import SettingsWindow
 from .table_sort import heading_text, sorted_with_blanks
-from .version import __version__
+from .version import display_version
 
 
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title(f"Privateer {__version__} — Rule the Waves 3 Save Editor")
+        self.title(f"Privateer {display_version()} — Rule the Waves 3 Save Editor")
         self.geometry("900x560")
         self.save_model: RTW3Save | None = None
         self.main_sort_column = None

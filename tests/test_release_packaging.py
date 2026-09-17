@@ -29,6 +29,8 @@ def test_release_workflow_builds_only_the_portable_archive():
     assert '"packaging/RELEASE_CHANNEL"' in workflow
     assert '"packaging/RELEASE_NOTES.md"' in workflow
     assert "gh release create" in workflow
+    assert 'if ($isBeta)' in workflow
+    assert '--prerelease' in workflow
     assert "--notes-file" in workflow
     assert "--prerelease=false" in workflow
     assert "refs/heads/main" in workflow

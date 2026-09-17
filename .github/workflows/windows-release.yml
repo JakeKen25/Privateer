@@ -35,8 +35,8 @@ jobs:
             throw "Release marker $releaseVersion does not match package version $version"
           }
           $channel = (Get-Content packaging/RELEASE_CHANNEL -Raw).Trim()
-          if ($channel -ne "stable") {
-            throw "The main branch only publishes the stable channel"
+          if ($channel -notin @("stable", "beta")) {
+            throw "Release channel must be stable or beta"
           }
 
       - name: Check tag matches package version
@@ -44,8 +44,10 @@ jobs:
         shell: pwsh
         run: |
           $version = python -c "from privateer.version import __version__; print(__version__)"
-          if ("v$version" -ne "${{ github.ref_name }}") {
-            throw "Tag ${{ github.ref_name }} does not match package version v$version"
+          $channel = (Get-Content packaging/RELEASE_CHANNEL -Raw).Trim()
+          $expectedTag = if ($channel -eq "beta") { "v$version-beta" } else { "v$version" }
+          if ($expectedTag -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} does not match release tag $expectedTag"
           }
 
       - name: Install release builder
@@ -69,11 +71,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $version = (Get-Content packaging/RELEASE_VERSION -Raw).Trim()
-          $tag = "v$version"
+          $channel = (Get-Content packaging/RELEASE_CHANNEL -Raw).Trim()
+          $isBeta = $channel -eq "beta"
+          $tag = if ($isBeta) { "v$version-beta" } else { "v$version" }
+          $title = if ($isBeta) { "Privateer $version Beta" } else { "Privateer $version" }
           $archive = Get-ChildItem release/Privateer-*-Windows-x64.zip | Select-Object -First 1
           if (gh release view $tag 2>$null) {
-            gh release edit $tag --prerelease=false --latest --title "Privateer $version" --notes-file packaging/RELEASE_NOTES.md
+            if ($isBeta) {
+              gh release edit $tag --prerelease --latest=false --title $title --notes-file packaging/RELEASE_NOTES.md
+            } else {
+              gh release edit $tag --prerelease=false --latest --title $title --notes-file packaging/RELEASE_NOTES.md
+            }
             gh release upload $tag $archive.FullName --clobber
           } else {
-            gh release create $tag $archive.FullName --target "${{ github.sha }}" --notes-file packaging/RELEASE_NOTES.md --title "Privateer $version"
+            if ($isBeta) {
+              gh release create $tag $archive.FullName --target "${{ github.sha }}" --notes-file packaging/RELEASE_NOTES.md --title $title --prerelease
+            } else {
+              gh release create $tag $archive.FullName --target "${{ github.sha }}" --notes-file packaging/RELEASE_NOTES.md --title $title
+            }
           }

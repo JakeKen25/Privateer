@@ -1,42 +1,45 @@
-# Privateer 0.92
+# Privateer 0.93 Beta
 
-Privateer 0.92 expands the stable Rule the Waves 3 save editor with safer colony
-transfers, clearer ship-state handling, unrest editing, save reloading, and a
-guided first-launch setup.
+Privateer 0.93 Beta introduces aircraft-model creation and improves how aircraft
+design values are selected for the current campaign. This is a beta release so
+the new aircraft workflow can receive broader in-game testing before it becomes
+part of the next stable release.
 
-## Major improvements
+## Aircraft Manager
 
-- The Colony Manager now shows named map regions instead of raw area numbers.
-- National home regions are identified and locked so they cannot be transferred
-  through the Colony Manager.
-- The Transfer Ships screen now displays saved ship statuses, including Active
-  Fleet, Reserve, Mothballed, Foreign Service, and Under Construction.
-- Destroyed, sunk, mined, scrapped, retired, and museum ships are omitted from
-  the transfer list and rejected by the transfer API.
-- The Economy and Unrest Manager can edit each nation's `UnrestLevel` alongside
-  funds and base resources. These changes are staged and validated together.
-- A Reload button refreshes the currently selected save without opening the
-  folder picker again. The selected nation is retained, and Privateer warns
-  before discarding unsaved changes.
-- First Run Configuration now collects the Rule the Waves 3 installation folder,
-  save-game folder, and backup preferences. Every option remains available later
-  through Settings.
+- Create a new aircraft model for any nation from the nation context menu.
+- Choose among all supported aircraft roles, including fighters, bombers,
+  floatplanes, patrol aircraft, jets, and helicopters.
+- Start with **Privateer** as the manufacturer or choose a manufacturer already
+  used by the selected nation.
+- Set the model's design year automatically from the current campaign year.
+- Show only the statistics that apply to the selected aircraft role.
+- Prefill editable statistics using year-by-year averages derived from all 1,121
+  aircraft models observed in Game 6.
+- When a role has no model in the campaign year, use that role's lowest observed
+  yearly average for each field as a conservative starting point.
+- Preserve the source model's unknown internal fields and leave existing air
+  units and squadrons unchanged.
 
-## Additional refinements
+## Safety and validation
 
-- Colony, ship-transfer, economy, and main tables retain sortable column headers.
-- Loading, reloading, validating, and saving continue to use responsive progress
-  windows for larger campaigns.
-- Economy and Infrastructure menu names now reflect unrest and planned
-  fortification management.
+- New aircraft models receive a contiguous aircraft slot and an ID allocated
+  through the campaign's global ID counter.
+- Aircraft-only saves compare all other loaded campaign files and sections with
+  their original data before writing.
+- Existing unrelated ship-design validation findings no longer prevent a valid
+  aircraft-only edit from being saved.
+- The complete automated suite passes 91 tests, including aircraft creation in a
+  fixture that already contains an unrelated missing ship-design reference.
 
 ## Known limitations
 
-- Economy projections are estimates and still require refinement against the
-  game's internal calculations.
+- Aircraft Manager creates aircraft model definitions; it does not create or
+  modify air units or squadrons.
+- The Game 6 averages are practical starting values and may not match every
+  campaign's technology state or the game's internal aircraft generator.
+- Economy projections are estimates and still require refinement.
 - Relationship editing remains under development. Fortification editing and Ship
   Spawner remain placeholders.
-- Transfers involving aircraft carriers or certain active campaign-division
-  relationships remain blocked until their linked records can be handled safely.
 
-Keep a known-good backup and test important edits in a copied save slot.
+Keep automatic backups enabled and test important edits in a copied save slot.

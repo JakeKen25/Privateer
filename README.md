@@ -1,6 +1,6 @@
 # Privateer
 
-**Version 0.92**
+**Version 0.93 Beta**
 
 Privateer is a save editor for **Rule the Waves 3**. It turns many manual,
 error-prone save-file edits into guided tools so players can spend less time
@@ -128,7 +128,8 @@ published releases. Create focused `feature/<name>` or `fix/<name>` branches fro
 `develop` and submit completed work back to `develop`. See
 [BRANCHING.md](BRANCHING.md) for the complete release flow.
 
-Version 0.92 expands colony and ship-state handling, adds unrest editing and
-save reloading, and introduces first-launch configuration. Budget calculations
-remain estimates, and features identified as under development still require
-additional file-format research and in-game validation.
+Version 0.93 Beta adds aircraft-model creation with nation-specific manufacturer
+choices, campaign-year design dates, type-specific fields, and editable defaults
+derived from Game 6 aircraft averages. Budget calculations remain estimates,
+and features identified as under development still require additional file-format
+research and in-game validation.

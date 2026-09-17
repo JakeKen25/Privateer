@@ -13,6 +13,7 @@ $work = Join-Path $repo ".release-work"
 $staging = Join-Path $output "staging"
 
 $version = (& $PythonExe -c "from privateer.version import __version__; print(__version__)" | Select-Object -Last 1).Trim()
+$displayVersion = (& $PythonExe -c "from privateer.version import display_version; print(display_version())" | Select-Object -Last 1).Trim()
 if (-not $version) {
     throw "Could not determine the Privateer version"
 }
@@ -49,7 +50,7 @@ $app = Join-Path $staging "Privateer"
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "END_USER_INSTALL.txt") -Destination (Join-Path $app "INSTALL.txt")
 [IO.File]::WriteAllText(
     (Join-Path $app "VERSION.txt"),
-    "Privateer $version (Windows x64)$([Environment]::NewLine)",
+    "Privateer $displayVersion (Windows x64)$([Environment]::NewLine)",
     [Text.UTF8Encoding]::new($false)
 )
 

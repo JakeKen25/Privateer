@@ -3,8 +3,9 @@
 The GitHub Actions workflow in `.github/workflows/windows-release.yml` builds
 the end-user Windows package. A manual workflow run saves the ZIP as a workflow
 artifact. Changing `RELEASE_VERSION` or `RELEASE_CHANNEL` on `main` creates or
-updates that version's stable release and attaches the ZIP. Pushing a matching
-version tag also builds and attaches the package.
+updates that version's release and attaches the ZIP. The `stable` channel uses
+`v<version>` and the `beta` channel uses `v<version>-beta` as a prerelease.
+Pushing a matching channel tag also builds and attaches the package.
 
 `RELEASE_VERSION` and any pushed tag must match
 `privateer.version.__version__`. Update the package version,
