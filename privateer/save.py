@@ -37,6 +37,7 @@ class RTW3Save:
         self._tension_changes = False
         self._colony_changes = False
         self._ship_changes = False
+        self._aircraft_changes = False
         self._source_snapshot = None
         self._build_model()
 
@@ -94,8 +95,8 @@ class RTW3Save:
                 for p in folder.iterdir() if p.is_file()}
 
     def _check_tension_source(self):
-        if (self._tension_changes or self._colony_changes or self._ship_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
-            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, or ship edits.")
+        if (self._tension_changes or self._colony_changes or self._ship_changes or self._aircraft_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, ship, or aircraft edits.")
 
     def transfer_ship_batch(self, assignments):
         from .ship_transfers import transfer_batch
@@ -108,6 +109,10 @@ class RTW3Save:
     def set_tensions(self, changes):
         from .diplomacy import set_tensions
         set_tensions(self, changes)
+
+    def create_aircraft_type(self, nation, template_slot: int, changes: dict[str, str], *, purpose: int | None = None):
+        from .aircraft import create_aircraft_type
+        return create_aircraft_type(self, nation, template_slot, changes, purpose=purpose)
 
     def _build_model(self) -> None:
         main = self.documents[self.main_file]
@@ -511,15 +516,40 @@ class RTW3Save:
         report = self.validate()
         if not report.valid: raise SaveValidationError(report)
 
+    def _validate_for_write(self) -> bool:
+        """Validate a new aircraft record without rechecking unrelated old ships."""
+        if self._aircraft_changes:
+            from .aircraft import validate_aircraft_only_changes
+            try:
+                validate_aircraft_only_changes(self)
+            except ValueError:
+                pass
+            else:
+                return True
+        self.validate_or_raise()
+        return False
+
+    def _validate_written_copy(self, folder: Path, aircraft_only: bool) -> None:
+        if not aircraft_only:
+            RTW3Save.load(folder).validate_or_raise()
+            return
+        reloaded = RTW3Save.load(folder)
+        from .aircraft import aircraft_types
+        if aircraft_types(reloaded) != aircraft_types(self):
+            raise ValueError("The written aircraft records differ from the staged records")
+        for name, document in self.documents.items():
+            if reloaded.documents[name].to_bytes() != document.to_bytes():
+                raise ValueError(f"The written save file differs from the staged file: {name}")
+
     def save_as(self, destination: str | Path) -> Path:
         self._check_tension_source()
-        self.validate_or_raise(); destination = Path(destination).resolve()
+        aircraft_only = self._validate_for_write(); destination = Path(destination).resolve()
         if destination.exists(): raise FileExistsError(f"Destination already exists: {destination}")
         temporary = Path(tempfile.mkdtemp(prefix=f".{destination.name}-", dir=destination.parent))
         try:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True)
             self._write_documents(temporary)
-            RTW3Save.load(temporary).validate_or_raise()
+            self._validate_written_copy(temporary, aircraft_only)
             self._check_tension_source()
             temporary.replace(destination)
         except Exception:
@@ -528,7 +558,7 @@ class RTW3Save:
 
     def save(self, *, create_backup: bool = True, backup_directory=None) -> Path | None:
         self._check_tension_source()
-        self.validate_or_raise()
+        aircraft_only = self._validate_for_write()
         stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
         backup = None
         persistent_recovery = bool(create_backup)
@@ -549,7 +579,7 @@ class RTW3Save:
         cleanup_recovery = not persistent_recovery
         try:
             shutil.copytree(self.folder, temporary, dirs_exist_ok=True); self._write_documents(temporary)
-            RTW3Save.load(temporary).validate_or_raise()
+            self._validate_written_copy(temporary, aircraft_only)
             self._check_tension_source()
             names = [*self.documents, "RTW3_SAVE_EDITOR_LOG.txt"]
             attempted = []
