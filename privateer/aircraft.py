@@ -88,15 +88,43 @@ def suggested_template(types: list[AircraftType], purpose: int, nation_index: in
     ))
 
 
-def average_defaults(purpose: int, year: int) -> tuple[dict[str, str], bool]:
-    """Return Game6 role/year means, or each field's lowest role mean."""
+def _round_ratio_half_up(numerator: int, denominator: int) -> int:
+    sign = -1 if numerator < 0 else 1
+    return sign * ((2 * abs(numerator) + denominator) // (2 * denominator))
+
+
+def average_defaults(purpose: int, year: int) -> tuple[dict[str, str], tuple[int, int] | None]:
+    """Return exact, interpolated, carried-forward, or early-design means.
+
+    ``None`` as the source span means the request predates all observed models
+    for the role, so each field uses its lowest observed yearly mean.
+    """
     if purpose not in ROLE_NAMES:
         raise ValueError("Choose a supported aircraft type")
-    row = YEARLY_AVERAGES[purpose].get(year)
+    yearly = YEARLY_AVERAGES[purpose]
     minima = FIELD_MINIMA[purpose]
-    values = {key: str(row[key] if row is not None and key in row else minima[key])
-              for key in FIELD_NAMES}
-    return values, row is None
+    years = sorted(yearly)
+    if year < years[0]:
+        return {key: str(minima[key]) for key in FIELD_NAMES}, None
+    if year >= years[-1]:
+        source_year = years[-1]
+        row = yearly[source_year]
+        return {key: str(row.get(key, minima[key])) for key in FIELD_NAMES}, (
+            source_year, source_year)
+    earlier = max(observed_year for observed_year in years if observed_year <= year)
+    if earlier == year:
+        row = yearly[year]
+        return {key: str(row.get(key, minima[key])) for key in FIELD_NAMES}, (year, year)
+    later = min(observed_year for observed_year in years if observed_year > year)
+    span = later - earlier
+    offset = year - earlier
+    values = {}
+    for key in FIELD_NAMES:
+        start = yearly[earlier].get(key, minima[key])
+        end = yearly[later].get(key, minima[key])
+        numerator = start * span + (end - start) * offset
+        values[key] = str(_round_ratio_half_up(numerator, span))
+    return values, (earlier, later)
 
 
 def validate_aircraft_only_changes(save) -> None:

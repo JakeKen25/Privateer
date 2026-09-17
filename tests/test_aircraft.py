@@ -70,15 +70,23 @@ def test_aircraft_parser_rejects_duplicate_model_ids(tmp_path):
         aircraft_types(save)
 
 
-def test_game6_averages_are_grouped_by_role_and_year_with_minimum_fallback():
+def test_game6_averages_interpolate_gaps_and_use_minima_only_before_first_year():
     assert MODEL_COUNT == 1121
     assert sum(row["count"] for years in YEARLY_AVERAGES.values()
                for row in years.values()) == MODEL_COUNT
-    fighter, fallback = average_defaults(0, 1970)
-    assert not fallback
+    fighter, source_span = average_defaults(0, 1970)
+    assert source_span == (1970, 1970)
     assert (fighter["MaxSpeed"], fighter["Firepower"]) == ("417", "13")
-    helicopter, fallback = average_defaults(13, 1914)
-    assert fallback
+    fighter_1951, source_span = average_defaults(0, 1951)
+    assert source_span == (1950, 1952)
+    assert (fighter_1951["MaxSpeed"], fighter_1951["CruiseSpeed"],
+            fighter_1951["LtEndurance"], fighter_1951["Toughness"]) == (
+                "411", "238", "278", "10")
+    fighter_future, source_span = average_defaults(0, 1971)
+    assert source_span == (1970, 1970)
+    assert fighter_future == fighter
+    helicopter, source_span = average_defaults(13, 1914)
+    assert source_span is None
     assert helicopter["MaxSpeed"] == str(FIELD_MINIMA[13]["MaxSpeed"])
     assert helicopter["Maneuver"] == str(FIELD_MINIMA[13]["Maneuver"])
     assert "Torpedo1" in APPLICABLE_FIELDS[2]
@@ -98,7 +106,7 @@ def test_nation_manufacturers_and_campaign_year_drive_suggested_design(tmp_path)
 
 def test_chosen_aircraft_type_overrides_template_role(tmp_path):
     save = aircraft_save(tmp_path)
-    stats, _fallback = average_defaults(13, 1941)
+    stats, _source_span = average_defaults(13, 1941)
     created = save.create_aircraft_type(
         0, 0, {"Manufacturer": "Privateer", "Name": "Helo 1941",
                "Year": "1941", "BaseModelYear": "1941", **stats},

@@ -10,9 +10,12 @@ or Save As writes the campaign.
 
 The form uses derived averages from all 1,121 Game 6 aircraft model records,
 grouped by aircraft type and model year. Numeric game fields are rounded to
-whole numbers. If the campaign year has no Game 6 models for the selected type,
-each field uses the lowest yearly average for that type. For example, a
-helicopter created in 1914 uses those per-field minimum values because Game 6
+whole numbers. If the campaign year falls between two years with Game 6 models,
+each field is linearly interpolated between those yearly averages and rounded to
+the nearest whole number. After the final observed year, the latest averages
+carry forward. The per-field lowest observed averages are used only when the
+requested year is earlier than every observed model for that type. For example,
+a helicopter created in 1914 uses those early-design defaults because Game 6
 helicopters begin in 1954. All displayed defaults remain editable. The form
 shows fields observed as relevant for that aircraft type; fields unused by the
 type are hidden and set to inactive defaults. The aggregate table lives in
