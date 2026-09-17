@@ -3,6 +3,11 @@
 Privateer 0.931 Beta fixes an aircraft-default progression issue identified
 after 0.93 Beta was published.
 
+The Windows package was rebuilt with Python 3.14 after Microsoft Defender's
+machine-learning scanner flagged the original GitHub Actions executable. An
+independently built Python 3.14 package scanned clean with the same Defender
+signatures. Source code and application behavior are unchanged by this rebuild.
+
 ## Corrected aircraft progression
 
 - If the selected aircraft type has no data for the current campaign year,
