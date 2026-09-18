@@ -128,9 +128,8 @@ published releases. Create focused `feature/<name>` or `fix/<name>` branches fro
 `develop` and submit completed work back to `develop`. See
 [BRANCHING.md](BRANCHING.md) for the complete release flow.
 
-Version 0.932 Beta corrects aircraft defaults so a year without new designs is
-interpolated from the nearest earlier and later yearly averages. The latest data
-carries forward after the final observed year, while minimum fallback values
-apply only to designs that predate every observed model of that type. Budget
+Aircraft defaults now come from a stored row for each aircraft type and campaign
+year, with plausible values already filled in for missing years. No runtime
+interpolation is needed. Budget
 calculations remain estimates, and features identified as under development
 still require additional file-format research and in-game validation.

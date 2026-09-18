@@ -70,23 +70,19 @@ def test_aircraft_parser_rejects_duplicate_model_ids(tmp_path):
         aircraft_types(save)
 
 
-def test_game6_averages_interpolate_gaps_and_use_minima_only_before_first_year():
+def test_static_year_table_preserves_game6_defaults():
     assert MODEL_COUNT == 1121
     assert sum(row["count"] for years in YEARLY_AVERAGES.values()
                for row in years.values()) == MODEL_COUNT
-    fighter, source_span = average_defaults(0, 1970)
-    assert source_span == (1970, 1970)
+    fighter = average_defaults(0, 1970)
     assert (fighter["MaxSpeed"], fighter["Firepower"]) == ("417", "13")
-    fighter_1951, source_span = average_defaults(0, 1951)
-    assert source_span == (1950, 1952)
+    fighter_1951 = average_defaults(0, 1951)
     assert (fighter_1951["MaxSpeed"], fighter_1951["CruiseSpeed"],
             fighter_1951["LtEndurance"], fighter_1951["Toughness"]) == (
                 "411", "238", "278", "10")
-    fighter_future, source_span = average_defaults(0, 1971)
-    assert source_span == (1970, 1970)
+    fighter_future = average_defaults(0, 1971)
     assert fighter_future == fighter
-    helicopter, source_span = average_defaults(13, 1914)
-    assert source_span is None
+    helicopter = average_defaults(13, 1914)
     assert helicopter["MaxSpeed"] == str(FIELD_MINIMA[13]["MaxSpeed"])
     assert helicopter["Maneuver"] == str(FIELD_MINIMA[13]["Maneuver"])
     assert "Torpedo1" in APPLICABLE_FIELDS[2]
@@ -106,7 +102,7 @@ def test_nation_manufacturers_and_campaign_year_drive_suggested_design(tmp_path)
 
 def test_chosen_aircraft_type_overrides_template_role(tmp_path):
     save = aircraft_save(tmp_path)
-    stats, _source_span = average_defaults(13, 1941)
+    stats = average_defaults(13, 1941)
     created = save.create_aircraft_type(
         0, 0, {"Manufacturer": "Privateer", "Name": "Helo 1941",
                "Year": "1941", "BaseModelYear": "1941", **stats},
@@ -137,3 +133,21 @@ def test_aircraft_only_save_preserves_preexisting_fleet_validation_issues(tmp_pa
     reloaded = RTW3Save.load(save.folder)
     assert aircraft_types(reloaded)[-1].fields == created.fields
     assert "missing_design" in {issue.code for issue in reloaded.validate().issues}
+
+
+def test_static_table_covers_every_supported_year_and_returns_independent_values():
+    from privateer.aircraft import ROLE_NAMES
+    from privateer.aircraft_game6_averages import FIELD_NAMES
+    from privateer.aircraft_year_defaults import YEAR_DEFAULTS
+    assert set(YEAR_DEFAULTS) == set(ROLE_NAMES)
+    for yearly in YEAR_DEFAULTS.values():
+        assert set(yearly) == set(range(1800, 2201))
+        assert all(len(row) == len(FIELD_NAMES) for row in yearly.values())
+    values = average_defaults(0, 1951)
+    values["MaxSpeed"] = "999"
+    assert average_defaults(0, 1951)["MaxSpeed"] == "411"
+    for year in (1799, 2201):
+        with pytest.raises(ValueError, match="Campaign year"):
+            average_defaults(0, year)
+    with pytest.raises(ValueError, match="supported aircraft type"):
+        average_defaults(99, 1951)

@@ -8,19 +8,19 @@ manufacturer dropdown also lists every manufacturer already used by the
 selected nation's aircraft models. The change is staged in memory until Save
 or Save As writes the campaign.
 
-The form uses derived averages from all 1,121 Game 6 aircraft model records,
-grouped by aircraft type and model year. Numeric game fields are rounded to
-whole numbers. If the campaign year falls between two years with Game 6 models,
-each field is linearly interpolated between those yearly averages and rounded to
-the nearest whole number. After the final observed year, the latest averages
-carry forward. The per-field lowest observed averages are used only when the
-requested year is earlier than every observed model for that type. For example,
-a helicopter created in 1914 uses those early-design defaults because Game 6
-helicopters begin in 1954. All displayed defaults remain editable. The form
-shows fields observed as relevant for that aircraft type; fields unused by the
-type are hidden and set to inactive defaults. The aggregate table lives in
-`privateer/aircraft_game6_averages.py` and contains no model names or raw save
-records.
+The form reads a static table row for the selected aircraft type and exact
+campaign year. `privateer/aircraft_year_defaults.py` contains all years from
+1800 through 2200. No interpolation or year-based stat calculations run when
+opening the form or adding an aircraft.
+
+The table was prepared from the 1,121 Game 6 models summarized in
+`privateer/aircraft_game6_averages.py`. Missing intermediate years were filled
+once using linear interpolation with whole-number half-up rounding. Years
+before the first observed model use per-field minimum averages; years after
+the last observed model repeat its averages. These values are stored explicitly
+in the table. Both files contain aggregate statistics, not raw save records.
+All displayed defaults remain editable. Fields unused by the selected type
+are hidden and set to inactive defaults.
 
 Privateer reads models from `[AircraftTypes]` in `RTWGameX.bcs`. Each `ATn` model
 contains a manufacturer, model name, year, role (`Purpose`), nation index,

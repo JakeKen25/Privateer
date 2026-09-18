@@ -6,7 +6,8 @@ from dataclasses import dataclass
 import re
 
 from .document import FIELD, Section, TextDocument
-from .aircraft_game6_averages import FIELD_MINIMA, FIELD_NAMES, YEARLY_AVERAGES
+from .aircraft_game6_averages import FIELD_NAMES
+from .aircraft_year_defaults import YEAR_DEFAULTS
 
 
 ROLE_NAMES = {
@@ -88,43 +89,15 @@ def suggested_template(types: list[AircraftType], purpose: int, nation_index: in
     ))
 
 
-def _round_ratio_half_up(numerator: int, denominator: int) -> int:
-    sign = -1 if numerator < 0 else 1
-    return sign * ((2 * abs(numerator) + denominator) // (2 * denominator))
-
-
-def average_defaults(purpose: int, year: int) -> tuple[dict[str, str], tuple[int, int] | None]:
-    """Return exact, interpolated, carried-forward, or early-design means.
-
-    ``None`` as the source span means the request predates all observed models
-    for the role, so each field uses its lowest observed yearly mean.
-    """
-    if purpose not in ROLE_NAMES:
+def average_defaults(purpose: int, year: int) -> dict[str, str]:
+    """Read the stored row for this aircraft type and exact campaign year."""
+    if purpose not in YEAR_DEFAULTS:
         raise ValueError("Choose a supported aircraft type")
-    yearly = YEARLY_AVERAGES[purpose]
-    minima = FIELD_MINIMA[purpose]
-    years = sorted(yearly)
-    if year < years[0]:
-        return {key: str(minima[key]) for key in FIELD_NAMES}, None
-    if year >= years[-1]:
-        source_year = years[-1]
-        row = yearly[source_year]
-        return {key: str(row.get(key, minima[key])) for key in FIELD_NAMES}, (
-            source_year, source_year)
-    earlier = max(observed_year for observed_year in years if observed_year <= year)
-    if earlier == year:
-        row = yearly[year]
-        return {key: str(row.get(key, minima[key])) for key in FIELD_NAMES}, (year, year)
-    later = min(observed_year for observed_year in years if observed_year > year)
-    span = later - earlier
-    offset = year - earlier
-    values = {}
-    for key in FIELD_NAMES:
-        start = yearly[earlier].get(key, minima[key])
-        end = yearly[later].get(key, minima[key])
-        numerator = start * span + (end - start) * offset
-        values[key] = str(_round_ratio_half_up(numerator, span))
-    return values, (earlier, later)
+    try:
+        row = YEAR_DEFAULTS[purpose][year]
+    except KeyError as error:
+        raise ValueError("Campaign year must be from 1800 to 2200") from error
+    return dict(zip(FIELD_NAMES, map(str, row)))
 
 
 def validate_aircraft_only_changes(save) -> None:
