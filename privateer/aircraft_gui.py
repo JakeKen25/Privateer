@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from .aircraft import (
-    ROLE_NAMES, average_defaults, aircraft_types, campaign_year,
+    ROLE_NAMES, average_defaults, aircraft_types, aircraft_year_range, campaign_year,
     manufacturers_for_nation, suggested_template,
 )
 from .aircraft_game6_averages import APPLICABLE_FIELDS, FIELD_NAMES
@@ -73,6 +73,17 @@ class AircraftWindow(tk.Toplevel):
         ttk.Label(design, text="Design year").grid(row=1, column=2, sticky="w", pady=(8, 0))
         ttk.Entry(design, textvariable=self.design_year, state="readonly", width=27).grid(
             row=1, column=3, sticky="ew", pady=(8, 0))
+        self.equivalent_year = tk.IntVar(value=self.year)
+        ttk.Label(design, text="Equivalent year (stats)").grid(
+            row=2, column=0, sticky="w", pady=(8, 0))
+        self.year_slider = tk.Scale(
+            design, variable=self.equivalent_year, orient="horizontal",
+            resolution=1, showvalue=True, highlightthickness=0,
+            command=self.change_equivalent_year,
+        )
+        self.year_slider.grid(row=2, column=1, columnspan=3, sticky="ew", pady=(8, 0))
+        ttk.Label(design, text="Moving the slider replaces the stats below; design year stays at the campaign year.").grid(
+            row=3, column=0, columnspan=4, sticky="w")
         design.columnconfigure(1, weight=1)
         design.columnconfigure(3, weight=1)
 
@@ -141,10 +152,10 @@ class AircraftWindow(tk.Toplevel):
 
     def change_role(self):
         purpose = self._purpose()
-        defaults = average_defaults(purpose, self.year)
-        applicable = set(APPLICABLE_FIELDS[purpose])
-        for key, value in defaults.items():
-            self.stats[key].set(value if key in applicable else ("-1" if key == "Radar" else "0"))
+        first, last = aircraft_year_range(purpose)
+        self.year_slider.configure(from_=first, to=last)
+        self.equivalent_year.set(max(first, min(self.year, last)))
+        self.change_equivalent_year()
         for widgets in self.stat_widgets.values():
             for widget in widgets:
                 widget.grid_forget()
@@ -164,9 +175,17 @@ class AircraftWindow(tk.Toplevel):
         if self.table.exists(str(self.template.slot)):
             self.table.selection_set(str(self.template.slot))
             self.table.see(str(self.template.slot))
-        note = (f"Defaults loaded from the table for {self.role.get().lower()}, "
-                f"{self.year}. ")
-        self.status.set(note + "All shown values can be edited before Apply.")
+
+    def change_equivalent_year(self, _value=None):
+        purpose = self._purpose()
+        equivalent_year = self.equivalent_year.get()
+        defaults = average_defaults(purpose, equivalent_year)
+        applicable = set(APPLICABLE_FIELDS[purpose])
+        for key, value in defaults.items():
+            self.stats[key].set(value if key in applicable else ("-1" if key == "Radar" else "0"))
+        self.status.set(
+            f"Stats loaded for {self.role.get().lower()}, {equivalent_year}. "
+            f"Design year remains {self.year}. All shown values can be edited before Apply.")
 
     def render(self):
         selected = self.table.selection()[0] if self.table.selection() else None

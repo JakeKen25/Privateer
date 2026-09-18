@@ -8,19 +8,17 @@ manufacturer dropdown also lists every manufacturer already used by the
 selected nation's aircraft models. The change is staged in memory until Save
 or Save As writes the campaign.
 
-The form reads a static table row for the selected aircraft type and exact
-campaign year. `privateer/aircraft_year_defaults.py` contains all years from
-1800 through 2200. No interpolation or year-based stat calculations run when
-opening the form or adding an aircraft.
+The Equivalent year (stats) slider selects the stored defaults for that year.
+Its bounds match the first and last recorded Game 6 model years for the chosen
+aircraft type. The initial selection is the campaign year, or the nearest
+endpoint when the campaign is outside that range. Changing aircraft type resets
+this selection. Moving the slider replaces the editable stats; the design year
+and base model year remain the current campaign year.
 
-The table was prepared from the 1,121 Game 6 models summarized in
-`privateer/aircraft_game6_averages.py`. Missing intermediate years were filled
-once using linear interpolation with whole-number half-up rounding. Years
-before the first observed model use per-field minimum averages; years after
-the last observed model repeat its averages. These values are stored explicitly
-in the table. Both files contain aggregate statistics, not raw save records.
-All displayed defaults remain editable. Fields unused by the selected type
-are hidden and set to inactive defaults.
+`privateer/aircraft_year_defaults.py` contains one stored row for every year
+within each type's recorded range, including precomputed intermediate years.
+There are no rows before or after that range and no runtime interpolation.
+The source aggregates remain in `privateer/aircraft_game6_averages.py`.
 
 Privateer reads models from `[AircraftTypes]` in `RTWGameX.bcs`. Each `ATn` model
 contains a manufacturer, model name, year, role (`Purpose`), nation index,
