@@ -89,6 +89,13 @@ def suggested_template(types: list[AircraftType], purpose: int, nation_index: in
     ))
 
 
+def aircraft_year_range(purpose: int) -> tuple[int, int]:
+    """Return the available equivalent-year bounds for this aircraft type."""
+    if purpose not in YEAR_DEFAULTS:
+        raise ValueError("Choose a supported aircraft type")
+    return min(YEAR_DEFAULTS[purpose]), max(YEAR_DEFAULTS[purpose])
+
+
 def average_defaults(purpose: int, year: int) -> dict[str, str]:
     """Read the stored row for this aircraft type and exact campaign year."""
     if purpose not in YEAR_DEFAULTS:
@@ -96,7 +103,7 @@ def average_defaults(purpose: int, year: int) -> dict[str, str]:
     try:
         row = YEAR_DEFAULTS[purpose][year]
     except KeyError as error:
-        raise ValueError("Campaign year must be from 1800 to 2200") from error
+        raise ValueError("Equivalent year is outside the table for this aircraft type") from error
     return dict(zip(FIELD_NAMES, map(str, row)))
 
 

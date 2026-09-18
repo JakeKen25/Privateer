@@ -80,11 +80,6 @@ def test_static_year_table_preserves_game6_defaults():
     assert (fighter_1951["MaxSpeed"], fighter_1951["CruiseSpeed"],
             fighter_1951["LtEndurance"], fighter_1951["Toughness"]) == (
                 "411", "238", "278", "10")
-    fighter_future = average_defaults(0, 1971)
-    assert fighter_future == fighter
-    helicopter = average_defaults(13, 1914)
-    assert helicopter["MaxSpeed"] == str(FIELD_MINIMA[13]["MaxSpeed"])
-    assert helicopter["Maneuver"] == str(FIELD_MINIMA[13]["Maneuver"])
     assert "Torpedo1" in APPLICABLE_FIELDS[2]
     assert "Torpedo1" not in APPLICABLE_FIELDS[0]
     assert "Floatplane" in APPLICABLE_FIELDS[3]
@@ -102,7 +97,7 @@ def test_nation_manufacturers_and_campaign_year_drive_suggested_design(tmp_path)
 
 def test_chosen_aircraft_type_overrides_template_role(tmp_path):
     save = aircraft_save(tmp_path)
-    stats = average_defaults(13, 1941)
+    stats = average_defaults(13, 1954)
     created = save.create_aircraft_type(
         0, 0, {"Manufacturer": "Privateer", "Name": "Helo 1941",
                "Year": "1941", "BaseModelYear": "1941", **stats},
@@ -140,14 +135,46 @@ def test_static_table_covers_every_supported_year_and_returns_independent_values
     from privateer.aircraft_game6_averages import FIELD_NAMES
     from privateer.aircraft_year_defaults import YEAR_DEFAULTS
     assert set(YEAR_DEFAULTS) == set(ROLE_NAMES)
-    for yearly in YEAR_DEFAULTS.values():
-        assert set(yearly) == set(range(1800, 2201))
+    for role, yearly in YEAR_DEFAULTS.items():
+        observed = YEARLY_AVERAGES[role]
+        assert set(yearly) == set(range(min(observed), max(observed) + 1))
         assert all(len(row) == len(FIELD_NAMES) for row in yearly.values())
     values = average_defaults(0, 1951)
     values["MaxSpeed"] = "999"
     assert average_defaults(0, 1951)["MaxSpeed"] == "411"
-    for year in (1799, 2201):
-        with pytest.raises(ValueError, match="Campaign year"):
+    for year in (1914, 1971):
+        with pytest.raises(ValueError, match="Equivalent year"):
             average_defaults(0, year)
     with pytest.raises(ValueError, match="supported aircraft type"):
         average_defaults(99, 1951)
+
+
+def test_equivalent_year_slider_keeps_campaign_design_date(tmp_path):
+    import tkinter as tk
+    from privateer.aircraft_gui import AircraftWindow
+    root = tk.Tk()
+    root.withdraw()
+    root.status = tk.StringVar()
+    save = aircraft_save(tmp_path)
+    try:
+        window = AircraftWindow(root, save, 0)
+        root.update()
+        assert window.equivalent_year.get() == 1941
+        window.equivalent_year.set(1950)
+        window.change_equivalent_year()
+        assert window.stats["MaxSpeed"].get() == average_defaults(0, 1950)["MaxSpeed"]
+        assert window.design_year.get() == "1941"
+        window.role.set("Helicopter")
+        root.update()
+        assert int(window.year_slider.cget("from")) == 1954
+        assert int(window.year_slider.cget("to")) == 1970
+        assert window.equivalent_year.get() == 1954
+        window.equivalent_year.set(1960)
+        window.change_equivalent_year()
+        window.apply()
+        created = aircraft_types(save)[-1]
+        assert created.fields["Year"] == "1941"
+        assert created.fields["BaseModelYear"] == "1941"
+        assert created.fields["MaxSpeed"] == average_defaults(13, 1960)["MaxSpeed"]
+    finally:
+        root.destroy()
