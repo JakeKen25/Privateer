@@ -26,3 +26,7 @@ The resulting archive is written to `release/`. It contains the standalone
 application, its private runtime, `VERSION.txt`, and the end-user `INSTALL.txt`.
 It intentionally excludes the source tree, tests, examples, and developer
 documentation.
+
+An optional `RELEASE_TAG` file selects a distinct tag when repackaging the same
+program version, preserving previously published tags. Remove or update it when
+preparing the next release.

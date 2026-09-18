@@ -10,6 +10,7 @@ on:
     paths:
       - "packaging/RELEASE_VERSION"
       - "packaging/RELEASE_CHANNEL"
+      - "packaging/RELEASE_TAG"
       - "packaging/RELEASE_NOTES.md"
 
 permissions:
@@ -46,6 +47,7 @@ jobs:
           $version = python -c "from privateer.version import __version__; print(__version__)"
           $channel = (Get-Content packaging/RELEASE_CHANNEL -Raw).Trim()
           $expectedTag = if ($channel -eq "beta") { "v$version-beta" } else { "v$version" }
+          if (Test-Path packaging/RELEASE_TAG) { $expectedTag = (Get-Content packaging/RELEASE_TAG -Raw).Trim() }
           if ($expectedTag -ne "${{ github.ref_name }}") {
             throw "Tag ${{ github.ref_name }} does not match release tag $expectedTag"
           }
@@ -74,6 +76,7 @@ jobs:
           $channel = (Get-Content packaging/RELEASE_CHANNEL -Raw).Trim()
           $isBeta = $channel -eq "beta"
           $tag = if ($isBeta) { "v$version-beta" } else { "v$version" }
+          if (Test-Path packaging/RELEASE_TAG) { $tag = (Get-Content packaging/RELEASE_TAG -Raw).Trim() }
           $title = if ($isBeta) { "Privateer $version Beta" } else { "Privateer $version" }
           $archive = Get-ChildItem release/Privateer-*-Windows-x64.zip | Select-Object -First 1
           if (gh release view $tag 2>$null) {
