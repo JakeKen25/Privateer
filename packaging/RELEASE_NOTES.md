@@ -1,12 +1,11 @@
 # Privateer 0.932 Beta
 
-Static-table rebuild for testing the reported Microsoft Defender detection.
+Updated build with the equivalent-year aircraft slider.
 
-- Aircraft defaults now read a stored row for the exact aircraft type and campaign year.
-- All supported years (1800-2200) have precomputed values; aircraft creation no longer interpolates or calculates year-based default statistics.
-- Missing intermediate years have plausible values filled in beforehand. Earlier years use minimum defaults; later years repeat the final observed averages.
-- All displayed aircraft statistics remain editable.
+- Choose an equivalent year to load that year's stored aircraft statistics while keeping the design and base model dates at the current campaign year.
+- Each aircraft type's slider and table span its first through last recorded Game 6 years. Intermediate years retain precomputed values; no runtime interpolation is performed.
+- Changing aircraft type resets the slider to the campaign year or nearest available endpoint. Moving the slider replaces the editable statistics.
 
-This replaces the earlier 0.932 Beta package for testing. The distinct tag `v0.932-beta-static-table` identifies this build while preserving the original tag. The program version remains 0.932 Beta.
+Replaces the previous ZIP on this release. Aircraft implementation: https://github.com/JakeKen25/Privateer/commit/72306b258b41768f672380e1662430b3b5230767 . The existing release tag is preserved; GitHub's automatic source archives describe the original tagged build. Use the attached Windows ZIP for this updated application.
 
-Validation: all 92 source tests passed. The earlier Defender detection remains unresolved; this build is not confirmed to fix it. Windows installation instructions are included as INSTALL.txt in the ZIP.
+Validation: all 93 source tests passed, including slider and saved design-date checks. The local app opened successfully. The preceding static-table build passed the user's Defender test; this rebuilt package needs its own check. INSTALL.txt is included in the Windows ZIP.
