@@ -1,11 +1,29 @@
-# Privateer 0.932 Beta
+# Privateer 0.9.4
 
-Updated build with the equivalent-year aircraft slider.
+This release adds fortification management and more precise technology editing.
 
-- Choose an equivalent year to load that year's stored aircraft statistics while keeping the design and base model dates at the current campaign year.
-- Each aircraft type's slider and table span its first through last recorded Game 6 years. Intermediate years retain precomputed values; no runtime interpolation is performed.
-- Changing aircraft type resets the slider to the campaign year or nearest available endpoint. Moving the slider replaces the editable statistics.
+## Fortifications Manager
 
-Replaces the previous ZIP on this release. Aircraft implementation: https://github.com/JakeKen25/Privateer/commit/72306b258b41768f672380e1662430b3b5230767 . The existing release tag is preserved; GitHub's automatic source archives describe the original tagged build. Use the attached Windows ZIP for this updated application.
+- View and sort each nation’s fortification roster alongside its dockyard size.
+- Add coastal and turreted batteries, missile batteries, MTB squadrons, airship bases, and airbases in owned possessions.
+- Edit built installations and resize airbases while preserving installation IDs and aircraft assignments.
+- New installations are built immediately without deducting funds. Construction and retired entries remain read-only.
+- Airbase sizes respect the campaign limit; bases cannot shrink below their assigned aircraft capacity.
 
-Validation: all 93 source tests passed, including slider and saved design-date checks. The local app opened successfully. The preceding static-table build passed the user's Defender test; this rebuilt package needs its own check. INSTALL.txt is included in the Windows ZIP.
+## Technology Manager
+
+- Keep the cumulative research-area sliders, with individual checkboxes to enable or skip specific technologies.
+- View each technology’s description and typical unlock year.
+- Moving a slider replaces that area’s individual exceptions with a fresh cumulative selection.
+
+## Aircraft Manager testing status
+
+The Aircraft Manager appears to be working, but has not been extensively tested. Keep backups and verify generated aircraft in-game before relying on them in an ongoing campaign.
+
+## Validation and installation
+
+103 automated tests passed, along with Tk interaction checks and a temporary Game 6 save/reload check. The live Game 6 save was not modified. Newly created fortifications have not yet been verified through an RTW3 turn advance.
+
+Download the Windows ZIP, extract the entire folder, and run Privateer.exe. Keep the _internal folder beside the executable. INSTALL.txt is packaged with the application; no separate Python installation is required.
+
+The application now displays the corrected version number, 0.9.4.

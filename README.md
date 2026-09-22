@@ -1,6 +1,6 @@
 # Privateer
 
-**Version 0.932 Beta**
+**Version 0.9.4**
 
 Privateer is a save editor for **Rule the Waves 3**. It turns many manual,
 error-prone save-file edits into guided tools so players can spend less time
