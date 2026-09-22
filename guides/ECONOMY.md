@@ -5,19 +5,21 @@ in one window. Each value retains the existing Set value, Adjust by amount, and
 Adjust by percentage operations. Blank rows remain unchanged, and Apply stages both
 validated edits as one transaction.
 
-The lower panel is a read-only planning calculator. For the supplied January 1920
-Game1 Germany save, `BaseResources=30000` corresponds to the screenshot's 72,000
-yearly budget and 6,000 monthly budget, giving the observed factor of 2.4 per year.
-The saved `ResearchPct=8` produces the screenshot's 480 research expense. Privateer
-also totals the saved Maintenance field for active hulls and MonthlyCost for ships
-under construction. It reads direct spending fields for aircraft, extra training,
-and intelligence when they exist.
+The lower panel is a read-only planning calculator. Its original 2.4 annual
+BaseResources multiplier came from one early Game1 example and is not a general
+RTW3 budget formula. The [Games 1–9 comparison](BUDGET_CALCULATOR_RESEARCH.md)
+documents the current discrepancies and supersedes that original assumption.
 
-The game screenshot reports maintenance of 2,909 while the 47 stored German hull
-records total 2,795, leaving 114 that is not identified by a verified per-nation or
-per-ship field. The calculator labels its figure **Recorded ship maintenance** and
-states that RTW3 can add engine-calculated expenses. It does not invent or write
-unknown expense fields.
+As of 0.9.4, Privateer totals stored Maintenance for all non-construction hull
+records, including historical records, and MonthlyCost for construction hulls.
+It does not yet account for hurried or halted construction, and it misses expense
+categories such as submarine and dock construction. Its optional aircraft/training
+spending fields are absent from the nine inspected saves, and its intelligence
+lookup reads the player record instead of the target-nation records.
+
+The calculator labels maintenance **Recorded ship maintenance**. The research
+report distinguishes observed matches from candidate formulas and unresolved
+costs. It does not change calculator behavior or write unknown expense fields.
 
 The bottom of the calculator states that all displayed budget numbers are estimates
 and that the underlying math still needs refinement.
