@@ -28,10 +28,10 @@ the save and screenshot. No game turn or controlled experiment was run.
 | 8 | Spain | January 1935 |
 | 9 | China | December 1926 |
 
-Companion JSON observations are retained locally and are not included in this
-publication. They retain all displayed values (including both maintenance boxes),
-backend projections, selected inputs, aggregate record counts, and SHA-256 hashes
-of each input file. They do not contain full game saves or installed game data.
+The companion [JSON observations](../developmentResources/budget-calculator/games-1-9-comparison.json)
+retain all displayed values (including both maintenance boxes), backend projections,
+selected inputs, aggregate record counts, and SHA-256 hashes of each input file.
+They do not contain full game saves or installed game data.
 
 ## In-game figures versus current Privateer results
 

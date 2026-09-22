@@ -1,0 +1,1478 @@
+{
+  "inspected_on": "2026-09-22",
+  "baseline_commit": "a9937c364a3cda9439171e30d7662c61eaaa4064",
+  "notes": "Manually transcribed screenshots compared read-only with matching live saves. Aggregate observations only; no raw saves. Candidate formulas are not production implementation or independently validated game rules.",
+  "observations": [
+    {
+      "game": 1,
+      "nation": "Germany",
+      "year": 1920,
+      "month": 1,
+      "source_bcs_sha256": "f6397b472d8830545a82648779e814699016a635b537804881a9128ee1aff428",
+      "source_map_sha256": "8cd1cf3a17b3cd536ccc25bd1826be4c87788a9a429aefd785496cc482de1e33",
+      "screenshot_sha256": "f5eae252ffa231a431618c59dbfb4fb814a0d9b593dac165dfd6062b6daeee24",
+      "screenshot": {
+        "yearly_budget": 86240,
+        "monthly_budget": 7187,
+        "maintenance": 2566,
+        "maintenance_reference": 2955,
+        "construction": 0,
+        "naval_aircraft": 0,
+        "research": 862,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 3428,
+        "monthly_balance": 3759,
+        "funds": 124,
+        "research_percent": 12
+      },
+      "privateer_094": {
+        "yearly_budget": 86400,
+        "monthly_budget": 7200,
+        "maintenance": 2795,
+        "construction": 0,
+        "naval_aircraft": 0,
+        "research": 864,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 3659,
+        "monthly_balance": 3541,
+        "funds": 124,
+        "research_percent": 12
+      },
+      "backend": {
+        "fleet_size": 8,
+        "nation_fields": {
+          "BaseResources": "36000",
+          "BudgetModifier": "3",
+          "Corruption": "0",
+          "ResearchPct": "12",
+          "Funds": "124",
+          "DockBuilding": "0",
+          "GunneryTraining": "0",
+          "NightFighting": "0",
+          "TorpedoWarfare": "0",
+          "DamageControl": "0",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "0",
+          "PendingTorpedoWarfare": "0",
+          "PendingDamageControl": "0",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|6|live": {
+            "count": 1,
+            "maintenance": 235,
+            "monthly": 1863
+          },
+          "1|0|live": {
+            "count": 43,
+            "maintenance": 1930,
+            "monthly": 21057
+          },
+          "1|0|final": {
+            "count": 1,
+            "maintenance": 14,
+            "monthly": 243
+          },
+          "1|1|live": {
+            "count": 1,
+            "maintenance": 349,
+            "monthly": 2979
+          },
+          "1|2|live": {
+            "count": 1,
+            "maintenance": 267,
+            "monthly": 2297
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 12,
+            "maintenance": 226,
+            "monthly": 350
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "0",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 0
+      },
+      "construction_candidate": {
+        "surface_ship_total": 0,
+        "unexplained": 0,
+        "hurried_count": 0,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 2,
+      "nation": "China",
+      "year": 1907,
+      "month": 6,
+      "source_bcs_sha256": "147876f367686c0193d55814218a650a375da36141fb2b98ca754f983c5d89e3",
+      "source_map_sha256": "ff49a75639dd1a77a69041099fd040679c90a06686b4beff6551a1a9ce96bc81",
+      "screenshot_sha256": "1bff540a84453dda96bb9f116cdc1edcdfc8bc6438849c0ea73eb4942db63216",
+      "screenshot": {
+        "yearly_budget": 49390,
+        "monthly_budget": 4116,
+        "maintenance": 8529,
+        "maintenance_reference": 8529,
+        "construction": 37661,
+        "naval_aircraft": 0,
+        "research": 412,
+        "extra_training": 2703,
+        "intelligence": 0,
+        "total_expenses": 49305,
+        "monthly_balance": -45189,
+        "funds": 1851480,
+        "research_percent": 10
+      },
+      "privateer_094": {
+        "yearly_budget": 18996,
+        "monthly_budget": 1583,
+        "maintenance": 15878,
+        "construction": 35039,
+        "naval_aircraft": 0,
+        "research": 158,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 51075,
+        "monthly_balance": -49492,
+        "funds": 1851480,
+        "research_percent": 10
+      },
+      "backend": {
+        "fleet_size": 8,
+        "nation_fields": {
+          "BaseResources": "7914",
+          "BudgetModifier": "8",
+          "Corruption": "20",
+          "ResearchPct": "10",
+          "Funds": "1851480",
+          "DockBuilding": "0",
+          "GunneryTraining": "0",
+          "NightFighting": "1",
+          "TorpedoWarfare": "1",
+          "DamageControl": "0",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "1",
+          "PendingTorpedoWarfare": "1",
+          "PendingDamageControl": "0",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|0|final": {
+            "count": 178,
+            "maintenance": 6901,
+            "monthly": 57491
+          },
+          "0|0|final": {
+            "count": 1,
+            "maintenance": 135,
+            "monthly": 1093
+          },
+          "1|0|live": {
+            "count": 113,
+            "maintenance": 7474,
+            "monthly": 44244
+          },
+          "0|0|live": {
+            "count": 32,
+            "maintenance": 5289,
+            "monthly": 35039
+          },
+          "1|8|final": {
+            "count": 2,
+            "maintenance": 28,
+            "monthly": 362
+          },
+          "1|10|live": {
+            "count": 1,
+            "maintenance": 1077,
+            "monthly": 5826
+          },
+          "1|1|final": {
+            "count": 2,
+            "maintenance": 263,
+            "monthly": 929
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 8,
+            "maintenance": 92,
+            "monthly": 800
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "0",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 0
+      },
+      "construction_candidate": {
+        "surface_ship_total": 37661,
+        "unexplained": 0,
+        "hurried_count": 3,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 3,
+      "nation": "China",
+      "year": 1945,
+      "month": 12,
+      "source_bcs_sha256": "d505c9a01a4a5aea6131320fb65914d5480ca2e2f9ec946310cb364db0316c66",
+      "source_map_sha256": "d19a149475cff16f5f7648c9d5e74cf571f6456071ca6b7b9d050f0f4dfadb7a",
+      "screenshot_sha256": "76d6f5b074430bfac3e9a5683c61da7b6046b73fd2b59a91f2417f8afdb44e05",
+      "screenshot": {
+        "yearly_budget": 395520,
+        "monthly_budget": 32960,
+        "maintenance": 6044,
+        "maintenance_reference": 6130,
+        "construction": 3759,
+        "naval_aircraft": 18194,
+        "research": 3955,
+        "extra_training": 1436,
+        "intelligence": 0,
+        "total_expenses": 33388,
+        "monthly_balance": -428,
+        "funds": 17107,
+        "research_percent": 12
+      },
+      "privateer_094": {
+        "yearly_budget": 72384,
+        "monthly_budget": 6032,
+        "maintenance": 19014,
+        "construction": 3759,
+        "naval_aircraft": 0,
+        "research": 724,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 23497,
+        "monthly_balance": -17465,
+        "funds": 17107,
+        "research_percent": 12
+      },
+      "backend": {
+        "fleet_size": 8,
+        "nation_fields": {
+          "BaseResources": "30162",
+          "BudgetModifier": "16",
+          "Corruption": "5",
+          "ResearchPct": "12",
+          "Funds": "17107",
+          "DockBuilding": "0",
+          "GunneryTraining": "0",
+          "NightFighting": "0",
+          "TorpedoWarfare": "1",
+          "DamageControl": "1",
+          "PilotTraining": "1",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "0",
+          "PendingTorpedoWarfare": "1",
+          "PendingDamageControl": "1",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|0|final": {
+            "count": 241,
+            "maintenance": 11304,
+            "monthly": 91345
+          },
+          "1|3|final": {
+            "count": 9,
+            "maintenance": 80,
+            "monthly": 1650
+          },
+          "0|0|final": {
+            "count": 40,
+            "maintenance": 3713,
+            "monthly": 32190
+          },
+          "1|8|final": {
+            "count": 11,
+            "maintenance": 242,
+            "monthly": 2529
+          },
+          "1|2|final": {
+            "count": 19,
+            "maintenance": 228,
+            "monthly": 2603
+          },
+          "1|9|live": {
+            "count": 1,
+            "maintenance": 105,
+            "monthly": 944
+          },
+          "1|10|final": {
+            "count": 1,
+            "maintenance": 33,
+            "monthly": 3266
+          },
+          "1|1|final": {
+            "count": 1,
+            "maintenance": 11,
+            "monthly": 191
+          },
+          "1|0|live": {
+            "count": 52,
+            "maintenance": 3263,
+            "monthly": 33868
+          },
+          "1|10|live": {
+            "count": 1,
+            "maintenance": 35,
+            "monthly": 394
+          },
+          "0|0|live": {
+            "count": 2,
+            "maintenance": 507,
+            "monthly": 3759
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 38,
+            "maintenance": 2890,
+            "monthly": 5275
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "0",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 1956
+      },
+      "construction_candidate": {
+        "surface_ship_total": 3759,
+        "unexplained": 0,
+        "hurried_count": 0,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 4,
+      "nation": "Soviet Union",
+      "year": 1935,
+      "month": 1,
+      "source_bcs_sha256": "6d4ac2498dd091ccb7b8f1f2523210f3aabf5c0552a7be6ff0c38a4835bca73c",
+      "source_map_sha256": "b3cda258fa9a70faf7ba4a1273181c4fb2d8a9090ea2477f3dd55b76d809bb7b",
+      "screenshot_sha256": "c7a99e4d7a3976f6158fb6af784c774d5ac3b50b570185fcf9130af4f30339d8",
+      "screenshot": {
+        "yearly_budget": 160480,
+        "monthly_budget": 13373,
+        "maintenance": 5583,
+        "maintenance_reference": 5544,
+        "construction": 7573,
+        "naval_aircraft": 831,
+        "research": 1070,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 15057,
+        "monthly_balance": -1684,
+        "funds": 21728,
+        "research_percent": 8
+      },
+      "privateer_094": {
+        "yearly_budget": 60000,
+        "monthly_budget": 5000,
+        "maintenance": 4889,
+        "construction": 7573,
+        "naval_aircraft": 0,
+        "research": 400,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 12862,
+        "monthly_balance": -7862,
+        "funds": 21728,
+        "research_percent": 8
+      },
+      "backend": {
+        "fleet_size": 8,
+        "nation_fields": {
+          "BaseResources": "25000",
+          "BudgetModifier": "8",
+          "Corruption": "0",
+          "ResearchPct": "8",
+          "Funds": "21728",
+          "DockBuilding": "0",
+          "GunneryTraining": "0",
+          "NightFighting": "0",
+          "TorpedoWarfare": "0",
+          "DamageControl": "0",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "0",
+          "PendingTorpedoWarfare": "0",
+          "PendingDamageControl": "0",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|0|live": {
+            "count": 37,
+            "maintenance": 4889,
+            "monthly": 35494
+          },
+          "0|0|live": {
+            "count": 15,
+            "maintenance": 894,
+            "monthly": 7573
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 11,
+            "maintenance": 246,
+            "monthly": 875
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "0",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ],
+          [
+            9,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 96
+      },
+      "construction_candidate": {
+        "surface_ship_total": 7573,
+        "unexplained": 0,
+        "hurried_count": 0,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 5,
+      "nation": "Austria-Hungary",
+      "year": 1900,
+      "month": 1,
+      "source_bcs_sha256": "8f64784100f9476de8c0a96d2dcfa1dd0901d518e92d811159bc91b94063c39f",
+      "source_map_sha256": "5beeec939c5d78b29a74b265de0845713f5f721ea8a8cceea1bc4677245bfd69",
+      "screenshot_sha256": "07ce448376d5d09e3422f86619f04f3d4ea32681eda33eaf6dfd45d7c18dbb0c",
+      "screenshot": {
+        "yearly_budget": 72000,
+        "monthly_budget": 6000,
+        "maintenance": 1603,
+        "maintenance_reference": 1603,
+        "construction": 3244,
+        "naval_aircraft": 0,
+        "research": 480,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 5327,
+        "monthly_balance": 673,
+        "funds": 574,
+        "research_percent": 8
+      },
+      "privateer_094": {
+        "yearly_budget": 24000,
+        "monthly_budget": 2000,
+        "maintenance": 1573,
+        "construction": 3244,
+        "naval_aircraft": 0,
+        "research": 160,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 4977,
+        "monthly_balance": -2977,
+        "funds": 574,
+        "research_percent": 8
+      },
+      "backend": {
+        "fleet_size": 4,
+        "nation_fields": {
+          "BaseResources": "10000",
+          "BudgetModifier": "18",
+          "Corruption": "0",
+          "ResearchPct": "8",
+          "Funds": "574",
+          "DockBuilding": "0",
+          "GunneryTraining": "0",
+          "NightFighting": "0",
+          "TorpedoWarfare": "0",
+          "DamageControl": "0",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "0",
+          "PendingTorpedoWarfare": "0",
+          "PendingDamageControl": "0",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|0|live": {
+            "count": 33,
+            "maintenance": 1573,
+            "monthly": 14783
+          },
+          "0|0|live": {
+            "count": 3,
+            "maintenance": 359,
+            "monthly": 3244
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 6,
+            "maintenance": 64,
+            "monthly": 0
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "0",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ],
+          [
+            9,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 0
+      },
+      "construction_candidate": {
+        "surface_ship_total": 3244,
+        "unexplained": 0,
+        "hurried_count": 0,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 6,
+      "nation": "USA",
+      "year": 1971,
+      "month": 10,
+      "source_bcs_sha256": "fd421a7a9e07c9b3d9661a0b35ad602de2f228c0ffc54949273e75daaf882611",
+      "source_map_sha256": "8ca3f38a3caf6ef4411d1fb6ef3390bd50cd5441959f2aae56434c6dac5f17fb",
+      "screenshot_sha256": "716d4a9abf23d58eef1fac3818873174ce30d4d805375f828a85a27564b0ffb5",
+      "screenshot": {
+        "yearly_budget": 1949230,
+        "monthly_budget": 162436,
+        "maintenance": 41030,
+        "maintenance_reference": 37729,
+        "construction": 31921,
+        "naval_aircraft": 47428,
+        "research": 16244,
+        "extra_training": 10422,
+        "intelligence": 0,
+        "total_expenses": 147045,
+        "monthly_balance": 15391,
+        "funds": 83072,
+        "research_percent": 10
+      },
+      "privateer_094": {
+        "yearly_budget": 335292,
+        "monthly_budget": 27941,
+        "maintenance": 97369,
+        "construction": 26538,
+        "naval_aircraft": 0,
+        "research": 2794,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 126701,
+        "monthly_balance": -98760,
+        "funds": 83072,
+        "research_percent": 10
+      },
+      "backend": {
+        "fleet_size": 8,
+        "nation_fields": {
+          "BaseResources": "139707",
+          "BudgetModifier": "18",
+          "Corruption": "0",
+          "ResearchPct": "10",
+          "Funds": "83072",
+          "DockBuilding": "0",
+          "GunneryTraining": "0",
+          "NightFighting": "1",
+          "TorpedoWarfare": "0",
+          "DamageControl": "1",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "0",
+          "PendingTorpedoWarfare": "0",
+          "PendingDamageControl": "0",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|0|final": {
+            "count": 681,
+            "maintenance": 50302,
+            "monthly": 406691
+          },
+          "1|8|final": {
+            "count": 11,
+            "maintenance": 568,
+            "monthly": 6787
+          },
+          "1|2|final": {
+            "count": 53,
+            "maintenance": 6620,
+            "monthly": 45464
+          },
+          "1|6|final": {
+            "count": 43,
+            "maintenance": 1849,
+            "monthly": 13246
+          },
+          "1|1|final": {
+            "count": 25,
+            "maintenance": 1241,
+            "monthly": 7176
+          },
+          "0|0|final": {
+            "count": 97,
+            "maintenance": 13779,
+            "monthly": 114493
+          },
+          "1|3|final": {
+            "count": 3,
+            "maintenance": 54,
+            "monthly": 140
+          },
+          "1|10|final": {
+            "count": 2,
+            "maintenance": 18,
+            "monthly": 806
+          },
+          "1|0|live": {
+            "count": 134,
+            "maintenance": 21066,
+            "monthly": 148477
+          },
+          "1|6|live": {
+            "count": 27,
+            "maintenance": 1872,
+            "monthly": 22485
+          },
+          "0|0|live": {
+            "count": 14,
+            "maintenance": 4040,
+            "monthly": 26538
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 70,
+            "maintenance": 4406,
+            "monthly": 25871
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "0",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 3120
+      },
+      "construction_candidate": {
+        "surface_ship_total": 29866,
+        "unexplained": 2055,
+        "hurried_count": 6,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 7,
+      "nation": "USA",
+      "year": 1970,
+      "month": 12,
+      "source_bcs_sha256": "ac982dbe67c3f2f11e451daf7b8f53b89981cc9fd623210225c74aacd43a94c5",
+      "source_map_sha256": "6761af6724747715e758d128d407a03a3e423bb33737df8c14c1c9c2452575d2",
+      "screenshot_sha256": "094411b469d53d51509394686984f26770225f9142d2fb420bd11a0ab6d37fcf",
+      "screenshot": {
+        "yearly_budget": 1930070,
+        "monthly_budget": 160839,
+        "maintenance": 38663,
+        "maintenance_reference": 35537,
+        "construction": 25522,
+        "naval_aircraft": 47188,
+        "research": 16084,
+        "extra_training": 16803,
+        "intelligence": 0,
+        "total_expenses": 144260,
+        "monthly_balance": 16579,
+        "funds": 77875,
+        "research_percent": 10
+      },
+      "privateer_094": {
+        "yearly_budget": 331980,
+        "monthly_budget": 27665,
+        "maintenance": 97369,
+        "construction": 22194,
+        "naval_aircraft": 0,
+        "research": 2767,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 122330,
+        "monthly_balance": -94665,
+        "funds": 77875,
+        "research_percent": 10
+      },
+      "backend": {
+        "fleet_size": 8,
+        "nation_fields": {
+          "BaseResources": "138324",
+          "BudgetModifier": "18",
+          "Corruption": "0",
+          "ResearchPct": "10",
+          "Funds": "77875",
+          "DockBuilding": "0",
+          "GunneryTraining": "1",
+          "NightFighting": "1",
+          "TorpedoWarfare": "0",
+          "DamageControl": "0",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "1",
+          "PendingTorpedoWarfare": "0",
+          "PendingDamageControl": "1",
+          "PendingTrainingTime": "8",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|0|final": {
+            "count": 681,
+            "maintenance": 50302,
+            "monthly": 406691
+          },
+          "1|8|final": {
+            "count": 11,
+            "maintenance": 568,
+            "monthly": 6787
+          },
+          "1|2|final": {
+            "count": 53,
+            "maintenance": 6620,
+            "monthly": 45464
+          },
+          "1|6|final": {
+            "count": 43,
+            "maintenance": 1849,
+            "monthly": 13246
+          },
+          "1|1|final": {
+            "count": 25,
+            "maintenance": 1241,
+            "monthly": 7176
+          },
+          "0|0|final": {
+            "count": 97,
+            "maintenance": 13779,
+            "monthly": 114493
+          },
+          "1|3|final": {
+            "count": 3,
+            "maintenance": 54,
+            "monthly": 140
+          },
+          "1|10|final": {
+            "count": 2,
+            "maintenance": 18,
+            "monthly": 806
+          },
+          "1|0|live": {
+            "count": 118,
+            "maintenance": 20350,
+            "monthly": 145501
+          },
+          "1|10|live": {
+            "count": 16,
+            "maintenance": 716,
+            "monthly": 2976
+          },
+          "1|6|live": {
+            "count": 27,
+            "maintenance": 1872,
+            "monthly": 22485
+          },
+          "0|0|live": {
+            "count": 6,
+            "maintenance": 3640,
+            "monthly": 22194
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 58,
+            "maintenance": 3921,
+            "monthly": 13965
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "0",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 3120
+      },
+      "construction_candidate": {
+        "surface_ship_total": 25522,
+        "unexplained": 0,
+        "hurried_count": 6,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 8,
+      "nation": "Spain",
+      "year": 1935,
+      "month": 1,
+      "source_bcs_sha256": "aa4d28ebcbf1840a44f5dc3fbcb93d6247fd8770c64b19d4dd5d81e07bae354f",
+      "source_map_sha256": "949f707ed3efdb2be771416681ffc7ea218fed8460a70743af07180cd8381a28",
+      "screenshot_sha256": "4d6f478384fe5a714bc904704ba09e6b8b560eaea659dc17d654fe40e235a63b",
+      "screenshot": {
+        "yearly_budget": 14520,
+        "monthly_budget": 1210,
+        "maintenance": 593,
+        "maintenance_reference": 593,
+        "construction": 324,
+        "naval_aircraft": 253,
+        "research": 48,
+        "extra_training": 10,
+        "intelligence": 60,
+        "total_expenses": 1288,
+        "monthly_balance": -78,
+        "funds": 3539,
+        "research_percent": 4
+      },
+      "privateer_094": {
+        "yearly_budget": 16800,
+        "monthly_budget": 1400,
+        "maintenance": 387,
+        "construction": 0,
+        "naval_aircraft": 0,
+        "research": 56,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 443,
+        "monthly_balance": 957,
+        "funds": 3539,
+        "research_percent": 4
+      },
+      "backend": {
+        "fleet_size": 2,
+        "nation_fields": {
+          "BaseResources": "7000",
+          "BudgetModifier": "10",
+          "Corruption": "0",
+          "ResearchPct": "4",
+          "Funds": "3539",
+          "DockBuilding": "15",
+          "GunneryTraining": "0",
+          "NightFighting": "0",
+          "TorpedoWarfare": "0",
+          "DamageControl": "0",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "0",
+          "PendingTorpedoWarfare": "0",
+          "PendingDamageControl": "0",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|0|live": {
+            "count": 11,
+            "maintenance": 387,
+            "monthly": 4187
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 9,
+            "maintenance": 154,
+            "monthly": 350
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "0",
+            "0"
+          ],
+          [
+            2,
+            "3",
+            "0"
+          ],
+          [
+            3,
+            "0",
+            "0"
+          ],
+          [
+            4,
+            "0",
+            "0"
+          ],
+          [
+            5,
+            "0",
+            "0"
+          ],
+          [
+            6,
+            "0",
+            "0"
+          ],
+          [
+            7,
+            "0",
+            "0"
+          ],
+          [
+            8,
+            "0",
+            "0"
+          ],
+          [
+            9,
+            "0",
+            "0"
+          ]
+        ],
+        "air_unit_aircraft_count": 32
+      },
+      "construction_candidate": {
+        "surface_ship_total": 0,
+        "unexplained": 324,
+        "hurried_count": 0,
+        "halted_count": 0
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    },
+    {
+      "game": 9,
+      "nation": "China",
+      "year": 1926,
+      "month": 12,
+      "source_bcs_sha256": "3c5a88bd5e4477859245da515e9756fa1314f68d4c20b163267316859dd4a9f7",
+      "source_map_sha256": "5dfffa6ac5861be911e060f343d0c3669eb374eb67a9bfded088cdd77b3a1eb0",
+      "screenshot_sha256": "0928f209f571f197cb2d9dfcd8178a3bd4defc0af3217e60f0989770216497c3",
+      "screenshot": {
+        "yearly_budget": 310720,
+        "monthly_budget": 25893,
+        "maintenance": 12087,
+        "maintenance_reference": 11840,
+        "construction": 4026,
+        "naval_aircraft": 2080,
+        "research": 0,
+        "extra_training": 4483,
+        "intelligence": 1920,
+        "total_expenses": 24596,
+        "monthly_balance": 1297,
+        "funds": 5988,
+        "research_percent": 0
+      },
+      "privateer_094": {
+        "yearly_budget": 61788,
+        "monthly_budget": 5149,
+        "maintenance": 17618,
+        "construction": 20316,
+        "naval_aircraft": 0,
+        "research": 0,
+        "extra_training": 0,
+        "intelligence": 0,
+        "total_expenses": 37934,
+        "monthly_balance": -32785,
+        "funds": 5988,
+        "research_percent": 0
+      },
+      "backend": {
+        "fleet_size": 8,
+        "nation_fields": {
+          "BaseResources": "25744",
+          "BudgetModifier": "14",
+          "Corruption": "0",
+          "ResearchPct": "0",
+          "Funds": "5988",
+          "DockBuilding": "0",
+          "GunneryTraining": "1",
+          "NightFighting": "1",
+          "TorpedoWarfare": "0",
+          "DamageControl": "0",
+          "PilotTraining": "0",
+          "PendingGunneryTraining": "0",
+          "PendingNightFighting": "0",
+          "PendingTorpedoWarfare": "0",
+          "PendingDamageControl": "0",
+          "PendingTrainingTime": "0",
+          "IntelligenceSpending": "0"
+        },
+        "ship_groups": {
+          "1|8|final": {
+            "count": 51,
+            "maintenance": 2254,
+            "monthly": 20783
+          },
+          "1|0|final": {
+            "count": 20,
+            "maintenance": 1825,
+            "monthly": 12855
+          },
+          "0|0|final": {
+            "count": 19,
+            "maintenance": 3390,
+            "monthly": 22487
+          },
+          "1|0|live": {
+            "count": 75,
+            "maintenance": 9541,
+            "monthly": 68437
+          },
+          "0|9|final": {
+            "count": 1,
+            "maintenance": 192,
+            "monthly": 743
+          },
+          "1|10|final": {
+            "count": 10,
+            "maintenance": 84,
+            "monthly": 3896
+          },
+          "1|3|final": {
+            "count": 31,
+            "maintenance": 332,
+            "monthly": 12828
+          },
+          "0|0|live": {
+            "count": 11,
+            "maintenance": 3459,
+            "monthly": 20316
+          }
+        },
+        "coastal_groups": {
+          "1|0|live": {
+            "count": 12,
+            "maintenance": 602,
+            "monthly": 2274
+          }
+        },
+        "intelligence_by_nation": [
+          [
+            0,
+            "0",
+            "0"
+          ],
+          [
+            1,
+            "3",
+            "3"
+          ],
+          [
+            2,
+            "3",
+            "3"
+          ],
+          [
+            3,
+            "3",
+            "3"
+          ],
+          [
+            4,
+            "3",
+            "3"
+          ],
+          [
+            5,
+            "3",
+            "3"
+          ],
+          [
+            6,
+            "3",
+            "3"
+          ],
+          [
+            7,
+            "3",
+            "2"
+          ],
+          [
+            8,
+            "3",
+            "3"
+          ]
+        ],
+        "air_unit_aircraft_count": 0
+      },
+      "construction_candidate": {
+        "surface_ship_total": 4026,
+        "unexplained": 0,
+        "hurried_count": 0,
+        "halted_count": 8
+      },
+      "missing_optional_fields": [
+        "NavalAircraftSpending",
+        "AircraftSpending",
+        "ExtraTrainingSpending",
+        "TrainingSpending"
+      ]
+    }
+  ]
+}
