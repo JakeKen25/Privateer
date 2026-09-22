@@ -29,6 +29,7 @@ class AreaTechnologyTests(unittest.TestCase):
         edits = AreaTechnologyEdits(self.db, self.fields)
         self.assertEqual(edits.current(1), 5)
         self.assertTrue(edits.mixed(1))
+
         self.assertEqual(edits.pending, {})
         edits.set_level(1, 5)
         self.assertEqual(len(edits.pending), 4)
@@ -36,6 +37,43 @@ class AreaTechnologyTests(unittest.TestCase):
         edits.reset()
         self.assertEqual(edits.pending, {})
         self.assertTrue(edits.mixed(1))
+
+    def test_individual_exceptions_survive_until_slider_is_changed(self):
+        edits = AreaTechnologyEdits(self.db, self.fields)
+        edits.set_level(1, 5)
+        edits.set_enabled(1, 2, False)
+        self.assertEqual([edits.enabled(t) for t in self.db], [True, True, False, True, True, False])
+        self.assertEqual(edits.current(1), 5)
+        self.assertTrue(edits.mixed(1))
+        edits.set_enabled(1, 4, False)
+        self.assertEqual(edits.current(1), 4)
+        edits.set_enabled(1, 5, True)
+        self.assertEqual(edits.current(1), 6)
+        edits.set_level(1, 4)
+        self.assertEqual([edits.enabled(t) for t in self.db], [True] * 4 + [False] * 2)
+        edits.reset()
+        self.assertFalse(any(edits.enabled(t) for t in self.db))
+
+    def test_individual_gap_roundtrip(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / 'source'
+            source.mkdir()
+            (source / 'game.bcs').write_text('[Nation0]\nName=Test\n' + ''.join(f'{t.key}=1\n' for t in self.db))
+            save = RTW3Save.load(source)
+            edits = AreaTechnologyEdits(self.db, save.nation(0).section.fields())
+            edits.set_enabled(1, 2, False)
+            save.set_technology_flags(0, self.db, edits.pending)
+            output = save.save_as(Path(temp) / 'output')
+            reloaded = RTW3Save.load(output)
+            actual = AreaTechnologyEdits(self.db, reloaded.nation(0).section.fields())
+            self.assertEqual([actual.enabled(t) for t in self.db], [True, True, False, True, True, True])
+
+    def test_individual_invalid_input_is_atomic(self):
+        edits = AreaTechnologyEdits(self.db, self.fields)
+        for level, enabled in [(-1, False), (6, True), (True, True), (1, 1)]:
+            with self.assertRaises(ValueError):
+                edits.set_enabled(1, level, enabled)
+        self.assertEqual(edits.pending, {})
 
     def test_invalid_or_missing_fields_and_ranges(self):
         edits = AreaTechnologyEdits(self.db, self.fields)

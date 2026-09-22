@@ -75,14 +75,26 @@ class AreaTechnologyEdits:
         return all(self.original.get(t.key) in ('0', '1') for t in self.areas[area])
 
     def current(self, area):
-        if area in self.selected:
-            return self.selected[area]
         return max((i for i, t in enumerate(self.areas[area], 1)
-                    if self.original.get(t.key) == '1'), default=0)
+                    if self.enabled(t)), default=0)
+
+    def enabled(self, technology):
+        return str(self.pending.get(technology.key, self.original.get(technology.key))) == '1'
+
+    def set_enabled(self, area, level, enabled):
+        """Toggle one zero-based database level without changing its neighbors."""
+        if type(level) is not int or not 0 <= level < len(self.areas[area]):
+            raise ValueError('Technology level is outside this research area')
+        if type(enabled) is not bool or not self.editable(area):
+            raise ValueError('This area has missing or invalid save fields')
+        key = self.areas[area][level].key
+        if str(int(enabled)) == self.original[key]:
+            self.pending.pop(key, None)
+        else:
+            self.pending[key] = int(enabled)
 
     def mixed(self, area):
-        return area not in self.selected and any(
-            self.original.get(t.key) != '1' for t in self.areas[area][:self.current(area)])
+        return any(not self.enabled(t) for t in self.areas[area][:self.current(area)])
 
     def set_level(self, area, level):
         technologies = self.areas[area]

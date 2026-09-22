@@ -6,6 +6,7 @@ behavior behind them.
 - [Colonies](COLONIES.md)
 - [Diplomacy and relationships](DIPLOMACY.md)
 - [Economy](ECONOMY.md)
+- [Infrastructure and fortifications](FORTIFICATIONS.md)
 - [Settings and backups](SETTINGS.md)
 - [Ship transfers](SHIPS.md)
 - [Technology](TECHNOLOGY_WIP.md)

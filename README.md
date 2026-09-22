@@ -27,13 +27,18 @@ and more capable.
 - **Technology Manager** presents each technology area as a level slider. Moving
   a slider to a level includes all earlier levels and displays the selected
   technology's effect and typical year when that information is available.
+  Individual checkboxes let you skip specific technologies while keeping later
+  levels enabled. Moving a slider replaces those individual exceptions.
 - **Caliber Manager** provides the available quality setting for each supported
   gun caliber.
 - **Economy and Unrest Manager** edits funds, base resources, and unrest together and shows an
   estimated in-game budget breakdown as values change. Further refinement is
   still needed to ensure that the editor's calculator matches in-game statistics.
-- **Infrastructure and Fortifications Manager** edits national dockyard size. Fortification editing
-  is still under development but is planned for a future release.
+- **Infrastructure and Fortifications Manager** edits national dockyard size and
+  adds or edits coastal batteries, turreted batteries, missile batteries, MTB
+  squadrons, airship bases, and airbases. Its sortable roster preserves existing
+  installation IDs and aircraft assignments. New installations are built instantly;
+  construction and retired entries remain read-only.
 - **Relationship Manager** edits the tension level between nations. This area is
   still under development while alliances and wars are researched.
 - **Colony Manager** identifies colonies by their named map regions and changes

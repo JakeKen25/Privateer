@@ -38,6 +38,7 @@ class RTW3Save:
         self._colony_changes = False
         self._ship_changes = False
         self._aircraft_changes = False
+        self._fortification_changes = False
         self._source_snapshot = None
         self._build_model()
 
@@ -95,8 +96,8 @@ class RTW3Save:
                 for p in folder.iterdir() if p.is_file()}
 
     def _check_tension_source(self):
-        if (self._tension_changes or self._colony_changes or self._ship_changes or self._aircraft_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
-            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, ship, or aircraft edits.")
+        if (self._tension_changes or self._colony_changes or self._ship_changes or self._aircraft_changes or self._fortification_changes) and self._source_snapshot != self._folder_snapshot(self.folder):
+            raise ValueError("Save files changed on disk since loading. Reload before saving relations, colony, ship, aircraft, or fortification edits.")
 
     def transfer_ship_batch(self, assignments):
         from .ship_transfers import transfer_batch
@@ -518,6 +519,11 @@ class RTW3Save:
 
     def _validate_for_write(self) -> bool:
         """Validate a new aircraft record without rechecking unrelated old ships."""
+        if self._fortification_changes:
+            from .fortifications import records
+            for nation in self.nations:
+                if any(s.name == f'Nation{nation.index}CoastalArtillery' for s in self.documents[self.main_file].sections):
+                    records(self, nation.index)
         if self._aircraft_changes:
             from .aircraft import validate_aircraft_only_changes
             try:

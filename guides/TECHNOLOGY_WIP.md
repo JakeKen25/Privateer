@@ -14,6 +14,11 @@ area names and the technologies within them. Selecting a slider shows its curren
 technology's name, effect, and typical base year in the bottom text box.
 
 Existing unlock gaps are marked and preserved until that area's slider changes.
+Select an area to see its individual technologies in the right-hand checklist.
+Uncheck any level to skip it without disabling later levels; check it again to
+restore it. Click a technology's name for its effect and typical unlock year.
+The slider displays the highest enabled level and marks gaps. Moving it applies
+a fresh cumulative selection, replacing any checkbox exceptions in that area.
 Missing or invalid save fields disable the corresponding area slider. Reset changes
 restores the original state; Cancel discards all dialog edits. Apply stages the
 changes in memory. Use Save or Save As to write through the existing validation
@@ -28,11 +33,9 @@ Reset and Cancel discard staged gun changes; Apply stages them in the loaded sav
 Only explicitly changed GunsN values are written, preserving research and other
 nations. Existing ships are not automatically rebuilt.
 
-Validation: six technology unittest cases passed, including cumulative increases,
-decreases, no unlocks, maximum level, save/reload, gap preservation, and invalid
-inputs. Tk GUI checks passed for 22 sliders, selected-level details, filtering,
-Reset, Cancel, Apply, and the gun placeholder. The full pytest suite has not run
-because pytest is unavailable in the current runtimes.
+Validation covers cumulative selection, individual exceptions, reset, invalid
+inputs, and save/reload preservation of intermediate gaps. Tk checks also cover
+slider/checkbox synchronization and filtering without changing staged flags.
 
 Gun validation: three unit tests and GUI checks passed for all quality values,
 19 rows, 133 radio buttons, Reset, Apply, Cancel, and byte-preserving save/reload.
