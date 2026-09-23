@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from .economy import project_budget
+from .economy import BUDGET_DISCLAIMER, budget_context, project_budget
 from .model import ECONOMY_ADJUSTMENTS, adjusted_integer
 
 
@@ -11,6 +11,7 @@ class EconomyWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
         super().__init__(parent)
         self.save, self.nation = save, save.nation(nation_index)
+        self.budget_context = budget_context(save, self.nation)
         self.title(f"Economy and Unrest Manager — {self.nation.name}")
         self.resizable(False, False)
         self.transient(parent)
@@ -41,11 +42,11 @@ class EconomyWindow(tk.Toplevel):
         panel.grid(row=5, column=0, columnspan=4, sticky="ew", pady=(12, 8))
         self.lines = {}
         labels = (
-            ("yearly_budget", "Yearly budget"), ("monthly_budget", "Monthly budget"),
-            ("maintenance", "Recorded ship maintenance"), ("construction", "Construction"),
+            ("yearly_budget", "Yearly budget (provisional)"), ("monthly_budget", "Monthly budget (provisional)"),
+            ("maintenance", "Ship maintenance (partial)"), ("construction", "Surface construction"),
             ("naval_aircraft", "Naval aircraft"), ("research", "Research"),
             ("extra_training", "Extra training"), ("intelligence", "Intelligence"),
-            ("total_expenses", "Total expenses"), ("monthly_balance", "Monthly balance"),
+            ("total_expenses", "Calculated expenses (subtotal)"), ("monthly_balance", "Monthly balance"),
             ("funds", "Funds"),
         )
         for row, (key, label) in enumerate(labels):
@@ -54,11 +55,13 @@ class EconomyWindow(tk.Toplevel):
             self.lines[key] = variable
             ttk.Label(panel, textvariable=variable, width=16, anchor="e",
                       relief="sunken", padding=(4, 1)).grid(row=row, column=1, sticky="e", pady=2)
+        ttk.Label(body, text=BUDGET_DISCLAIMER, wraplength=570, justify="left").grid(
+            row=6, column=0, columnspan=4, sticky="w", pady=(0, 6))
         self.note = tk.StringVar()
         ttk.Label(body, textvariable=self.note, wraplength=570, justify="left").grid(
-            row=6, column=0, columnspan=4, sticky="w", pady=(0, 12))
+            row=7, column=0, columnspan=4, sticky="w", pady=(0, 12))
         buttons = ttk.Frame(body)
-        buttons.grid(row=7, column=0, columnspan=4, sticky="e")
+        buttons.grid(row=8, column=0, columnspan=4, sticky="e")
         ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="right")
         ttk.Button(buttons, text="Apply", command=self.apply).pack(side="right", padx=(0, 8))
         self.refresh()
@@ -81,15 +84,14 @@ class EconomyWindow(tk.Toplevel):
             self.projected["funds"].set(f"Projected: {self._number(funds)}")
             self.projected["base_resources"].set(f"Projected: {self._number(resources)}")
             self.projected["unrest_level"].set(f"Projected: {self._number(unrest)}")
-            projection = project_budget(self.nation, base_resources=resources, funds=funds)
+            projection = project_budget(self.nation, context=self.budget_context,
+                                        base_resources=resources, funds=funds)
             for key, variable in self.lines.items():
-                variable.set(f"{getattr(projection, key):,}")
-            self.lines["research"].set(f"{projection.research:,} ({projection.research_percent}%)")
-            self.note.set(
-                "Disclaimer: These numbers are estimates, and the underlying budget math still needs to "
-                "be refined. RTW3 may add maintenance, aircraft, or training costs that do not have a "
-                "verified save-field mapping."
-            )
+                value = getattr(projection, key)
+                variable.set("Not calculated" if value is None else f"{value:,}")
+            if projection.research is not None:
+                self.lines["research"].set(f"{projection.research:,} ({projection.research_percent}%)")
+            self.note.set(" ".join(projection.notes))
         except ValueError as exc:
             self.note.set(str(exc))
 

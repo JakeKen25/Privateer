@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from privateer.economy import project_budget
+from privateer.economy import BudgetContext, project_budget
 from privateer.save import RTW3Save
 
 
@@ -53,20 +53,21 @@ def fixture(tmp_path: Path):
     return RTW3Save.load(folder)
 
 
-def test_game1_budget_projection_matches_verified_budget_and_research(tmp_path):
-    projection = project_budget(fixture(tmp_path).nation(0))
+def test_provisional_income_and_known_expense_subtotal(tmp_path):
+    projection = project_budget(fixture(tmp_path).nation(0), context=BudgetContext(8, 10))
     assert projection.yearly_budget == 72_000
     assert projection.monthly_budget == 6_000
     assert projection.research == 480
     assert projection.maintenance == 235
     assert projection.construction == 849
     assert projection.total_expenses == 1_579
-    assert projection.monthly_balance == 4_421
+    assert projection.monthly_balance is None
+    assert projection.incomplete
     assert projection.funds == 100
 
 
 def test_projection_uses_staged_funds_and_resources(tmp_path):
-    projection = project_budget(fixture(tmp_path).nation(0), base_resources=40_000, funds=250)
+    projection = project_budget(fixture(tmp_path).nation(0), context=BudgetContext(8, 10), base_resources=40_000, funds=250)
     assert (projection.yearly_budget, projection.monthly_budget, projection.research) == (96_000, 8_000, 640)
     assert projection.funds == 250
 

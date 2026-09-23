@@ -218,3 +218,20 @@ been shipped to users.
 - All nine screenshot expense sums, balances, monthly income rounding, research
   calculations and saved funds/research percentages were checked programmatically.
 - No raw saves, manual copies, or screenshots are included in the repository.
+
+## Implementation follow-up
+
+The development calculator now applies historical/museum exclusion, the observed
+reserve/mothball reductions, hurried/halted surface construction and level-3 target
+intelligence costs. A provisional domestic-income estimate includes fleet size and
+budget modifier; possession effects remain unresolved. Missing costs are displayed
+as uncalculated, expenses as a subtotal, and no complete monthly balance is claimed.
+The development warning remains visible. The tables above are unchanged 0.9.4
+baseline evidence, not outputs from the updated calculator.
+
+Validation: 112 tests passed, the economy window was opened and checked for layout
+fit and input validation, and read-only checks against Games1–9 reproduced all seven
+previously explained construction totals and all nine intelligence totals. Game6's
+2,055 and Game8's 324 construction differences remain flagged. Full in-game turn
+validation and the remaining expense formulas are still outstanding; issue #22
+remains open.
