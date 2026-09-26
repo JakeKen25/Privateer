@@ -1,4 +1,4 @@
-PRIVATEER 0.9.4 - WINDOWS INSTALLATION
+PRIVATEER 0.9.5 - WINDOWS INSTALLATION
 =====================================
 
 SYSTEM REQUIREMENTS
@@ -9,7 +9,7 @@ SYSTEM REQUIREMENTS
 
 INSTALL
 
-1. Right-click Privateer-0.9.4-Windows-x64.zip and choose Extract All.
+1. Right-click Privateer-0.9.5-Windows-x64.zip and choose Extract All.
 2. Keep the entire extracted Privateer folder together. Do not move only
    Privateer.exe out of the folder, and do not run it from inside the ZIP.
 3. Open the extracted folder and double-click Privateer.exe.
@@ -50,3 +50,4 @@ KNOWN LIMITATIONS
 Keep backups and test edited output in a
 copied save slot. Budget calculations are estimates, and features marked WIP are
 not complete.
+
