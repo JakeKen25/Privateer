@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 import re
 
 from .ship_status import appears_in_transfer_window
@@ -42,6 +42,7 @@ class BudgetContext:
     intelligence: int | None = None
     construction_notes: tuple[str, ...] = ()
     maintenance_notes: tuple[str, ...] = ()
+    additional_construction: int = 0
 
 
 def budget_context(save, nation):
@@ -51,12 +52,13 @@ def budget_context(save, nation):
     fleet = _field_integer(general.fields(), "FleetSize", default=None) if general else None
     intelligence = None
     # The target-nation spending fields describe the player's intelligence only.
-    if nation.index == 0 and fleet is not None:
+    if nation.index == 0:
         levels = [_field_integer(n.section.fields(), "IntelligenceSpending", default=None)
                   for n in save.nations if n.index != 0]
-        if all(level in (0, 3) for level in levels):
-            intelligence = sum(level == 3 for level in levels) * 30 * fleet
+        if all(level in (0, 1, 2, 3) for level in levels):
+            intelligence = sum(levels) * 80
     construction, maintenance = [], []
+    additional_construction = 0
     if _field_integer(nation.section.fields(), "DockBuilding") > 0:
         construction.append("dock expansion")
     for suffix, prefix, label in (("Submarines", "Sub", "submarines"),
@@ -72,9 +74,18 @@ def budget_context(save, nation):
             if _field_integer(fields, "InPlay", default=1):
                 maintenance.append(label)
             else:
-                construction.append(label)
+                # Submarine records often have no MonthlyCost. Do not substitute
+                # the single observed Game3 cost for all eras and submarine types.
+                cost = _field_integer(fields, "MonthlyCost", default=None)
+                if cost is None or (prefix == "Sub" and _field_integer(fields, "Halted")):
+                    construction.append(label)
+                elif prefix == "Ship" and (_field_integer(fields, "Halted") or
+                                            _field_integer(fields, "Hurry")):
+                    construction.append(label + " (halted/accelerated)")
+                else:
+                    additional_construction += cost
     return BudgetContext(fleet, intelligence, tuple(dict.fromkeys(construction)),
-                         tuple(dict.fromkeys(maintenance)))
+                         tuple(dict.fromkeys(maintenance)), additional_construction)
 
 
 @dataclass(frozen=True)
@@ -116,7 +127,8 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None):
     research_percent = _field_integer(fields, "ResearchPct")
     research = (None if monthly is None else
                 _whole(Decimal(monthly) * research_percent / 100))
-    maintenance = construction = 0
+    maintenance = 0
+    construction = context.additional_construction
     for ship in nation.ships:
         f = ship.section.fields()
         if not appears_in_transfer_window(f):
@@ -131,7 +143,13 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None):
                                  if _field_integer(f, "Hurry") else cost)
         else:
             status = str(f.get("Status", "0")).strip()
-            maintenance += charge // 2 if status == "1" else charge // 5 if status == "2" else charge
+            # Controlled Game3 observations: class-2 search radar adds 2 on
+            # destroyers and 4 on cruisers/carriers, before status reductions.
+            if _field_integer(f, "SearchRadarClass") == 2:
+                charge += {"DD": 2, "CL": 4, "CV": 4}.get(str(f.get("ShipType", "")).strip(), 0)
+            divisor = 2 if status == "1" else 5 if status == "2" else 1
+            maintenance += int((Decimal(charge) / divisor).quantize(
+                Decimal(1), rounding=ROUND_HALF_EVEN))
     naval_aircraft = _field_integer(fields, "NavalAircraftSpending", "AircraftSpending", default=None)
     extra_training = _field_integer(fields, "ExtraTrainingSpending", "TrainingSpending", default=None)
     intelligence = context.intelligence
@@ -143,7 +161,7 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None):
         notes.append("Construction excludes " + ", ".join(context.construction_notes) + ".")
     if context.maintenance_notes:
         notes.append("Maintenance excludes " + ", ".join(context.maintenance_notes) + ".")
-    notes.append("Ship maintenance excludes unverified repair, equipment, officer and other modifiers.")
+    notes.append("Ship maintenance includes observed class-2 search radar charges for DD/CL/CV; other equipment, repair and officer modifiers remain unverified.")
     total = maintenance + construction + sum(v for v in
         (naval_aircraft, research, extra_training, intelligence) if v is not None)
     # A balance from incomplete expenses would look like money available to spend.

@@ -12,12 +12,12 @@ class EconomyWindow(tk.Toplevel):
         super().__init__(parent)
         self.save, self.nation = save, save.nation(nation_index)
         self.budget_context = budget_context(save, self.nation)
-        self.title(f"Economy and Unrest Manager — {self.nation.name}")
+        self.title(f"Economy and Unrest Manager â€” {self.nation.name}")
         self.resizable(False, False)
         self.transient(parent)
         body = ttk.Frame(self, padding=16)
         body.pack(fill="both", expand=True)
-        ttk.Label(body, text=f"Economy and Unrest — {self.nation.name}",
+        ttk.Label(body, text=f"Economy and Unrest â€” {self.nation.name}",
                   font=("Segoe UI", 13, "bold")).grid(row=0, column=0, columnspan=4, sticky="w")
         ttk.Label(body, text="Funds, base resources, and unrest are staged together. The budget panel updates as you type.").grid(
             row=1, column=0, columnspan=4, sticky="w", pady=(2, 12))
@@ -43,7 +43,7 @@ class EconomyWindow(tk.Toplevel):
         self.lines = {}
         labels = (
             ("yearly_budget", "Yearly budget (provisional)"), ("monthly_budget", "Monthly budget (provisional)"),
-            ("maintenance", "Ship maintenance (partial)"), ("construction", "Surface construction"),
+            ("maintenance", "Ship maintenance (partial)"), ("construction", "Construction (partial)"),
             ("naval_aircraft", "Naval aircraft"), ("research", "Research"),
             ("extra_training", "Extra training"), ("intelligence", "Intelligence"),
             ("total_expenses", "Calculated expenses (subtotal)"), ("monthly_balance", "Monthly balance"),
@@ -70,7 +70,7 @@ class EconomyWindow(tk.Toplevel):
 
     @staticmethod
     def _number(value):
-        return "—" if value is None else f"{value:,}"
+        return "â€”" if value is None else f"{value:,}"
 
     def _value(self, key, current):
         raw = self.amounts[key].get().strip()

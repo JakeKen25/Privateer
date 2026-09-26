@@ -54,7 +54,7 @@ def test_target_intelligence_and_ai_nation_limits():
     assert context.intelligence == 240
     assert budget_context(save, save.nation(1)).intelligence is None
     save.nation(1).section.set('IntelligenceSpending', 2)
-    assert budget_context(save, save.nation(0)).intelligence is None
+    assert budget_context(save, save.nation(0)).intelligence == 160
 
 
 def test_fleet_size_income_and_rounding_before_research():
@@ -89,3 +89,48 @@ def test_context_flags_missing_infrastructure_costs():
     assert c.construction_notes == ('dock expansion', 'submarines')
     sub.set('Sub0Sunk', 1)
     assert budget_context(save, save.nation(0)).construction_notes == ('dock expansion',)
+
+
+@pytest.mark.parametrize("raw,kind,radar,status,expected", [
+    (35, "DD", 0, 0, 35), (35, "DD", 0, 1, 18), (35, "DD", 0, 2, 7),
+    (35, "DD", 2, 0, 37), (35, "DD", 2, 1, 18), (35, "DD", 2, 2, 7),
+    (112, "CL", 2, 0, 116), (112, "CL", 2, 1, 58),
+    (80, "CL", 2, 2, 17), (255, "CV", 2, 1, 130),
+])
+def test_observed_ship_maintenance(raw, kind, radar, status, expected):
+    save = campaign([dict(Maintenance=raw, ShipType=kind, SearchRadarClass=radar, Status=status)])
+    assert project_budget(save.nation(0)).maintenance == expected
+
+
+def test_intelligence_levels_are_additive_and_independent_of_fleet_size():
+    save = campaign(extra="[Nation1]\nName=A\nIntelligenceSpending=1\n[Nation2]\nName=B\nIntelligenceSpending=2\n[Nation3]\nName=C\nIntelligenceSpending=3\n")
+    for fleet in [2, 8, 12]:
+        next(s for s in save.documents['test.bcs'].sections if s.name == 'General').set('FleetSize', fleet)
+        assert budget_context(save, save.nation(0)).intelligence == 480
+    save.nation(1).section.set('IntelligenceSpending', 9)
+    assert budget_context(save, save.nation(0)).intelligence is None
+
+
+def test_battery_construction_and_unknown_submarine_cost():
+    save = campaign([{'MonthlyCost': 1876, 'UnderConstruction': 1},
+                     {'MonthlyCost': 1883, 'UnderConstruction': 1}])
+    sections = {s.name: s for s in save.documents['test.bcs'].sections}
+    fort = sections['Nation0CoastalArtillery']
+    for key, value in {'Ship0Name': 'Battery 39', 'Ship0InPlay': 0,
+                       'Ship0MonthlyCost': 2400, 'Ship0Status': 0,
+                       'Ship1InPlay': 1, 'Ship1MonthlyCost': 999,
+                       'Ship2InPlay': 0, 'Ship2Fate': 'Scrapped', 'Ship2MonthlyCost': 999}.items():
+        fort.set(key, value)
+    sub = sections['Nation0Submarines']
+    sub.set('Sub0InPlay', 0)
+    sub.set('Sub0RemainingBuildTime', 18)
+    before = save.documents['test.bcs'].render()
+    context = budget_context(save, save.nation(0))
+    assert project_budget(save.nation(0), context=context).construction == 6159
+    assert context.construction_notes == ('submarines',)
+    assert save.documents['test.bcs'].render() == before
+    # When a format supplies an explicit cost, include it without guessing.
+    sub.set('Sub0MonthlyCost', 295)
+    context = budget_context(save, save.nation(0))
+    assert project_budget(save.nation(0), context=context).construction == 6454
+    assert not context.construction_notes

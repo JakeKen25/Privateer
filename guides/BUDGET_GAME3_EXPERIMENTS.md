@@ -1,4 +1,4 @@
-# Game3 controlled budget comparisons — 2026-09-24
+# Game3 controlled budget comparisons â€” 2026-09-24
 
 Source: six user-provided folders under `Documents/Codex/Privateer Calc`, each with a numbered RTWGame3.bcs and budget screenshot. Screen title identifies RTW3 1.01.44. Files were read only; no live game, executable, or save was modified.
 
@@ -28,8 +28,8 @@ All screenshot expense sums and monthly balances reconcile.
 The affected ship is CV Fu Chi Hen, Ship376, ID 9276:
 Maintenance=253, MonthlyCost=1876, AircraftCapacity=64.
 
-- Accelerated: Hurry 0→1. round(1876 × 1.15)=2157, an increase of 281. Total construction 3759+281=4040 exactly.
-- Halted: Halted 0→1. floor(253/2)=126 replaces 1876. Total construction 3759−1876+126=2009 exactly.
+- Accelerated: Hurry 0â†’1. round(1876 Ã— 1.15)=2157, an increase of 281. Total construction 3759+281=4040 exactly.
+- Halted: Halted 0â†’1. floor(253/2)=126 replaces 1876. Total construction 3759âˆ’1876+126=2009 exactly.
 - Halted + accelerated: both flags are 1; the total remains 2009. Halted takes precedence.
 
 These rules already exist in the development calculator. The experiments validate them without requiring a production formula change.
@@ -38,7 +38,7 @@ These rules already exist in the development calculator. The experiments validat
 
 The affected ship is CV Hai Nan, Ship348, ID 8443:
 Maintenance=268, MonthlyCost=1910, AircraftCapacity=70, EAM=0.
-Only Status changes: 0→1 (reserve) or 0→2 (mothballed), beyond the shared changes described above.
+Only Status changes: 0â†’1 (reserve) or 0â†’2 (mothballed), beyond the shared changes described above.
 
 | Change from baseline | Maintenance change | Aircraft change | Training change | Expense change |
 |---|---:|---:|---:|---:|
@@ -51,7 +51,7 @@ An effective active maintenance charge of 272, reduced to 136 in reserve and 54 
 
 Both non-active statuses reduce aircraft spending by exactly 158 while the saved air-unit/type fields stay unchanged. Aircraft expense calculation must therefore consider ship readiness or another consequence of that readiness, not just aircraft counts. The specific rule remains unverified.
 
-Training reductions are consistent with approximately 32% of the maintenance reduction (136×0.32≈44; 218×0.32≈70), but this does not establish the training cost base, rounding stage, or a universal percentage. The carrier/aircraft interaction and active pilot-training setting need separate experiments.
+Training reductions are consistent with approximately 32% of the maintenance reduction (136Ã—0.32â‰ˆ44; 218Ã—0.32â‰ˆ70), but this does not establish the training cost base, rounding stage, or a universal percentage. The carrier/aircraft interaction and active pilot-training setting need separate experiments.
 
 ## Next narrowly targeted comparisons
 
@@ -63,3 +63,46 @@ Use this same baseline, without advancing the turn:
 4. For income, a separate copied-save experiment changing BaseResources only is still needed; income never changes in this batch.
 
 Keep the existing development warning. These experiments do not resolve income, total maintenance, aircraft or training formulas, and do not complete issue #22.
+
+
+
+## September 26 follow-up: maintenance, intelligence and construction
+
+Controlled ship-list and save comparisons support nearest-even rounding after
+status multipliers: AF 100%, RF 50%, MB 20%. Chao Ching (no radar) costs
+35/18/7. Class-2 search radar DD examples cost 37/18/7; cruiser examples
+show 112 -> 116 active and 80 -> 84 active; carriers show 255 -> 259.
+The calculator now includes the observed +2 DD and +4 CL/CV class-2 search
+radar adjustments. These remain empirical rules; other radar classes and ship
+types need verification. Fire-control radar had no additional visible charge
+in these examples. Halted surface construction retains its separately verified
+floor-half-maintenance rule.
+
+The user confirmed intelligence costs are universally 80 per level per target:
+low 80, medium 160, high 240, summed across targets without fleet-size scaling.
+This supersedes the earlier fleet-size hypothesis. The historical Game8 value
+of 60 remains a discrepancy to explain, not a reason to retain that hypothesis.
+
+Construction reconciled exactly: Fu Chi Hen 1876 + Ho Pei 1883 + Battery 39
+2400 + submarine Ho Hsie 295 = 6454. Battery 39 is an unfinished coastal
+record with InPlay=0 and MonthlyCost=2400. Its displayed status 10 represents
+construction time; its saved Status=0 must not be interpreted as completed.
+Normal unfinished fortifications are included by InPlay and MonthlyCost.
+Historical and completed records are excluded from construction.
+
+Ho Hsie has RemainingBuildTime=18 but no saved MonthlyCost. The 295 observed
+charge is not a universal submarine constant. Submarines with missing cost
+fields remain explicitly excluded until their cost formula is established;
+formats providing MonthlyCost can be summed directly. Thus the current live
+Game3 calculator construction subtotal is 6159, with submarines identified as
+missing. Fortification halt/acceleration rules also remain unverified.
+
+Extra training reconciles as priorities plus academy: baseline 1096+340=1436;
+latest Chao Ching mothball example 1071+340=1411. This does not establish a
+general academy or training-base formula, so no fitted formula was added.
+
+Remaining work: income and possession effects; aircraft and pilot expenses;
+submarine construction/maintenance, dock expansion and special construction;
+fortification recurring maintenance; other ship equipment/repair modifiers;
+training base, academy costs and pending versus active doctrine settings.
+The calculator retains its under-development warning and unknown-cost labels.
