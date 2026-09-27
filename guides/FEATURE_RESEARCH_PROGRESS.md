@@ -1,6 +1,6 @@
 # Feature research progress and resume point
 
-Checkpoint 4: 2026-09-26. Read-only content research; no game edits or new
+Checkpoint 6: 2026-09-26. Read-only content research; no game edits or new
 experiments. This document supplements FEATURE_IMPLEMENTATION_GUIDE.md and
 records source-specific discoveries rather than silently overriding earlier evidence.
 
@@ -427,4 +427,134 @@ read-only scans and existing source code. No formulas were fitted and no game
 state changed. Next: remaining nation template dependencies, installed design
 metadata and tactical result fields, then consolidate per-feature acceptance gaps.
 
+
+## Checkpoint 5: design catalog readiness, nation dependencies and tactical provenance
+
+### #30/#31 Read-only design catalog is directly supportable
+
+Read all 1,466 installed individual designs in Designs and Data/IDes: every file
+has Data, Armor and Guns sections and Data/Name, ShipType, Displacement and Nation.
+That supports a read-only catalog with source path, display name, type and tonnage
+without decoding positional campaign designs. Display optional metadata as absent
+when absent: BuildYear is missing in eight designs, Cost in one, BuildingNation
+in eight, and the Weights section in seven. Three files lack Torpedoes sections.
+A fixed mandatory schema would reject genuine installed designs.
+
+Filename, class name and source folder must remain distinct. The same named
+coastal-battery design appears in multiple folders and variants. A sampled 10-inch
+battery .sdf lists Cost=9000, while the existing campaign creation table uses
+7200. This is a concrete cross-source disagreement, not a reason to overwrite
+the current campaign value. Catalog costs should be labeled as template values;
+campaign cost conversion and era/version applicability require research.
+
+This review establishes preview metadata availability only. It does not decode
+.sdf/.tdf conversion into .des, hull initialization or campaign legality.
+
+### #17 Additional prototype blockers and source irregularities
+
+Both BNat1890 and BNat1920 have ten named nations, but Russia exists only under
+that name in the earlier file; the later file uses Soviet Union. The current
+prototype requires config.template_name to exist unchanged in both era maps.
+Therefore a Russia-based two-era export fails its explicit presence check even
+after the BOM bug is fixed. Require an explicit per-era template selection or
+verified identity mapping; do not silently choose a different nation by position.
+
+Preserve ordered fields and report duplicates. Examples from the installed files:
+
+| File | Nation | Repeated key | Observed values |
+|---|---|---|---|
+| BNat1890.dat | Spain | Possession6 | Northwestern Spain; Eastern Spain |
+| BNat1900.dat | Germany | ParliamentName | the Reichstag; the Reichsrat |
+| BNat1935.dat | Germany | GovernmentType | 4; 1 |
+
+Other duplicates have equal values, such as Russia FlagFileName. The prototype
+keeps fields in a tuple, reads the first matching value and removes later copies
+of explicitly replaced keys. That is its behavior, not proof of the game's
+first/last-value rule. Distinguish equal duplicates from conflicts, retain source
+order, and require a defined policy before modifying conflicting keys. The 1935
+file is not currently one of the prototype's two export inputs; it matters before
+extending era support.
+
+France's FlagFileNameF references MnV.bmp in all four inspected era files, but
+that exact referenced asset is absent from the installed Flags directory. Report
+missing dependencies in package previews rather than assuming every stock
+reference resolves. Do not source replacement artwork during this format audit.
+
+User-provided custom packages demonstrate that filename stem and displayed nation
+name may differ: Byzantium.N00 contains Name=Byzantine Empire and its supporting
+files use different stems by family. The other inspected package includes explicit
+Possession entries; Byzantium also has HomePossession. Package filenames, nation
+identity, possession names and inherited template identity need separate fields.
+These examples are observed package layouts, not proof all have passed RTW3 tests.
+
+### #33 Tactical files contain useful details, but also demonstrably stale state
+
+Read all ten available .sac files, including numbered and autosave variants.
+Environment supplies Year, Month, Day, Hour, Minute, TimeElapsed and GameEnded.
+All ten sampled GameEnded values are zero, including records with elapsed combat
+and hit histories; these samples cannot establish a completed-battle predicate.
+
+A concrete mismatch: Game3's campaign BCS is December 1945, its numbered SAC is
+January 1931, and Autosave.sac is August 1932. Numbered and autosave tactical files
+must never be treated as interchangeable or automatically attached to the current
+campaign month. This is an observed mismatch, not merely a hypothetical risk.
+
+Division ship records and SunkShips include Id, Nation, DesignId, Side, position,
+damage/hit counters, scored-hit/ammunition counters and indexed Hits narrative.
+These support candidate battle-detail views. Keep received hits separate from
+HitsScored and preserve embedded text markers; do not derive final casualty or
+victory totals before outcome/lifecycle semantics are verified. SunkShips can
+contain a full hull record with a nonempty hit history.
+
+Some tactical files repeat Ship Id=0 (including all 18 ships in the standalone
+scenario sample). Positive-ID uniqueness in campaign rosters therefore does not
+justify requiring unique global IDs for every tactical entity. Retain file,
+section and local slot as source identity; treat campaign matching as optional.
+No nonzero repeated ship IDs were found in this scan, but that is a corpus result,
+not a format guarantee.
+
+### Resume boundary
+
+Checkpoint 5 completes the targeted installed design metadata scan and all-SAC
+header/identity review. Campaign cost semantics, final AAR outcome rules and
+nation package compatibility remain unresolved and have not been experimentally
+investigated. Remaining sources include unreviewed manual/FAQ tables, further
+readable data dependencies, and positional/opaque formats. Do not repeat the
+completed inventory, full PDF extraction or 1,466-design metadata census.
+
+## Checkpoint 6: FAQ constraints and actionable feature handoff
+
+FAQ v1.00 pp.1-6 prose was reviewed, and p.7's technology-table preface/key was
+visually inspected. Pages 8-12 were text-indexed/reviewed for relevant entries but
+not validated cell-by-cell against rendered tables. Do not present that extraction
+as a tested machine-readable technology matrix.
+
+The p.7 preface explicitly treats technology years as likely development dates,
+affected by research and starting technology variation. Many cells describe an
+effect rather than the technology's actual name. Thus a year table can support
+planning hints, but cannot prove a campaign has a technology or supply exact
+save IDs. Read campaign research state for feature eligibility; preserve the
+existing research-record ID mapping instead of deriving IDs from this table.
+
+FAQ pp.5-6 differentiates base creation dependencies: an airship base is stocked
+automatically with eight airships, whereas airplane squadrons must be added to an
+airbase. Current fortification creation writes a built installation record; the
+source inspection does not establish that bypassing in-game construction triggers
+automatic airship population. Add this exact behavior to #27's in-game acceptance
+check rather than claiming capacity=8 proves eight functioning airships exist.
+
+FAQ p.3 distinguishes regional foreign-station coverage from the FS mission:
+active undamaged ships can satisfy local requirements without FS orders, while
+FS-assigned ships contribute nationally and may move automatically. This matters
+for status tutorials and future fleet-readiness calculations. Do not derive
+foreign-station compliance solely by counting Status=FS or by total displacement.
+FAQ p.4 also says ship range cannot be changed by an ordinary rebuild, and p.6
+limits battleship/cruiser floatplanes to search/strike rather than CAP. Preserve
+those distinctions in future custom-design compatibility checks and tutorials.
+
+Current GitHub open issues were refreshed: the same 15 planned issues remain.
+A compact FEATURE_READINESS_MATRIX.md now maps all of them to available inputs,
+implementation-ready portions and unresolved acceptance work. No issue was closed,
+no milestone changed, and none of the research findings were implemented as game
+edits. Remaining unread/opaque sources are explicitly retained as outstanding.
 

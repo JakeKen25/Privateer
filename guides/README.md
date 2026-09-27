@@ -18,3 +18,6 @@ behavior behind them.
 - [Feature data catalog](FEATURE_DATA_CATALOG.md): observed file families, field patterns and open-issue coverage.
 
 - [Content research progress](FEATURE_RESEARCH_PROGRESS.md): manual findings, evidence conflicts, completed reading and the next resume point.
+
+- [Feature readiness matrix](FEATURE_READINESS_MATRIX.md): all open issues, usable inputs, remaining blockers and concrete acceptance cases.
+
