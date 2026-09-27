@@ -1,6 +1,6 @@
 # Feature research progress and resume point
 
-Checkpoint 1: 2026-09-26. Read-only content research; no game edits or new
+Checkpoint 2: 2026-09-26. Read-only content research; no game edits or new
 experiments. This document supplements FEATURE_IMPLEMENTATION_GUIDE.md and
 records source-specific discoveries rather than silently overriding earlier evidence.
 
@@ -154,7 +154,7 @@ academy formula, aircraft/submarine cost functions, war transition initializatio
 and individual-design conversion remain unresolved. Documentation facts are
 implementation constraints, not automatically verified save-field recipes.
 
-## Next resume point
+## Checkpoint 1 resume point (superseded below)
 
 Read the remaining high-value user references (base/wartime tension documents,
 JSON evidence and ship storage/transfer guide), then inspect self-describing
@@ -163,3 +163,110 @@ covering AAR/battle results and graphical technology tables as needed. Keep a
 source/page or filename/field citation per finding, preserve conflicts, and add
 another checkpoint before moving into positional formats. Do not re-extract all
 PDFs or repeat the completed inventory.
+
+## Checkpoint 2: readable guides and installed data
+
+### #17 Custom nations: encoding and identifiers
+
+The custom-nation prototype at a2aa879 uses cp1252 in `_read_game_text` and
+recognizes nation sections with a full-line `[NationN]` match. Installed
+Data/BNat1890.dat and BNat1920.dat have a UTF-8 BOM. Decoding these with cp1252
+leaves three characters before the first section: only nine of ten sections match.
+UTF-8-with-BOM decoding recognizes all ten. Implementation requirement: detect
+BOMs before the legacy encoding fallback, retain the chosen encoding for safe
+writes, and test that Nation0 survives parsing. This is a directly reproduced
+parser problem; no prototype code has been changed during this audit.
+
+Keep identifiers separate. BNat research advantages use keys such as
+Research1Advantage and Research19Advantage. ResearchAreas3.dat has area sections
+0 through 21; the prototype accepts advantage identifiers 1 through 22. Their
+mapping is not established here. Do not silently shift identifiers based on the
+apparent indexing difference.
+
+StockMapData contains named areas, possession owner codes, Value, BaseValue,
+Oil, and parallel site/coordinate/adjacency lists. These are candidate inputs for
+nation setup and a map preview. They do not establish the campaign income formula.
+Validate parallel-array lengths and preserve owner codes; do not substitute
+campaign nation slots for installation nation identities.
+
+### Technology and aircraft reference tables
+
+Data/ResearchAreas3.dat has 22 areas and 572 semicolon records. Of these, 569 have
+seven fields and three have eight. The extra-field rows include proximity-fuze
+technologies (lines 400, 401 and 403). The existing technology parser retains
+raw_fields, which must remain intact. Description is field seven in these records;
+the optional eighth field's meaning remains unresolved. Never discard it while
+editing a known field or infer a technology ID from row position alone.
+
+AircraftBasicData.dat has seven role blocks and 147 rows with 22 fields.
+AircraftBasicData3.dat has eleven role blocks: 255 rows have 22 fields, four have
+23, and 32 have 26. The later roles include light/heavy jet fighters, jet attack
+and helicopters. Rows contain decimal commas, missing-value dashes, empty fields
+and trailing flags. These are useful role/year reference inputs, but lack column
+labels establishing aircraft maintenance or purchase costs. A fixed-width parser
+for every role would lose information. Preserve raw fields and flag unsupported
+layouts rather than assign guessed cost meanings.
+
+Gundata.dat is tab-delimited with headers c, sw, ROF, mr; TorpedoData.dat is
+also tab-delimited, headed TYPE, CAL, WH, RH, SH, RL, SL, N. Neither is a labeled
+budget price table. Delimiter handling must be per source.
+
+### #14/#30/#31 Ship catalogs and transfers
+
+The user ship-storage guide separates ShipDesignN record ordinals from internal
+design IDs and treats DesignIDCount as a high-water mark, not the record count.
+Its documented transfer procedure clones the complete opaque design block,
+allocates above both counter and observed IDs, and reuses a clone by source nation,
+source design ID and destination nation. Preserve building nation separately from
+current ownership. Cached Description is not an authoritative design definition.
+Carrier links remain outside that guide's supported transfer procedure.
+
+Installed Data/IDes contains 56 .sdf and 1,237 .tdf files; Designs contains 173
+.sdf files. ShipParts contains 293 BMP assets and two extensionless files, not a
+ship-statistics table. A sampled battery .tdf has named design fields (including
+Ready, Displacement, ShipType, Nation and BuildingNation), but those are not the
+campaign BCS hull schema. Do not import a design template as a completed hull.
+DataGraphics .eqs/.tus/.hus examples describe geometry rather than budget costs.
+
+Expanded Battles manual pp.21-22 distinguishes national technology and doctrine,
+design-year armor/engine technology, and individual hull radar/build year. Setting
+a scenario tech year resets manual technology adjustments. These distinctions
+belong in catalog provenance and validation; tactical setup is not evidence of a
+campaign conversion recipe.
+
+### #28/#21 Diplomacy and event grammar
+
+The base/wartime reference documents distinguish dynamic campaign slots from
+NationNumber. A known wartime sample still has Wars and WillGoToWar equal to zero;
+those names do not justify automatically setting them to one. An observed
+General/War change from -61 to 1 spans multiple months and is not an isolated
+transition test. Self-cells and extra indexed records must not be interpreted as
+ordinary foreign relations solely because they exist.
+
+Data/BuldCampEventConditions.txt documents semicolon response records with caption,
+budget/prestige/tension effects, affected-nation selector and condition. Its
+selectors include context-dependent and all/random/most-tense targets; they are
+not ordinary nation IDs. A separate chengenationcodeforevents.txt notes a code
+change from 7 to 15, so these comments may reflect different format generations.
+Treat the event description as a grammar lead, not a verified current schema.
+Peace-related response codes do not establish a direct save-edit peace operation.
+Preserve blank fields when inspecting Events.dat.
+
+### #33 AAR and tutorial implications
+
+Expanded Battles manual p.11 states that Exit battle opens results, while closing
+the battle window ends a standalone scenario without that results screen. An AAR
+collector therefore cannot equate window closure with completed result capture.
+Page 36 describes Check scenario warnings as reminders, not universally fatal
+errors. Tutorials should preserve those distinctions.
+
+### Remaining work / next resume point
+
+Read the remaining ship-guide sections and structured evidence JSON, then inspect
+Events.dat, named campaign/tactical records and AAR log samples. Record field
+presence separately from verified semantics. Positional design data remains last;
+use existing supported codecs as evidence and mark unknown fields without reverse
+engineering them. The aircraft/submarine price functions, academy formula,
+maintenance residual and missile accounting remain unresolved. No new game tests,
+executable analysis, feature implementation or release occurred in this checkpoint.
+
