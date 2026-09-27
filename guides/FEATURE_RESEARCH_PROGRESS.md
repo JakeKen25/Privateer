@@ -1,6 +1,6 @@
 # Feature research progress and resume point
 
-Checkpoint 2: 2026-09-26. Read-only content research; no game edits or new
+Checkpoint 3: 2026-09-26. Read-only content research; no game edits or new
 experiments. This document supplements FEATURE_IMPLEMENTATION_GUIDE.md and
 records source-specific discoveries rather than silently overriding earlier evidence.
 
@@ -9,9 +9,9 @@ records source-specific discoveries rather than silently overriding earlier evid
 1. Installed manuals, FAQ and release history: relevant prose sections reviewed;
    graphical tables and remaining pages still pending detailed review.
 2. User reference guides: diplomacy final findings and verified add-enemy procedure
-   reviewed. Remaining package JSON/base-tension references and ship guide pending.
-3. Self-describing installed data: next priority after remaining guides.
-4. Campaign and tactical structured records: inventoried; targeted semantic review pending.
+   reviewed, including base/wartime references. Evidence JSON and parts of ship guide remain.
+3. Self-describing installed data: targeted nation, research, aircraft, map and event review complete.
+4. Campaign and tactical records: AAR log samples reviewed; other targeted review remains.
 5. Positional/opaque formats: last; no executable analysis initiated.
 
 PDF text was extracted locally from all six installed PDFs (248 pages total).
@@ -24,7 +24,7 @@ are one-based PDF pages; for the main manual these match visible page numbers.
 - Manuals/Rule the Waves 3 Manual Patch 2026.pdf (149 pages): contents/key-topic
   search, full prose on pp.12-13,31,34-35,51-56,63,65-66,106-114,126,145.
 - Manuals/Rule the Waves Expanded Battles Manual EBOOK.pdf (40 pages):
-  pp.13-19 and 34-35 relevant text; no complete visual-table verification yet.
+  pp.11,13-19,21-22,34-36 relevant text; no complete visual-table verification yet.
 - Manuals/RTW3 FAQ v1.00.pdf (12 pages): topic index/search; technology tables
   pp.7-12 detected but NOT transcribed as validated tables.
 - whatsnew.pdf (17 pages): topic search; pp.6-7 read for maintenance/submarine
@@ -269,4 +269,65 @@ use existing supported codecs as evidence and mark unknown fields without revers
 engineering them. The aircraft/submarine price functions, academy formula,
 maintenance residual and missile accounting remain unresolved. No new game tests,
 executable analysis, feature implementation or release occurred in this checkpoint.
+
+## Checkpoint 3: event records and AAR candidates
+
+### Events.dat structure
+
+All 324 nonblank lines fit 81 consecutive groups of one nine-field prompt and
+three six-field responses. This matches the broad grammar in the event-condition
+reference, while exposing additional prompt fields absent from the response
+schema. Preserve empty semicolon fields and distinguish prompt/response records.
+This validates the observed grouping only, not every numeric selector or condition.
+Do not implement diplomacy transitions by copying event effect codes into saves.
+
+### #33 AAR: directly available log inputs
+
+Five available TLog.log/TTime.log pairs have matching line counts: 1,890, 998,
+43, 699 and 4. One pair belongs to the standalone Scenarios directory. TLog holds
+narrative events; TTime holds corresponding-looking day/time strings. Line-index
+pairing is a supported candidate, not yet a verified lifecycle contract. Preserve
+blank lines and original order; reject or explicitly flag unequal counts instead
+of silently truncating with zip. Dates lack a full year/month in sampled lines.
+Some narrative lines start with numeric prefixes; retain them until their meaning
+is established rather than stripping them as noise.
+
+BattleInfo.bbi has a named BATTLE INFO section with BattlePossession, BattleArea,
+BattleIndex, BattleSize and BattleOpponentIndex. These are useful metadata
+candidates. Their relation to the current campaign save, log freshness and battle
+completion is unresolved. A collector must not attach old tactical files to the
+current campaign date merely because they share a save directory.
+
+Air Combat Log.skv has a 13-field semicolon header and 18 populated rows in the
+available nonempty sample, all also 13 fields. It labels time, attacker/defender
+counts, roles, aircraft types, home bases, attack/resistance values, destroyed and
+damaged. Duplicate column names occur for each side: use positional, side-qualified
+labels instead of a dictionary keyed only by header text.
+
+Bombing Log.skv is less reliable: its header splits into seven fields, but all
+11 populated rows across two samples split into ten. Header text visibly joins
+some labels. Preserve all ten raw values; do not use the header directly to map
+columns or discard extras. Full column semantics require additional research.
+All four AA Log.skv files in the current corpus are empty. Header-only aircraft
+logs also exist; empty/header-only does not demonstrate that no combat happened.
+
+The .sta sample is positional numeric data without a descriptive header. Its
+meaning remains unassigned; no reverse engineering was attempted. These files
+must not become an invented casualty or campaign-statistics schema.
+
+### Implementation requirements and remaining scope
+
+For an eventual local AAR prototype, record source identity, content hash, capture
+time, encoding and raw rows; detect absent/empty/malformed files; keep narrative,
+combat and battle metadata separate until their association is verified. These
+are recommendations from observed format hazards, not a new product commitment.
+Campaign association, rotation/overwrite behavior, complete timestamps, result
+finality and the meaning of numeric prefixes remain research tasks. No watcher,
+cloud integration or automated collection has been implemented.
+
+Next resume point: finish the remaining user ship-reference sections and evidence
+JSON, then review named campaign/tactical records against the existing codecs.
+Remaining manual pages and positional formats are still not fully reviewed.
+The file inventory is complete; the content/semantic audit is deliberately not
+marked complete. Checkpoints 1-3 retain the verified findings and open questions.
 
