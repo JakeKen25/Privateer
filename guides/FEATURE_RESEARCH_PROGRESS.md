@@ -1,10 +1,14 @@
 # Feature research progress and resume point
 
-Checkpoint 7: 2026-09-26. Read-only content research; no game edits or new
+Checkpoint 8 (FINAL source-audit checkpoint): 2026-09-26. Read-only content research; no game edits or new
 experiments. This document supplements FEATURE_IMPLEMENTATION_GUIDE.md and
 records source-specific discoveries rather than silently overriding earlier evidence.
 
-## Reading order and current position
+**Final status:** checkpoint 8 completes the scoped source audit. Earlier pending
+lists below describe historical checkpoints; the final disposition is in
+[Audit completion](FEATURE_AUDIT_COMPLETION.md).
+
+## Reading order and checkpoint history
 
 1. Installed manuals, FAQ and release history: relevant prose sections reviewed;
    graphical tables and remaining pages still pending detailed review.
@@ -640,4 +644,74 @@ gap. The normal campaign MapDataX data stays separate from installed templates.
 Checkpoint 7 is an intermediate checkpoint. Final completion requires the source
 coverage ledger and a final reconciliation of unresolved items; no claim of final
 completion is made here.
+
+## Checkpoint 8 — FINAL source-audit checkpoint
+
+The requested file-content audit is complete at the documented boundary: every
+installed/save file was read and fingerprinted, text families were classified and
+scanned, directly useful sources were mapped to the current feature plans, and
+unresolved mechanics were handed off without experiments or reverse engineering.
+This does not mean every field is decoded, every manual illustration transcribed,
+or any planned feature is implemented or game-validated. See
+FEATURE_AUDIT_COMPLETION.md for the final coverage ledger and remaining research.
+
+### Last design/budget findings
+
+A final scan of the 1,466 individual designs plus two temporary design files found
+Maintenance in 1,467 files, FinalMaintenance in 11, MissileMaintenancePoints in
+1,154, and HullCost/ArmorCost/EngineCost in 1,460 each. These are literal named
+fields, not inferred offsets. Nonzero values exist in each category. The preview
+catalog can expose available raw values with their source, without inventing
+missing ones. Do not treat FinalMaintenance as a universally present final budget
+charge or MissileMaintenancePoints as currency. Their mapping to the current
+campaign's status, technology and modifiers remains unverified.
+
+The scanned design libraries contain two observed header layouts. Seventy-two
+start with v10139; nine (all Game7) start directly with a numeric count followed
+by ShipDesign0. Each of those first-line counts matches its observed marker count.
+Current save.py positional parsing and ship_transfers.py require v10139, so the
+Game7 layout is an explicit compatibility gap. Do not repair it by prepending a
+version string: compatible payload semantics have not been established.
+Observed design blocks vary from 768 to 1,052 lines across the corpus. Fixed-size
+835-line block logic would be invalid even within this snapshot.
+
+### Final documented save/design constraints
+
+Main manual pp.23-30 states that full save folders and design files are required
+for transfer/recovery. Autosaves occur monthly and during battles. Design studies
+have separate time/cost and discounts for derivatives; raw hull installments are
+not automatically a complete account of design-development spending. Mildly
+overweight designs can be allowed with penalties, and design report Notes differ
+from Errors. A future importer must not turn every advisory into a hard rejection.
+
+Manual pp.27-30 distinguishes functional gun-position designators from cosmetic
+mount placement; secondary/tertiary graphics can differ from actual weapon counts.
+Pages 37-44 describe component cost/weight modifiers and radar-capacity limits,
+but do not supply a complete construction/maintenance function. Keep geometry,
+weapon data and calculated costs separate rather than reconstructing armament
+from the number of drawn objects.
+
+### Final auxiliary-source disposition
+
+All nine installed scenario sets have matching .nsc/.ndt/.act/.txt basenames.
+Their records are useful tactical examples, not campaign initialization recipes.
+Twenty installed text files require the cp1252 fallback after strict UTF-8 decode
+fails; all 164 save files in this snapshot decode as UTF-8 (BOM-aware). Successful
+ASCII decoding does not prove the original producer selected UTF-8. Preserve
+original bytes/encoding rather than rewrite all sources to one assumed encoding.
+
+The launcher .resx files contain 31-32 UI resource entries each; the C# file is a
+generated resource accessor. They do not expose RTW campaign budget functions.
+The two extensionless ShipParts files are empty placeholders. Map .lyr files are
+opaque binary resources; runtime executables/libraries, imagery and audio were
+fingerprinted and classified, without decompilation or wholesale asset copying.
+No remaining unclassified file family was found.
+
+### Final status
+
+All 15 open issues have source coverage and explicit acceptance/research gaps in
+FEATURE_READINESS_MATRIX.md. The audit is finished; future work should choose an
+implementation or unresolved research item from that matrix, not repeat inventory.
+No game edits, turn tests, missing-formula experiments, source-feature changes,
+release builds, or raw game/save uploads were performed by this audit.
 

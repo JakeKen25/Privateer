@@ -1,6 +1,6 @@
 # Feature readiness after the content audit
 
-Updated 2026-09-26, through research checkpoint 6. This is an implementation
+Updated 2026-09-26, through final research checkpoint 8. This is an implementation
 handoff, not a statement that the features have passed in-game validation.
 See [implementation guide](FEATURE_IMPLEMENTATION_GUIDE.md) for architecture,
 [data catalog](FEATURE_DATA_CATALOG.md) for field families and
@@ -18,7 +18,7 @@ Later checkpoint corrections take precedence over initial inventory-only notes.
 | #29 Public-domain sourcing | Asset-family inventory and exact dependency names. | Rights evidence and actual asset selection remain unresearched. Installed/modded artwork is not automatically redistributable. |
 | #19 Submarine manager | All nine campaign rosters; 14 observed fields; status/history examples and optional building locations. A read-only sortable roster is supportable. | Numeric labels/ranges beyond verified cases, creation/removal counters, persistent identity, pricing and multi-turn edits. Active=0 is not a deletion condition. |
 | #21 War/alliance editor | Reuse existing diplomacy staging after #28; preserve raw directional values and dynamic slots. | Safe transition transactions remain gated on #28. No broad war/peace toggle is established. |
-| #30 Built-in spawning | Metadata preview over 1,466 individual designs is supportable. Existing transfer code supplies whole-block copying and ID remapping for already saved designs. | Individual-design conversion, fresh hull initialization, histories/counters, construction and carrier/division dependencies; game checks across nations. |
+| #30 Built-in spawning | Metadata preview over 1,466 individual designs is supportable. Existing transfer code supplies whole-block copying and ID remapping for already saved designs. | Headerless Game7 libraries, individual-design conversion, fresh hull initialization, histories/counters, construction and carrier/division dependencies; game checks across nations. |
 | #31 Custom-design spawning | Reuse phase-1 preview/provenance and supported-format rejection; user templates and scenario lookup documentation exist. | Depends on #30; campaign legality, custom-nation compatibility and multi-turn imports. Scenario acceptance does not prove campaign legality. |
 | #14 Spawner parent | Shared catalog, staging and dependencies are documented under #30/#31. | Keep open until both child phases meet their acceptance criteria. |
 | #17 Custom nations | Existing isolated prototype, BNat era records, names, map possessions, WarInfo and user packages. | Fix BOM handling; explicitly pair Russia/Soviet-era templates; handle conflicting duplicate keys and missing flags; verify install/new campaigns. Do not merge prototype as already validated. |
@@ -69,13 +69,10 @@ These are proposed next development steps, not changes performed by the audit.
 These are proposed tests. The audit did not run game acceptance, mutate saves,
 create a release, or claim a new cost formula.
 
-## Remaining source work
+## Final source-audit disposition
 
-The inventory and targeted structured-content scans are complete; exhaustive
-semantic interpretation is not. Remaining work includes unreviewed manual pages,
-visual verification of detailed FAQ technology cells, other readable settings and
-template dependencies, and opaque/positional formats. Unknown format meanings
-should remain marked for research rather than inferred by reverse engineering
-under this task. No binary/executable analysis is required for the read-only
-implementation slices above.
+The scoped source audit is complete. See [final coverage and research gaps](FEATURE_AUDIT_COMPLETION.md).
+Every source family has a disposition; unresolved mechanics and lower-priority
+opaque formats remain documented future research, not unfinished checkpoints.
+Neither audit completion nor parser support establishes in-game compatibility.
 
