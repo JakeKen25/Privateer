@@ -16,3 +16,5 @@ behavior behind them.
 
 - [Feature implementation guide](FEATURE_IMPLEMENTATION_GUIDE.md): milestone-by-milestone sources, dependencies, implementation boundaries and unresolved research.
 - [Feature data catalog](FEATURE_DATA_CATALOG.md): observed file families, field patterns and open-issue coverage.
+
+- [Content research progress](FEATURE_RESEARCH_PROGRESS.md): manual findings, evidence conflicts, completed reading and the next resume point.
