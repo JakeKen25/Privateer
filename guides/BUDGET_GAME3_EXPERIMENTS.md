@@ -1,4 +1,4 @@
-# Game3 controlled budget comparisons â€” 2026-09-24
+# Game3 controlled budget comparisons — 2026-09-24
 
 Source: six user-provided folders under `Documents/Codex/Privateer Calc`, each with a numbered RTWGame3.bcs and budget screenshot. Screen title identifies RTW3 1.01.44. Files were read only; no live game, executable, or save was modified.
 
@@ -28,8 +28,8 @@ All screenshot expense sums and monthly balances reconcile.
 The affected ship is CV Fu Chi Hen, Ship376, ID 9276:
 Maintenance=253, MonthlyCost=1876, AircraftCapacity=64.
 
-- Accelerated: Hurry 0â†’1. round(1876 Ã— 1.15)=2157, an increase of 281. Total construction 3759+281=4040 exactly.
-- Halted: Halted 0â†’1. floor(253/2)=126 replaces 1876. Total construction 3759âˆ’1876+126=2009 exactly.
+- Accelerated: Hurry 0→1. round(1876 × 1.15)=2157, an increase of 281. Total construction 3759+281=4040 exactly.
+- Halted: Halted 0→1. floor(253/2)=126 replaces 1876. Total construction 3759−1876+126=2009 exactly.
 - Halted + accelerated: both flags are 1; the total remains 2009. Halted takes precedence.
 
 These rules already exist in the development calculator. The experiments validate them without requiring a production formula change.
@@ -38,7 +38,7 @@ These rules already exist in the development calculator. The experiments validat
 
 The affected ship is CV Hai Nan, Ship348, ID 8443:
 Maintenance=268, MonthlyCost=1910, AircraftCapacity=70, EAM=0.
-Only Status changes: 0â†’1 (reserve) or 0â†’2 (mothballed), beyond the shared changes described above.
+Only Status changes: 0→1 (reserve) or 0→2 (mothballed), beyond the shared changes described above.
 
 | Change from baseline | Maintenance change | Aircraft change | Training change | Expense change |
 |---|---:|---:|---:|---:|
@@ -51,7 +51,7 @@ An effective active maintenance charge of 272, reduced to 136 in reserve and 54 
 
 Both non-active statuses reduce aircraft spending by exactly 158 while the saved air-unit/type fields stay unchanged. Aircraft expense calculation must therefore consider ship readiness or another consequence of that readiness, not just aircraft counts. The specific rule remains unverified.
 
-Training reductions are consistent with approximately 32% of the maintenance reduction (136Ã—0.32â‰ˆ44; 218Ã—0.32â‰ˆ70), but this does not establish the training cost base, rounding stage, or a universal percentage. The carrier/aircraft interaction and active pilot-training setting need separate experiments.
+Training reductions are consistent with approximately 32% of the maintenance reduction (136×0.32≈44; 218×0.32≈70), but this does not establish the training cost base, rounding stage, or a universal percentage. The carrier/aircraft interaction and active pilot-training setting need separate experiments.
 
 ## Next narrowly targeted comparisons
 
@@ -106,3 +106,77 @@ submarine construction/maintenance, dock expansion and special construction;
 fortification recurring maintenance; other ship equipment/repair modifiers;
 training base, academy costs and pending versus active doctrine settings.
 The calculator retains its under-development warning and unknown-cost labels.
+
+
+## September 26: budget tooltip and air-group totals (latest findings)
+
+The current budget screenshot still shows maintenance 6044. Hovering over that
+value exposes the following breakdown, transcribed from the user's screenshot:
+
+| Tooltip item | Amount |
+|---|---:|
+| Ship maintenance | 3445 |
+| Coastal artillery maintenance | 268 |
+| Airbase maintenance | 1946 |
+| Submarine maintenance | 385 |
+| Missile storage | 1967 |
+
+The first four entries sum exactly: 3445 + 268 + 1946 + 385 = 6044.
+Missile storage is displayed in the tooltip but is NOT an additional amount
+in that sum. Adding it again would double-count or otherwise misclassify costs.
+Its actual accounting treatment is unresolved; visibility in a tooltip alone
+does not establish whether it is charged, embedded elsewhere, or informational.
+
+The user reports the adjacent 6130 value is an estimate with all ships active,
+with a warning that actual wartime costs may increase it. It is not a second
+actual expense and must not be added to maintenance. Its difference from 6044
+is not, by itself, a measurement of reserve/mothball savings.
+
+### Reconciliation with individual lists and saved fields
+
+All 53 surface-ship rows total 3424 (CL 568, CV 1198, DD 1658). Therefore the
+remaining 21 belongs specifically to the difference between aggregate SHIP
+maintenance (3445) and displayed surface-ship rows (3424). Do not assign this
+residual to fortifications or submarines, or patch it with a constant 21.
+Possible mechanisms still require evidence; no cause has been established.
+
+Completed infrastructure rows reconcile exactly with the tooltip:
+
+- Six batteries: 48; eleven MTB squadrons: 220; combined coastal artillery: 268.
+- Nineteen size-100 airbases at 94 plus two size-80 airbases at 80: 1946.
+- Seven completed long-range submarines at 55: 385.
+
+The observed completed battery/airbase charges fit 75% of saved Maintenance,
+rounded to nearest-even: 6 -> 4, 13 -> 10, 126 -> 94, 106 -> 80.
+MTB squadrons instead display their full saved Maintenance of 20 each.
+This is an empirical Game3 pattern, still needing verification in other saves.
+The current calculator has not yet implemented these recurring infrastructure
+charges or a general submarine cost formula.
+
+Battery 39 remains under construction: its displayed 2400 is construction,
+not maintenance. Ho Hsie likewise contributes 295 construction, not the 55
+charged for each completed submarine. Construction remains reconciled at 6454.
+
+### Air-group management screenshot
+
+The footer reports:
+
+| Field | Value |
+|---|---:|
+| Single-engined aircraft | 1330 |
+| Multi-engined aircraft | 626 |
+| Total aircraft ASW value | 436 |
+| Authorized aircraft in carrier-capable units | 326 |
+| Training capacity for carrier aircrew | 359 |
+| Total aircraft maintenance | 18194 |
+| Total airbase maintenance | 1946 |
+
+Aircraft maintenance matches the budget's Naval aircraft line exactly. Airbase
+maintenance separately matches the maintenance tooltip, so it must not also be
+added to Naval aircraft. The aircraft counts are useful formula inputs, but
+these totals alone do not establish per-aircraft prices or pilot-training rules.
+
+These notes supersede the earlier broad uncertainty about which category holds
+the 21 residual. No further game changes were requested for this documentation
+update. Next research can resume with the ship aggregate/row discrepancy,
+aircraft cost formula, submarine cost rules, income, or training/academy costs.
