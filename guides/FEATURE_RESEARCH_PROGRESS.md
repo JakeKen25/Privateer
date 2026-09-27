@@ -1,6 +1,6 @@
 # Feature research progress and resume point
 
-Checkpoint 6: 2026-09-26. Read-only content research; no game edits or new
+Checkpoint 7: 2026-09-26. Read-only content research; no game edits or new
 experiments. This document supplements FEATURE_IMPLEMENTATION_GUIDE.md and
 records source-specific discoveries rather than silently overriding earlier evidence.
 
@@ -557,4 +557,87 @@ A compact FEATURE_READINESS_MATRIX.md now maps all of them to available inputs,
 implementation-ready portions and unresolved acceptance work. No issue was closed,
 no milestone changed, and none of the research findings were implemented as game
 edits. Remaining unread/opaque sources are explicitly retained as outstanding.
+
+## Checkpoint 7: remaining feature-relevant manuals and auxiliary tables
+
+### Additional documented constraints
+
+Main manual pp.15-22: research allocation is capped at 12%, with diminishing
+returns above 10%; relative area priorities are not absolute budget multipliers.
+Fleet-size and historical-budget settings affect the economic context. Legacy
+fleet construction has special starting-payment rules, so its partially built
+hulls should not be used to infer ordinary newly ordered construction charges.
+These statements do not supply the missing budget coefficients.
+
+Pages 32-33: rebuilds can change ship classification; shipyard capacity includes
+submarine construction but excludes rebuilds, AMCs and small corvettes. A future
+spawner/capacity preview must distinguish these cases. Dock expansion takes a
+year with era-dependent size increments. No dock-cost formula is given.
+
+Pages 57-59: permanent divisions normally contain up to five ships, or six for
+destroyers, with type restrictions and stated exceptions. The first ship is the
+flagship; changing membership, commander or flagship can change experience.
+Therefore reordering ShipId entries is a gameplay change, not just formatting.
+National shipbuilding traits alter completion time by 10%; they must not be
+silently interpreted as a 10% discount on stored cost.
+
+Pages 133-137 define ship-class constraints that change with technology and era,
+including DD/CL size limits, BC speed requirements, carrier capacities and CVL
+conversion exceptions. These rules support validation requirements, but are not
+a complete executable design validator. Preserve the game-reported type and flag
+unsupported designs rather than applying a single timeless displacement cutoff.
+
+### #33 AAR has a documented user-export path
+
+Main manual pp.81-83 says the battle log window supports copying its complete log
+to the clipboard as formatted RTF. This offers a candidate user-assisted import
+path in addition to saved .log/.sac files, without executable analysis. Clipboard
+capture was not performed; preserve user workflow choice for the later AAR task.
+Reports are explicitly subject to fog of war and must not be presented as exact
+actual enemy state. Page 103 explains victory also involves objectives, proximity
+and tonnage conditions, so a sum of damage or sunk-hull rows is not a final score.
+Pages 120-122 describe aircraft result information but give no export schema.
+
+### #23/#25/#29 Visual assets and catalog
+
+Manual p.138 specifies optional ship side views at 640x160 in JPG/BMP. This is
+useful for asset preparation, not a license to redistribute installed images.
+The Visual Parts Catalog contents and a rendered sample page were inspected:
+it is a visual equipment reference, not a numeric cost/design-conversion table.
+Its labels are largely embedded in images and absent from extracted text; full
+artwork transcription is not required for the current planned features.
+
+Manual pp.141-144 documents turret filenames, nation/era visual selectors and
+fallbacks to universal/dreadnought graphics. Nation/era style is cosmetic, not
+ship ownership or technology. The prose's heavy-size example uses H while one
+size list uses L; retain observed filenames rather than normalizing from that
+inconsistent description. Graphics field meanings beyond documentation remain
+out of scope. The license document was classified as a licensing source; this
+audit makes no new redistribution-permission or legal conclusion.
+
+### Remaining readable tables: preserve labels, do not infer engine formulas
+
+OrdnanceTable.dat is a tab-separated table with explicitly named Cal, Cat, Weight,
+Cost, TF1/TF2/TF3/TFC and SW columns. It is a usable ordnance reference candidate,
+but does NOT label its Cost as monthly maintenance or establish a complete ship
+price formula. Missing cells and literal x markers occur; retain them as distinct
+from numeric zero. HorPen/VerPen and SpeedHPTable variants are sparse numeric
+tables with headers; their units/engine selection/interpolation are not established
+by this audit. They are deferred inputs for design mechanics, not budget fixes.
+
+gunpos.txt labels gun positions A/B/C/D/E/Q/R/S/W/X/Y. AircraftIcon.dat has polar
+point geometry. HullShapes.dat is positional numeric data. TurretShapeLoadLog.txt
+records graphic load/array mappings, not current game costs or stable entity IDs.
+Launcher configuration advertises GameVersion=1.01.44 and Steam platform; this is
+launcher metadata, not verification of the executable's actual version.
+
+MapData.dat and its Old/Wrong/tmp variants have large multi-section layouts,
+whereas MapData1890.dat and MapData1920.dat are much smaller MapAreas records.
+Do not treat every similarly named file as an interchangeable complete map or
+select the newest filename lexically. Era overlay/load order remains a research
+gap. The normal campaign MapDataX data stays separate from installed templates.
+
+Checkpoint 7 is an intermediate checkpoint. Final completion requires the source
+coverage ledger and a final reconciliation of unresolved items; no claim of final
+completion is made here.
 
