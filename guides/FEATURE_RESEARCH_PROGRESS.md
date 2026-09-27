@@ -1,6 +1,6 @@
 # Feature research progress and resume point
 
-Checkpoint 3: 2026-09-26. Read-only content research; no game edits or new
+Checkpoint 4: 2026-09-26. Read-only content research; no game edits or new
 experiments. This document supplements FEATURE_IMPLEMENTATION_GUIDE.md and
 records source-specific discoveries rather than silently overriding earlier evidence.
 
@@ -217,8 +217,9 @@ The user ship-storage guide separates ShipDesignN record ordinals from internal
 design IDs and treats DesignIDCount as a high-water mark, not the record count.
 Its documented transfer procedure clones the complete opaque design block,
 allocates above both counter and observed IDs, and reuses a clone by source nation,
-source design ID and destination nation. Preserve building nation separately from
-current ownership. Cached Description is not an authoritative design definition.
+source design ID and destination nation. Building nation is separate from current ownership. The old guide changes it on
+transfer, whereas current code preserves it; see checkpoint 4 for this conflict.
+Cached Description is not an authoritative design definition.
 Carrier links remain outside that guide's supported transfer procedure.
 
 Installed Data/IDes contains 56 .sdf and 1,237 .tdf files; Designs contains 173
@@ -330,4 +331,100 @@ JSON, then review named campaign/tactical records against the existing codecs.
 Remaining manual pages and positional formats are still not fully reviewed.
 The file inventory is complete; the content/semantic audit is deliberately not
 marked complete. Checkpoints 1-3 retain the verified findings and open questions.
+
+## Checkpoint 4: campaign relationships and overlooked readable data
+
+### #22 Budget: another documented modifier
+
+Data/Tips.txt explicitly describes a 10% maintenance increase for ships older
+than 35 years. It also says rebuilding a damaged ship replaces repair cost with
+rebuild cost, with completion time equal to the longer of the two. These are
+additional calculator cases to investigate. The file does not establish rounding,
+which year field drives age after rebuilding, stacking order, or whether saved
+Maintenance already incorporates the age modifier. Do not blindly apply another
+10% to the stored value. Tips also reiterates double maintenance during repairs.
+
+### #19 Submarine manager: cross-save record census
+
+All nine numbered campaign saves were read (autosaves excluded). Across their
+nation rosters, submarine records total respectively 179, 100, 205, 212, 0, 384,
+386, 57 and 1,369. These include historical losses, not just operational boats.
+All observed submarine Active fields are zero. Sunk records can retain InPlay=1
+and large nonzero RemainingBuildTime values. Neither field alone defines a live
+boat or current construction. The observed field union remains the 14 fields
+listed in the implementation guide, without permanent Id or explicit costs.
+
+The building Ho Hsie record has InPlay=0, Sunk=0, YearBuilt=0 and
+RemainingBuildTime=18; LocationAreaName is absent. Building boats therefore need
+an optional current location. Reused names occur among historical and current
+records, so Name must not become a unique key. Keep source nation and local slot
+as snapshot identity, and do not promise persistent identity across rewrites.
+SubType values 0 through 4 occur in the corpus; presence does not decode labels.
+
+### #27/#30/#31 Aircraft and carrier dependencies
+
+All 4,055 AirUnits across the numbered saves have HomeBase values matching a
+surface-hull or coastal-installation Id in the same BCS. Of these, 1,710 match
+surface hulls and 2,345 match installations. This makes HomeBase a concrete
+relationship to validate for carrier transfers and base creation; it does not
+prove every linked unit should migrate automatically or establish allegiance rules.
+
+AircraftTypeId=-1 is present in otherwise populated rosters. Game3 has 14 such
+units, all with zero aircraft and AircraftType=XXX, but positive desired counts.
+Game6 has 94, all Role=14 with nonzero aircraft counts and AircraftType=XXX.
+Game7 has 113: 95 Role=14 plus 18 empty units of other roles. These must not all
+be treated as corrupt missing references or erased by a strict model lookup.
+Role=14 is outside the existing aircraft-model Purpose map; do not assume the
+two enumerations are identical or relabel it as Purpose=13. Its semantics remain
+an explicit research item. The sentinel and role-specific exception need to be
+preserved by future validators and any aircraft budget calculation.
+
+RTWGame3.off CampaignDivisions records include CDivId, Commander, LeadDivision,
+ShipCount and indexed ShipId entries. A populated carrier division contains two
+hull IDs, so commander-only handling does not establish complete division-safe
+transfer/spawn behavior. Preserve these records and validate understood links;
+officer numbers include retained historical officers and are not academy prices.
+
+### Transfer-policy correction and evidence boundaries
+
+The completed ship-guide review found a material disagreement. Its sections 8
+and 27 recommend changing BuildingNationIdx to the receiving nation, especially
+for unfinished ships. Current ship_transfers.py explicitly preserves the builder
+and changes only the design reference plus a departing player commander pointer.
+The older guide itself says historical-builder preservation requires separate
+load/turn/rebuild tests. This audit does not resolve that disagreement. Preserve
+current behavior during documentation research, and list unfinished-transfer and
+rebuild checks before claiming either policy universally safe.
+
+The remaining guide sections specify variable-length v10139 design blocks,
+internal ID at marker-relative offset 4, whole-block cloning, shared transaction
+mapping and failure rollback. Its regression checklist is proposed acceptance
+work, not a report that those tests ran. The existing codec confirms the supported
+version gate and offset; no new format has been decoded here.
+
+### #17 Nation sources: multiple incompatible families
+
+Data/BasicData.dat provides labeled tactical ShipType entries, including medium,
+coastal and minelaying submarines at 14-16. These are not the campaign SubType
+0-4 enum. Nations.dat is section/key text with old development-machine flag paths;
+Nations3.dat is a tabular tactical dataset. Neither should replace BNat era
+records as the campaign nation-builder template solely because its name looks apt.
+
+ChinaShipNames.dat has class sections plus DDprefix, SSprefix and Aircraft
+Manufacturers. Preserve prefixes and manufacturer pools as separate categories;
+they are not all ship names. ChinaWarInfo.dat contains opponent-specific mission
+sections with location, year bounds, battle size, weather and start/home/carrier
+coordinates. This is tactical mission-generation data, not current-war state.
+A nation package must consider these dependencies without assuming that renaming
+one BNat section supplies a functioning campaign nation.
+
+### Coverage and next work
+
+Completed the previously unread ship-guide tail and inspected structured alliance
+change/two-month/add-enemy evidence. Large diplomacy evidence JSON was indexed and
+partially reviewed; a full semantic replay is not claimed. This checkpoint used
+read-only scans and existing source code. No formulas were fitted and no game
+state changed. Next: remaining nation template dependencies, installed design
+metadata and tactical result fields, then consolidate per-feature acceptance gaps.
+
 
