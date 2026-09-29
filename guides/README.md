@@ -6,6 +6,7 @@ behavior behind them.
 - [Colonies](COLONIES.md)
 - [Diplomacy and relationships](DIPLOMACY.md)
 - [Economy](ECONOMY.md)
+- [Current numeric budget estimates and assumptions](BUDGET_ESTIMATES.md)
 - [Infrastructure and fortifications](FORTIFICATIONS.md)
 - [Settings and backups](SETTINGS.md)
 - [Ship transfers](SHIPS.md)
@@ -22,4 +23,3 @@ behavior behind them.
 - [Feature readiness matrix](FEATURE_READINESS_MATRIX.md): all open issues, usable inputs, remaining blockers and concrete acceptance cases.
 
 - [Final audit checkpoint](FEATURE_AUDIT_COMPLETION.md): completed coverage, final findings and the remaining research handoff.
-

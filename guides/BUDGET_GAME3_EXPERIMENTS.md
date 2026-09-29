@@ -1,5 +1,9 @@
 # Game3 controlled budget comparisons — 2026-09-24
 
+Current implementation note (2026-09-29): [0.9.6 numeric estimates](BUDGET_ESTIMATES.md)
+supersedes the implementation-status comments below. The measurements remain
+historical evidence; newly used fallback rates are not newly verified formulas.
+
 Source: six user-provided folders under `Documents/Codex/Privateer Calc`, each with a numbered RTWGame3.bcs and budget screenshot. Screen title identifies RTW3 1.01.44. Files were read only; no live game, executable, or save was modified.
 
 ## Baseline and controls

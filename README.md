@@ -1,6 +1,11 @@
 # Privateer
 
-**Version 0.9.4**
+**Development/local version 0.9.6; public release 0.9.4.**
+
+The development calculator now shows numeric estimates in every budget field,
+including total expenses and monthly balance. Unresolved costs use adjustable,
+explicit reference assumptions. See [budget estimates](guides/BUDGET_ESTIMATES.md).
+These figures are not yet a verified reproduction of RTW3's budget.
 
 Privateer is a save editor for **Rule the Waves 3**. It turns many manual,
 error-prone save-file edits into guided tools so players can spend less time

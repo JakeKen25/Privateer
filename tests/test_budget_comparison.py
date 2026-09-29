@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from privateer.document import TextDocument
-from privateer.economy import BudgetContext, budget_context, project_budget
+from privateer.economy import BudgetAssumptions, BudgetContext, budget_context, project_budget
 from privateer.save import RTW3Save
 
 
@@ -69,26 +69,31 @@ def test_fleet_size_income_and_rounding_before_research():
     assert (p.yearly_budget, p.monthly_budget, p.research) == (72007, 6001, 720)
 
 
-def test_missing_costs_are_not_zero_or_a_spendable_balance():
+def test_all_budget_fields_are_numeric_estimates_without_save_mutation():
     save = campaign()
     before = save.documents['test.bcs'].render()
     p = project_budget(save.nation(0), context=budget_context(save, save.nation(0)))
-    assert p.naval_aircraft is None and p.extra_training is None
-    assert p.monthly_balance is None and p.incomplete
+    assert p.naval_aircraft == 0 and p.extra_training == 0
+    assert p.monthly_balance == p.monthly_budget - p.total_expenses and p.incomplete
+    for key in ('yearly_budget', 'monthly_budget', 'maintenance', 'construction',
+                'naval_aircraft', 'research', 'extra_training', 'intelligence',
+                'total_expenses', 'monthly_balance', 'funds', 'all_active_maintenance'):
+        assert isinstance(getattr(p, key), int)
     assert p.total_expenses == p.maintenance + p.construction + p.research
     assert before == save.documents['test.bcs'].render()
     assert not save.modified
 
 
-def test_context_flags_missing_infrastructure_costs():
+def test_context_discloses_fallback_costs_and_excludes_sunk_submarines():
     save = campaign(nation='DockBuilding=15\n')
     sections = save.documents['test.bcs'].sections
     sub = next(s for s in sections if s.name == 'Nation0Submarines')
     sub.lines += ['Sub0InPlay=0\n', 'Sub0Sunk=0\n', 'Sub0Fate=\n']
     c = budget_context(save, save.nation(0))
-    assert c.construction_notes == ('dock expansion', 'submarines')
+    assert c.additional_construction == 324 + 295
+    assert any('fallback' in note for note in c.estimate_notes)
     sub.set('Sub0Sunk', 1)
-    assert budget_context(save, save.nation(0)).construction_notes == ('dock expansion',)
+    assert budget_context(save, save.nation(0)).additional_construction == 324
 
 
 @pytest.mark.parametrize("raw,kind,radar,status,expected", [
@@ -126,11 +131,53 @@ def test_battery_construction_and_unknown_submarine_cost():
     sub.set('Sub0RemainingBuildTime', 18)
     before = save.documents['test.bcs'].render()
     context = budget_context(save, save.nation(0))
-    assert project_budget(save.nation(0), context=context).construction == 6159
-    assert context.construction_notes == ('submarines',)
+    assert project_budget(save.nation(0), context=context).construction == 6454
+    assert any('missing MonthlyCost uses 295' in note for note in context.estimate_notes)
     assert save.documents['test.bcs'].render() == before
     # When a format supplies an explicit cost, include it without guessing.
     sub.set('Sub0MonthlyCost', 295)
     context = budget_context(save, save.nation(0))
     assert project_budget(save.nation(0), context=context).construction == 6454
     assert not context.construction_notes
+
+
+def test_reference_aircraft_training_and_infrastructure_do_not_double_count():
+    save = campaign([{'Maintenance': 3424}], nation='TorpedoWarfare=1\nDamageControl=1\nNavalAcademy=1\nPendingGunneryTraining=1\n',
+        extra='[AirUnits]\nAU0Nation=0\nAU0AircraftNumber=1956\nAU0AircraftTypeId=-1\nAU1Nation=1\nAU1AircraftNumber=999\n[AircraftTypes]\nAT0Nation=0\nAT0AvailableAircraft=233\n')
+    sections = {s.name: s for s in save.documents['test.bcs'].sections}
+    fort = sections['Nation0CoastalArtillery']
+    for i, (kind, raw) in enumerate([('4 in Coastal Battery', 6), ('Airbase100', 126), ('MTB squadron', 20)]):
+        for key, value in {'Classname': kind, 'Maintenance': raw, 'InPlay': 1}.items():
+            fort.set(f'Ship{i}{key}', value)
+    sub = sections['Nation0Submarines']
+    sub.set('Sub0InPlay', 1)
+    sub.set('Sub0Sunk', 0)
+    context = budget_context(save, save.nation(0))
+    p = project_budget(save.nation(0), context=context)
+    assert p.maintenance == 3424 + 4 + 94 + 20 + 55
+    assert p.naval_aircraft == 18194
+    assert p.extra_training == 1436
+    assert p.total_expenses == sum((p.maintenance, p.construction, p.naval_aircraft, p.research, p.extra_training, p.intelligence))
+    assert not save.modified
+
+
+def test_adjustable_fallbacks_and_missing_income_are_explicit():
+    save = campaign(extra='[AirUnits]\nAU0Nation=0\nAU0AircraftNumber=10\n', nation='NavalAcademy=1\n')
+    a = BudgetAssumptions(aircraft_rate=2, academy_cost=99, income_factor='1.5')
+    c = budget_context(save, save.nation(0), a)
+    p = project_budget(save.nation(0), context=c, assumptions=a)
+    assert (p.naval_aircraft, p.extra_training, p.yearly_budget) == (20, 99, 129600)
+    p = project_budget(save.nation(0))
+    assert p.yearly_budget == 0 and p.intelligence == 0
+    assert any('0 fallback' in note for note in p.notes)
+    for bad in ['NaN', 'Infinity', '-1']:
+        with pytest.raises(ValueError):
+            BudgetAssumptions(aircraft_rate=bad)
+
+
+def test_all_active_estimate_is_separate_from_expenses():
+    save = campaign([{'Maintenance': 100, 'Status': 1}])
+    p = project_budget(save.nation(0), context=BudgetContext(8, 0))
+    assert p.maintenance == 50
+    assert p.all_active_maintenance == 100
+    assert p.total_expenses == p.maintenance + p.research

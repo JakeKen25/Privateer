@@ -61,7 +61,7 @@ def test_provisional_income_and_known_expense_subtotal(tmp_path):
     assert projection.maintenance == 235
     assert projection.construction == 849
     assert projection.total_expenses == 1_579
-    assert projection.monthly_balance is None
+    assert projection.monthly_balance == 4_421
     assert projection.incomplete
     assert projection.funds == 100
 

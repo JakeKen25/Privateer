@@ -1,4 +1,16 @@
-# Privateer 0.9.4
+# Privateer 0.9.6 — local testing build
+
+Every budget field now shows a numeric estimate, including total expenses,
+monthly balance and a separate all-active maintenance estimate. Saved charges
+take precedence where available; missing costs use documented reference rates.
+An Estimate assumptions dialog adjusts aircraft, submarine, infrastructure,
+training, academy, dock and income assumptions without changing game saves.
+
+The budget remains approximate. Game3-derived rates are not universal formulas;
+missing inputs can produce explicitly disclosed zero fallbacks. See
+[calculation rules](../guides/BUDGET_ESTIMATES.md). Public release remains 0.9.4.
+
+# Privateer 0.9.4 (historical public release)
 
 This release adds fortification management and more precise technology editing.
 
