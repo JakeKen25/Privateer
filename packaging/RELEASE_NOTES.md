@@ -1,53 +1,56 @@
-# Privateer 0.9.8 - local testing build
+# Privateer 0.9.8
 
-Adds a read-only Submarine Manager with search, state filters, sortable columns
-and complete record details. Historical records remain visible. Unknown type
-codes retain raw values. Submarine editing/creation remain unimplemented.
+This release includes all updates since 0.9.4: a read-only Submarine Manager, expanded budget estimates, a monthly-balance planning range, and the completed game-data research handoff.
 
-# Privateer 0.9.7 - local testing build
+## Budget calculator: estimates and a ±10% range
 
-The estimated monthly balance now includes a +/-10% planning range.
-The central estimate and underlying expense calculations are unchanged.
-Negative balances show ordered lower and upper bounds.
+**The final monthly balance now includes a ±10% planning range alongside the central estimate, rather than presenting that estimate as an exact result. The underlying budget calculations are still under review.** This is a chosen planning allowance, not a measured confidence interval or a guarantee that actual costs fall inside it.
 
-# Privateer 0.9.6 — local testing build
+For example, an estimated balance of -3,795 displays a range of -4,174.5 to -3,415.5. Negative balances keep correctly ordered bounds; zero displays 0.0 to 0.0. The range does not change the underlying income or expense calculations.
 
-Every budget field now shows a numeric estimate, including total expenses,
-monthly balance and a separate all-active maintenance estimate. Saved charges
-take precedence where available; missing costs use documented reference rates.
-An Estimate assumptions dialog adjusts aircraft, submarine, infrastructure,
-training, academy, dock and income assumptions without changing game saves.
+Every calculator row now displays a numeric estimate, including total expenses and monthly balance. Changes since 0.9.4 include:
 
-The budget remains approximate. Game3-derived rates are not universal formulas;
-missing inputs can produce explicitly disclosed zero fallbacks. See
-[calculation rules](../guides/BUDGET_ESTIMATES.md). Public release remains 0.9.4.
+- Provisional income now accounts for saved budget modifier and fleet size instead of the original fixed resource multiplier. Research uses the resulting monthly-income estimate.
+- Historical and museum ships are excluded from surface maintenance and construction.
+- Reserve and mothball maintenance reductions use nearest-even rounding; observed class-2 search-radar charges are included for destroyers, light cruisers and carriers.
+- Surface construction handles normal, accelerated and halted charges, with halted construction taking precedence.
+- Normal unfinished fortification construction uses saved monthly cost; completed installations are kept out of construction.
+- Player intelligence uses the confirmed rate of 80 per level per target, summed across targets.
+- Installation maintenance and missing submarine, aircraft, academy, training and dock costs now have explicitly documented reference estimates.
+- An **Estimate assumptions…** dialog lets you adjust the fallback rates and income factor for the current calculator window.
+- A scrollable explanation identifies the inputs, assumptions and unresolved components. A separate all-active maintenance estimate is informational and is not added again to expenses.
+- Calculator changes and assumptions do not write projected costs to game saves. Existing Funds, Base Resources and Unrest editing remains separate.
 
-# Privateer 0.9.4 (historical public release)
+**Accuracy limitations:** several fallback rates are calibrated to the Game3 example and are not verified across nations, eras or submarine/aircraft types. Annual income, aircraft/pilot costs, submarine pricing, academy/training timing, missile-storage accounting and other maintenance modifiers remain unresolved. Some missing inputs use disclosed zero fallbacks. The Game3 ship-maintenance aggregate still differs from the displayed ship rows by 21; no arbitrary correction was added.
 
-This release adds fortification management and more precise technology editing.
+## Submarine Manager
 
-## Fortifications Manager
+Right-click a nation and choose **Submarine Manager**.
 
-- View and sort each nation’s fortification roster alongside its dockyard size.
-- Add coastal and turreted batteries, missile batteries, MTB squadrons, airship bases, and airbases in owned possessions.
-- Edit built installations and resize airbases while preserving installation IDs and aircraft assignments.
-- New installations are built immediately without deducting funds. Construction and retired entries remain read-only.
-- Airbase sizes respect the campaign limit; bases cannot shrink below their assigned aircraft capacity.
+- Search the submarine roster and sort its columns.
+- Filter in-service boats, boats under construction, halted construction, sunk/history records and unknown states.
+- Inspect every saved field for the selected record.
+- Keep repeated names as separate roster entries and retain missing locations explicitly.
+- Check sunk/final-fate state before ordinary service/construction flags.
+- Show unverified type codes and statistics as raw values rather than guessing labels.
+- Report missing rosters, inconsistent counts and ambiguous duplicate fields.
 
-## Technology Manager
+This is the **read-only inventory phase**. Submarine creation, editing, transfer and removal are not implemented. Save-slot numbers are not permanent submarine IDs. No in-game turn-progression validation of submarine edits is claimed.
 
-- Keep the cumulative research-area sliders, with individual checkboxes to enable or skip specific technologies.
-- View each technology’s description and typical unlock year.
-- Moving a slider replaces that area’s individual exceptions with a fresh cumulative selection.
+## Research and documentation
 
-## Aircraft Manager testing status
+- Added the nine-save budget comparison and controlled Game3 experiment findings.
+- Documented maintenance-tooltip, construction, training and aircraft reconciliations.
+- Added the feature implementation guide, field catalog, research checkpoints, readiness matrix and final source-audit handoff.
+- Documented the current calculator assumptions and submarine-manager implementation boundaries.
+- Updated roadmap/milestone planning, including the future AAR Logger; these plans are not shipped features.
 
-The Aircraft Manager appears to be working, but has not been extensively tested. Keep backups and verify generated aircraft in-game before relying on them in an ongoing campaign.
+## Validation
 
-## Validation and installation
+132 automated tests passed before release preparation. Read-only checks covered 2,506 submarine records across nine save slots. GUI checks covered submarine search, duplicate names, filtering, details and sorting, plus calculator assumptions and positive/negative/zero balance ranges. The local Windows build was opened successfully. No live save files were modified by these checks.
 
-103 automated tests passed, along with Tk interaction checks and a temporary Game 6 save/reload check. The live Game 6 save was not modified. Newly created fortifications have not yet been verified through an RTW3 turn advance.
+## Installation
 
-Download the Windows ZIP, extract the entire folder, and run Privateer.exe. Keep the _internal folder beside the executable. INSTALL.txt is packaged with the application; no separate Python installation is required.
+Download **Privateer-0.9.8-Windows-x64.zip**, extract the entire archive and run **Privateer.exe**. Keep the accompanying runtime folder beside the executable. Python is not required.
 
-The application now displays the corrected version number, 0.9.4.
+Close RTW3 before saving edits. Use **Save As** for the first edited copy and retain a known-good backup.
