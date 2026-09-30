@@ -1,3 +1,9 @@
+# Privateer 0.9.7 - local testing build
+
+The estimated monthly balance now includes a +/-10% planning range.
+The central estimate and underlying expense calculations are unchanged.
+Negative balances show ordered lower and upper bounds.
+
 # Privateer 0.9.6 — local testing build
 
 Every budget field now shows a numeric estimate, including total expenses,

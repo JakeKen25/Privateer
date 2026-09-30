@@ -1,6 +1,6 @@
 # Privateer
 
-**Development/local version 0.9.6; public release 0.9.4.**
+**Development/local version 0.9.7; public release 0.9.4.**
 
 The development calculator now shows numeric estimates in every budget field,
 including total expenses and monthly balance. Unresolved costs use adjustable,

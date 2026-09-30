@@ -1,6 +1,6 @@
 # Economy and infrastructure managers
 
-**Current calculator: local/development 0.9.6.** Every budget row displays
+**Current calculator: local/development 0.9.7.** Every budget row displays
 a numeric estimate. [Budget estimates](BUDGET_ESTIMATES.md) defines the current
 rules and adjustable reference costs.
 

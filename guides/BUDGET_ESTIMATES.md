@@ -1,4 +1,4 @@
-# Numeric budget estimates (local version 0.9.6)
+# Numeric budget estimates (local version 0.9.7)
 
 Updated 2026-09-29. The owner requested a value in every calculator field while
 awaiting formulas from the RTW3 developer. This supersedes the earlier policy of
@@ -60,3 +60,8 @@ information or controlled evidence becomes available. Issue #22 remains open.
 Historical measurements remain in [Game3 experiments](BUDGET_GAME3_EXPERIMENTS.md)
 and the [0.9.4 comparison](BUDGET_CALCULATOR_RESEARCH.md); those documents' earlier
 implementation-status statements do not describe this numeric-estimate mode.
+
+The monthly balance also shows a planning range of balance minus/plus 10% of
+its absolute value, displayed to one decimal place. Negative balances retain
+ordered lower/upper bounds; zero gives 0.0 to 0.0. This is a chosen planning
+allowance, not a measured confidence interval or a change to income/expenses.

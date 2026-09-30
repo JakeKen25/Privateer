@@ -60,6 +60,10 @@ class EconomyWindow(tk.Toplevel):
             self.lines[key] = variable
             ttk.Label(panel, textvariable=variable, width=16, anchor="e",
                       relief="sunken", padding=(4, 1)).grid(row=row, column=1, sticky="e", pady=2)
+            if key == "monthly_balance":
+                self.balance_range = tk.StringVar()
+                ttk.Label(panel, textvariable=self.balance_range).grid(
+                    row=row, column=2, sticky="w", padx=(12, 0))
         ttk.Label(body, text=BUDGET_DISCLAIMER, wraplength=570, justify="left").grid(
             row=6, column=0, columnspan=4, sticky="w", pady=(0, 6))
         self.note = tk.StringVar()
@@ -98,6 +102,10 @@ class EconomyWindow(tk.Toplevel):
                 variable.set(f"{value:,}")
             if projection.research is not None:
                 self.lines["research"].set(f"{projection.research:,} ({projection.research_percent}%)")
+            balance = Decimal(projection.monthly_balance)
+            margin = abs(balance) * Decimal("0.10")
+            self.balance_range.set(
+                f"±10%: {balance - margin:,.1f} to {balance + margin:,.1f}")
             self.note.set("\n\n".join(projection.notes))
         except ValueError as exc:
             self.note.set(f"{exc}\nDisplayed budget retains the last valid estimate.")
