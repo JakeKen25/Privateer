@@ -1,3 +1,9 @@
+# Privateer 0.9.8 - local testing build
+
+Adds a read-only Submarine Manager with search, state filters, sortable columns
+and complete record details. Historical records remain visible. Unknown type
+codes retain raw values. Submarine editing/creation remain unimplemented.
+
 # Privateer 0.9.7 - local testing build
 
 The estimated monthly balance now includes a +/-10% planning range.

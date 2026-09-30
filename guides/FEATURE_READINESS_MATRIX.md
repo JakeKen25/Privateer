@@ -1,5 +1,9 @@
 # Feature readiness after the content audit
 
+Implementation update, 2026-09-29: local 0.9.8 implements the read-only submarine
+inventory described below. Search, filters, sorting and raw details are available;
+creation and edits remain gated. See [Submarine Manager](SUBMARINES.md).
+
 Updated 2026-09-26, through final research checkpoint 8. This is an implementation
 handoff, not a statement that the features have passed in-game validation.
 See [implementation guide](FEATURE_IMPLEMENTATION_GUIDE.md) for architecture,
@@ -75,4 +79,3 @@ The scoped source audit is complete. See [final coverage and research gaps](FEAT
 Every source family has a disposition; unresolved mechanics and lower-priority
 opaque formats remain documented future research, not unfinished checkpoints.
 Neither audit completion nor parser support establishes in-game compatibility.
-

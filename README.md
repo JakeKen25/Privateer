@@ -1,6 +1,6 @@
 # Privateer
 
-**Development/local version 0.9.7; public release 0.9.4.**
+**Development/local version 0.9.8; public release 0.9.4.**
 
 The development calculator now shows numeric estimates in every budget field,
 including total expenses and monthly balance. Unresolved costs use adjustable,
@@ -143,3 +143,5 @@ year, with plausible values already filled in for missing years. No runtime
 interpolation is needed. Budget
 calculations remain estimates, and features identified as under development
 still require additional file-format research and in-game validation.
+
+Submarine Manager now provides a searchable, sortable read-only roster for each nation, including history and raw record details. See [the guide](guides/SUBMARINES.md). Editing and creation remain under research.
