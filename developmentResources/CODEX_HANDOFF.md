@@ -1,5 +1,10 @@
 # Privateer — Codex Project Handoff
 
+> Historical prototype handoff. The original text below is retained as evidence,
+> not current instructions. Its claim that Privateer is unusable and its listed
+> parser defects refer to an earlier implementation. Start with
+> [current status](../guides/PROJECT_STATUS.md) and [ship transfers](../guides/SHIPS.md).
+
 ## Purpose of this document
 
 This is the continuity document for the next Codex task. It records the product

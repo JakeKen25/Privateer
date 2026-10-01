@@ -1,5 +1,11 @@
 # Privateer feature implementation guide
 
+> Current implementation overlay, 2026-09-30: released Privateer is 0.9.8.
+> Numeric budget estimates and read-only submarine inventory are shipped.
+> The source audit and milestone baselines below retain their historical dates.
+> See [current status](PROJECT_STATUS.md); later research checkpoints supersede
+> initial inventory-only coverage statements.
+
 Audit date: 2026-09-26. Scope: installed RTW3 data, all nine local save slots,
 current public releases, open GitHub issues and their milestone descriptions,
 and the isolated custom-nation prototype. This is an implementation handoff,
@@ -30,8 +36,9 @@ not decoded, executed, decompiled, visually reviewed or exhaustively interpreted
 Positional text was recognized but not assigned invented field meanings.
 A schema scan is not a complete semantic specification of every file.
 
-The newest public release is **0.9.4** (`v0.9.4`); the local testing build is
-**0.9.5**, which does not mean milestone 01 is complete. At audit start:
+At the 2026-09-26 audit start, the public release was **0.9.4** (`v0.9.4`)
+and the local testing build was **0.9.5**. These are historical baselines,
+not current release numbers. At that time:
 
 - `main`: `a9937c364a3cda9439171e30d7662c61eaaa4064`.
 - `develop`: `639e51bfee6488b415fd812bfca6d8302e578d6f`.
@@ -223,8 +230,8 @@ progress windows and staged Apply/Cancel behavior. Settings persist in
 %APPDATA%/Privateer/settings.json, with the existing override mechanism.
 
 **Deliverable:** task-based Windows tutorials with an actual screenshot for every
-referenced screen/setting and a recovery example. Distinguish public 0.9.4 from
-local 0.9.5; refresh obsolete placeholder descriptions. Existing screenshots and
+referenced screen/setting and a recovery example. Target released 0.9.8,
+including read-only submarine inventory; refresh obsolete descriptions. Existing screenshots and
 the Google Doc are prior material, not freshly captured in this audit.
 **Research required:** final UI screenshots and user-facing explanations of any
 unverified behaviors. No screenshots were synthesized for this task.
@@ -254,10 +261,11 @@ YearBuilt=0. Historical sunk records retain values in other fields, including
 nonzero remaining time: never use remaining time alone to classify active builds.
 Blank Fate on live submarines is normal. Sunk/Fate must precede ordinary status.
 
-**Implementation:** read-only inventory first, sortable raw fields plus verified
-labels; then allow narrowly verified changes with complete batch validation.
+**Implementation update:** read-only inventory shipped in 0.9.8; see
+[Submarine Manager](SUBMARINES.md). Future work may allow narrowly verified
+changes with complete batch validation.
 Preserve unknown fields and nation ownership container. Reuse parser, staged
-editing, backups and stale-source detection; add a dedicated submarine module
+editing, backups and stale-source detection; extend the dedicated submarine module
 instead of forcing records into surface Ship models requiring Id/design fields.
 
 **Research required:** all SubType labels, meaning/ranges of Availability/Accuracy/
@@ -429,3 +437,7 @@ The accompanying catalog is a field-name and file-family reference, not a licens
 to edit every field. Raw inventories remain local under outputs/feature-audit;
 only this guide, a derived schema catalog and roadmap metadata are suitable for
 repository publication. No full game assets or personal save payloads are included.
+
+## Content-research checkpoints
+
+See [FEATURE_RESEARCH_PROGRESS.md](FEATURE_RESEARCH_PROGRESS.md) for manual/page references, newly recovered prior diplomacy evidence, conflicts and the exact resume point. The completed sequence runs through checkpoint 8; later corrections supersede early inventory-only statements. These supplement the inventory above; unknown formulas remain unknown.

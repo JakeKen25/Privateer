@@ -1,5 +1,10 @@
 # Final source-audit checkpoint
 
+> Historical source-audit completion, not a current release checklist.
+> Builder preservation is now settled product policy; no builder rewrite is
+> planned. For shipped budget/submarine behavior and remaining documentation
+> work, see [current status](PROJECT_STATUS.md).
+
 **Checkpoint 8 — complete, 2026-09-26.**
 
 The requested RTW3 install/save content audit and feature handoff are complete.
@@ -134,4 +139,3 @@ when an implementation need is established.
 
 The next task is implementation or explicitly authorized targeted research from
 this handoff. There is no remaining checkpoint in this source-audit sequence.
-

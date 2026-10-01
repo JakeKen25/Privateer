@@ -1,6 +1,6 @@
 # Feature readiness after the content audit
 
-Implementation update, 2026-09-29: local 0.9.8 implements the read-only submarine
+Implementation update, 2026-09-29: released 0.9.8 implements the read-only submarine
 inventory described below. Search, filters, sorting and raw details are available;
 creation and edits remain gated. See [Submarine Manager](SUBMARINES.md).
 
@@ -20,7 +20,7 @@ Later checkpoint corrections take precedence over initial inventory-only notes.
 | #28 War/alliance research | Existing controlled add-enemy and alliance evidence, scalar/pairwise relations, manual rules, event grammar. | First war from peace, ending wars, AI-only wars, conditional alliance timing and downstream effects. Event codes are not save-write recipes. |
 | #16 Current tutorials | Existing manager guides, manual/FAQ behavior and concrete caveats identified by the audit. | Current UI screenshots and verified recovery steps; distinguish public release from local test build. |
 | #29 Public-domain sourcing | Asset-family inventory and exact dependency names. | Rights evidence and actual asset selection remain unresearched. Installed/modded artwork is not automatically redistributable. |
-| #19 Submarine manager | All nine campaign rosters; 14 observed fields; status/history examples and optional building locations. A read-only sortable roster is supportable. | Numeric labels/ranges beyond verified cases, creation/removal counters, persistent identity, pricing and multi-turn edits. Active=0 is not a deletion condition. |
+| #19 Submarine manager | All nine campaign rosters; 14 observed fields; status/history examples and optional building locations. A read-only sortable roster is shipped in 0.9.8. | Numeric labels/ranges beyond verified cases, creation/removal counters, persistent identity, pricing and multi-turn edits. Active=0 is not a deletion condition. |
 | #21 War/alliance editor | Reuse existing diplomacy staging after #28; preserve raw directional values and dynamic slots. | Safe transition transactions remain gated on #28. No broad war/peace toggle is established. |
 | #30 Built-in spawning | Metadata preview over 1,466 individual designs is supportable. Existing transfer code supplies whole-block copying and ID remapping for already saved designs. | Headerless Game7 libraries, individual-design conversion, fresh hull initialization, histories/counters, construction and carrier/division dependencies; game checks across nations. |
 | #31 Custom-design spawning | Reuse phase-1 preview/provenance and supported-format rejection; user templates and scenario lookup documentation exist. | Depends on #30; campaign legality, custom-nation compatibility and multi-turn imports. Scenario acceptance does not prove campaign legality. |
@@ -28,14 +28,14 @@ Later checkpoint corrections take precedence over initial inventory-only notes.
 | #17 Custom nations | Existing isolated prototype, BNat era records, names, map possessions, WarInfo and user packages. | Fix BOM handling; explicitly pair Russia/Soviet-era templates; handle conflicting duplicate keys and missing flags; verify install/new campaigns. Do not merge prototype as already validated. |
 | #23 Graphics/pictures | Catalog of runtime references and graphics/geometry families. | Select licensed/public-domain assets under #29; UI integration and accessibility remain implementation work. |
 | #25 Logo | Product requirement and asset policy. | User-approved/public-domain artwork and actual design work remain; no image was generated during the audit. |
-| #32 Future tutorials | Feature-specific failure cases and acceptance checklist below. | Capture behavior after submarines, diplomacy, spawning and nations are implemented and tested. |
+| #32 Future tutorials | Feature-specific failure cases and acceptance checklist below. | Current submarine inventory belongs in #16; cover future submarine edits, diplomacy, spawning and nations after implementation and testing. |
 | #33 AAR logger | Paired text/time logs, combat tables, battle metadata and tactical ship/hit records. A raw local viewer/import preview is supportable. | Requirements TBD; stale-file association, finality, date linkage, sentinel IDs and malformed headers. Cloud/Pro integration remains exploratory. |
 
 ## Concrete first implementation slices
 
 These are proposed next development steps, not changes performed by the audit.
 
-1. **Read-only submarine roster:** group by nation/local slot, retain historical
+1. **Read-only submarine roster (shipped in 0.9.8):** group by nation/local slot, retain historical
    records, expose raw unknown values, make missing locations explicit, and keep
    creation/removal disabled until initialization and dependency rules are known.
 2. **Read-only design catalog:** index relative source, filename, class name,

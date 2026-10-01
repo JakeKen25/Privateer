@@ -1,5 +1,8 @@
 # RTW3 feature data catalog
 
+> Dated schema and roadmap snapshot. Issue/milestone listings below reflect
+> the audit date, not current release status. See [current status](PROJECT_STATUS.md).
+
 Companion to [FEATURE_IMPLEMENTATION_GUIDE.md](FEATURE_IMPLEMENTATION_GUIDE.md).
 
 Generated from the 2026-09-26 read-only inventory. Field names are observed schema,

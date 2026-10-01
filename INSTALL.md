@@ -22,7 +22,13 @@ before selecting **More info** and **Run anyway**.
 
 ## First use
 
-1. Select **Browse**.
+Before selecting a campaign, complete **First Run Configuration**. Choose the
+game installation folder containing `Data` and the save parent folder containing
+`Game1`, `Game2`, and other slots. Confirm backup preferences, then select
+**Save configuration**. **Skip for now** leaves configuration unfinished;
+[Settings](guides/SETTINGS.md) lets you configure these paths later.
+
+1. Select **Browse** in the main window.
 2. Choose the complete RTW3 save-slot folder, normally:
 
    ```text

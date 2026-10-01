@@ -1,6 +1,6 @@
 # Submarine Manager: read-only inventory
 
-Local/development 0.9.8 adds a Submarine Manager to each nation's right-click
+Privateer 0.9.8 includes a Submarine Manager to each nation's right-click
 menu. Search saved values, filter by state, sort columns, and select a row to
 inspect all saved fields. Reused names remain separate rows identified by local
 roster slot. Missing locations stay blank. No save changes are made.

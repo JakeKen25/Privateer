@@ -1,5 +1,11 @@
 # RTW3 format observations
 
+> Historical early-parser evidence. Statements below about disabled design
+> copying, unparsed maps and pending transfers describe that earlier stage.
+> Current [ship transfers](SHIPS.md) and [colonies](COLONIES.md) supersede them.
+> Original builder preservation is settled policy, including unfinished ships;
+> remaining in-game effects still require validation.
+
 This is the evidence log for the read-only reverse-engineering phase. The files
 under `developmentResources/exampleSaves/Game4` and
 `developmentResources/exampleSaves/Game5` are treated as immutable

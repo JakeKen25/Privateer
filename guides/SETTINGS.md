@@ -1,5 +1,20 @@
 # Program settings
 
+## Game and save locations
+
+**First Run Configuration** appears before initial setup is complete. Use
+**Browse…** beside each location:
+
+- **Rule the Waves 3 location:** installation folder containing `Data`.
+- **Save game location:** parent `Save` folder containing `Game1`, `Game2`, etc.
+- **Backup location:** optional destination for retained backups.
+
+Choose **Save configuration**, or **Skip for now** to postpone setup. In ordinary
+Settings, choose **Apply** to persist changes or **Cancel** to discard them.
+Main-window **Browse** selects one complete `GameX` folder, not the parent folder.
+
+## Backup preferences
+
 Open **Settings** from the lower-right corner of the main window. Settings are
 saved immediately when **Apply** is selected and persist between Privateer
 sessions. On Windows they are stored in `%APPDATA%\Privateer\settings.json`.

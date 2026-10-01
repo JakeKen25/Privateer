@@ -1,5 +1,11 @@
 # RTW3 Ship Parser and Transfer Implementation Notes for Codex
 
+> Historical parser proposal. Current Privateer parses flattened ship rosters
+> and supports guarded transfers. Builder-rewrite suggestions below are superseded:
+> preserve the original builder, including unfinished ships. Follow
+> [current ship behavior](../../guides/SHIPS.md) and
+> [current status](../../guides/PROJECT_STATUS.md), not this proposal.
+
 ## Purpose
 
 This document explains how Rule the Waves 3 stores ship records and ship designs, and how the save editor should parse, validate, and transfer ships safely.
@@ -229,7 +235,6 @@ import re
 
 SHIP_KEY_RE = re.compile(r"^Ship(?P<slot>\d+)(?P<field>.+)$")
 
-
 def parse_ship_section(lines):
     records = {}
 
@@ -275,7 +280,6 @@ Recommended object model:
 ```python
 from collections import OrderedDict
 from dataclasses import dataclass
-
 
 @dataclass
 class Ship:
@@ -666,7 +670,6 @@ Recommended design model:
 
 ```python
 from dataclasses import dataclass
-
 
 @dataclass
 class ShipDesign:
@@ -1102,7 +1105,6 @@ This allows unchanged content to be emitted with minimal modification.
 from collections import OrderedDict
 from dataclasses import dataclass
 
-
 @dataclass
 class Ship:
     original_slot: int
@@ -1156,7 +1158,6 @@ Expose typed properties for convenience, but preserve the full raw field diction
 
 ```python
 from dataclasses import dataclass
-
 
 @dataclass
 class ShipDesign:

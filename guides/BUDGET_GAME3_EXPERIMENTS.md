@@ -1,6 +1,6 @@
 # Game3 controlled budget comparisons — 2026-09-24
 
-Current implementation note (2026-09-29): [0.9.6 numeric estimates](BUDGET_ESTIMATES.md)
+Current implementation note (2026-09-29): [Current numeric estimates](BUDGET_ESTIMATES.md)
 supersedes the implementation-status comments below. The measurements remain
 historical evidence; newly used fallback rates are not newly verified formulas.
 
@@ -68,8 +68,6 @@ Use this same baseline, without advancing the turn:
 
 Keep the existing development warning. These experiments do not resolve income, total maintenance, aircraft or training formulas, and do not complete issue #22.
 
-
-
 ## September 26 follow-up: maintenance, intelligence and construction
 
 Controlled ship-list and save comparisons support nearest-even rounding after
@@ -110,7 +108,6 @@ submarine construction/maintenance, dock expansion and special construction;
 fortification recurring maintenance; other ship equipment/repair modifiers;
 training base, academy costs and pending versus active doctrine settings.
 The calculator retains its under-development warning and unknown-cost labels.
-
 
 ## September 26: budget tooltip and air-group totals (latest findings)
 

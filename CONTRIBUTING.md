@@ -24,6 +24,13 @@ Do not target `main`. The owner reviews proposed changes and decides whether and
 when to merge them. A submitted pull request does not grant permission to publish
 a release or change the stable branch.
 
+## Documentation
+
+Use the [guide index](guides/README.md) and [current status](guides/PROJECT_STATUS.md)
+for current behavior. Update affected feature guides with code changes. Preserve
+dated research as evidence and label superseded instructions explicitly. Generated
+`*.egg-info` metadata is rebuilt by packaging and must not be committed.
+
 ## Repository safety
 
 - Do not commit live save folders, installed game files, credentials, personal

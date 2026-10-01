@@ -1,5 +1,9 @@
 # Budget calculator comparison: Games 1–9
 
+> Historical 0.9.4 comparison. Measurements remain useful, but implementation
+> descriptions are superseded by [current budget estimates](BUDGET_ESTIMATES.md).
+> See [possession research](POSSESSION_BUDGET_RESEARCH.md) for later income analysis.
+
 Research date: 2026-09-22. Related issue: [#22](https://github.com/JakeKen25/Privateer/issues/22).
 
 This is a read-only investigation of the 0.9.4 calculator, not a formula replacement.
@@ -230,7 +234,7 @@ The development warning remains visible. The tables above are unchanged 0.9.4
 baseline evidence, not outputs from the updated calculator.
 
 Validation: 112 tests passed, the economy window was opened and checked for layout
-fit and input validation, and read-only checks against Games1�9 reproduced all seven
+fit and input validation, and read-only checks against Games1–9 reproduced all seven
 previously explained construction totals and all nine intelligence totals. Game6's
 2,055 and Game8's 324 construction differences remain flagged. Full in-game turn
 validation and the remaining expense formulas are still outstanding; issue #22

@@ -55,6 +55,9 @@ and more capable.
   type, set a manufacturer and name, and edit performance, armament, carrier
   capability, and available stock. The form uses the campaign year and starts
   with Game 6 averages for that aircraft type and year.
+- **Submarine Manager** provides a searchable, sortable read-only roster for each
+  nation, including history and raw record details. Editing and creation remain
+  under research. See [the submarine guide](guides/SUBMARINES.md).
 - **Validation, backups, and Save As** help protect campaigns. Backups are
   enabled by default, their destination is configurable, and settings persist
   between sessions.
@@ -62,6 +65,9 @@ and more capable.
   and show when loading, validation, or saving is still in progress.
 
 Ship Spawner remains a work-in-progress placeholder.
+
+See the [guide index](guides/README.md) for all managers and the
+[current project status](guides/PROJECT_STATUS.md) for research boundaries.
 
 ## Ship transfers
 
@@ -144,4 +150,3 @@ interpolation is needed. Budget
 calculations remain estimates, and features identified as under development
 still require additional file-format research and in-game validation.
 
-Submarine Manager now provides a searchable, sortable read-only roster for each nation, including history and raw record details. See [the guide](guides/SUBMARINES.md). Editing and creation remain under research.

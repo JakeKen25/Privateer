@@ -1,4 +1,4 @@
-# Numeric budget estimates (local version 0.9.8)
+# Numeric budget estimates (Privateer 0.9.8)
 
 Updated 2026-09-29. The owner requested a value in every calculator field while
 awaiting formulas from the RTW3 developer. This supersedes the earlier policy of

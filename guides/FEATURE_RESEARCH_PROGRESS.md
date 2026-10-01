@@ -1,5 +1,9 @@
 # Feature research progress and resume point
 
+> Dated research log. Read checkpoints chronologically; later corrections
+> supersede earlier pending lists. For current shipped features, use
+> [current status](PROJECT_STATUS.md) and the user guides.
+
 Checkpoint 8 (FINAL source-audit checkpoint): 2026-09-26. Read-only content research; no game edits or new
 experiments. This document supplements FEATURE_IMPLEMENTATION_GUIDE.md and
 records source-specific discoveries rather than silently overriding earlier evidence.
@@ -431,7 +435,6 @@ read-only scans and existing source code. No formulas were fitted and no game
 state changed. Next: remaining nation template dependencies, installed design
 metadata and tactical result fields, then consolidate per-feature acceptance gaps.
 
-
 ## Checkpoint 5: design catalog readiness, nation dependencies and tactical provenance
 
 ### #30/#31 Read-only design catalog is directly supportable
@@ -714,4 +717,3 @@ FEATURE_READINESS_MATRIX.md. The audit is finished; future work should choose an
 implementation or unresolved research item from that matrix, not repeat inventory.
 No game edits, turn tests, missing-formula experiments, source-feature changes,
 release builds, or raw game/save uploads were performed by this audit.
-

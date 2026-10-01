@@ -10,3 +10,13 @@ release/
 dist/
 build/
 *.spec
+
+# Generated package metadata and local development scratch
+*.egg-info/
+.venv/
+venv/
+.*-deps/
+.build-*/
+.pytest-tmp*/
+.release-work*/
+.custom-nation-qa/

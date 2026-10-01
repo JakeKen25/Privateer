@@ -1,12 +1,15 @@
 # Development resources
 
-This folder contains research and fixtures used to develop and validate
-Privateer. It is not included in the end-user Windows release.
+Research and fixtures used to develop and validate Privateer. These are excluded
+from the end-user Windows release. Start with [current project status](../guides/PROJECT_STATUS.md)
+and the [guide index](../guides/README.md) for current instructions.
 
-- `exampleSaves/` contains immutable, synthetic or intentionally supplied test
-  fixtures used by the automated test suite.
-- `CODEX_HANDOFF.md` preserves the original implementation research and handoff
-  notes for maintainers.
+- `exampleSaves/Game4` and `exampleSaves/Game5` are intentionally supplied,
+  immutable test fixtures. Automated tests rely on them; they are not cleanup debris.
+- `budget-calculator/games-1-9-comparison.json` preserves derived budget evidence.
+- `CODEX_HANDOFF.md` and `exampleSaves/RTW3_SHIP_PARSER_CODEX_SPEC.md` preserve
+  historical prototype notes. Their old defects and transfer proposals are
+  superseded by current source and guides. Do not follow them as current plans.
 
-Do not replace these fixtures with a live campaign or commit installed game
-data, credentials, or personal save files.
+Do not replace fixtures with live campaigns or add installed game data,
+credentials, personal saves, generated packages or temporary test output.

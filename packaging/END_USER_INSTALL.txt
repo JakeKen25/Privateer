@@ -21,7 +21,8 @@ FIRST USE
 
 1. Close Rule the Waves 3 before opening or saving a campaign in Privateer.
 2. Complete the First Run Configuration window. Confirm the Rule the Waves 3
-   installation folder, save-game folder, and backup settings.
+   installation folder (contains Data), save parent folder (contains Game1,
+   Game2, etc.), and backup settings. Choose Save configuration.
 3. Select Browse and choose the complete save-slot folder, normally:
 
    Documents\My Games\Rule the Waves 3\Save\GameX

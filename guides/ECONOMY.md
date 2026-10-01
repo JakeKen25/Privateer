@@ -1,6 +1,6 @@
 # Economy and infrastructure managers
 
-**Current calculator: local/development 0.9.8.** Every budget row displays
+**Current calculator: released 0.9.8.** Every budget row displays
 a numeric estimate. [Budget estimates](BUDGET_ESTIMATES.md) defines the current
 rules and adjustable reference costs.
 
@@ -14,7 +14,7 @@ BaseResources multiplier came from one early Game1 example and is not a general
 RTW3 budget formula. The [Games 1-9 comparison](BUDGET_CALCULATOR_RESEARCH.md)
 documents the current discrepancies and supersedes that original assumption.
 
-The development calculator now excludes ships with final fates and museum ships,
+The calculator excludes ships with final fates and museum ships,
 applies reserve/mothball reductions, and accounts for hurried and halted surface
 construction. Player intelligence costs use target-nation records for the observed
 levels 0–3 at 80 per level per target. AI-nation intelligence uses a disclosed
