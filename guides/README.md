@@ -6,6 +6,7 @@ behavior behind them.
 - [Colonies](COLONIES.md)
 - [Diplomacy and relationships](DIPLOMACY.md)
 - [Economy](ECONOMY.md)
+- [Possession values and annual budget research](POSSESSION_BUDGET_RESEARCH.md)
 - [Current numeric budget estimates and assumptions](BUDGET_ESTIMATES.md)
 - [Infrastructure and fortifications](FORTIFICATIONS.md)
 - [Settings and backups](SETTINGS.md)
