@@ -1,6 +1,6 @@
 # Privateer
 
-**Version 0.9.8**
+**Development version 0.9.8.1** — latest published release: **0.9.8**
 
 The calculator shows numeric estimates in every budget field,
 including total expenses and monthly balance. Unresolved costs use adjustable,

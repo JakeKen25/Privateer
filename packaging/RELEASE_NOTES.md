@@ -1,3 +1,12 @@
+# Privateer 0.9.8.1 — development, unpublished
+
+- Transfer Ships now labels status 1 as Reserve Fleet, 3 as Trade Protection,
+  and 4 as Raider. Active Fleet, Mothballed, Foreign Service and Museum Ship
+  retain their existing mappings and lifecycle safeguards.
+- Updated the ship-transfer guide with all seven supplied codes and recorded
+  user-confirmed combat and turn advancement for the HDP-64 cross-save test.
+- Version metadata advances to 0.9.8.1. No dedicated release or tag is published.
+
 # Privateer 0.9.8
 
 This release includes all updates since 0.9.4: a read-only Submarine Manager, expanded budget estimates, a monthly-balance planning range, and the completed game-data research handoff.

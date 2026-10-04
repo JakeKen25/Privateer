@@ -140,14 +140,17 @@ class ShipTransferTests(unittest.TestCase):
         fields.update({"Fate": "XXX", "InPlay": "1"})
         expected = {
             "0": "Active Fleet",
-            "1": "Reserve",
+            "1": "Reserve Fleet",
             "2": "Mothballed",
+            "3": "Trade Protection",
+            "4": "Raider",
             "6": "Foreign Service",
             "10": "Unknown status (10)",
         }
         for raw, label in expected.items():
             fields["Status"] = raw
             self.assertEqual(ship_status_label(ship, fields), label)
+            self.assertTrue(appears_in_transfer_window(fields))
         fields["InPlay"] = "0"
         self.assertEqual(ship_status_label(ship, fields), "Under construction")
         self.assertTrue(appears_in_transfer_window(fields))

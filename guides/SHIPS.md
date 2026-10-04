@@ -18,8 +18,21 @@ remain unassigned.
 
 The transfer window displays the saved type, name, class, displacement, speed,
 main caliber, search/fire-control radar classes, ASW value, build year, location,
-status, crew quality, maintenance, and armament description. Verified live-fleet
-status values are shown as Active Fleet, Reserve, Mothballed, and Foreign Service.
+status, crew quality, maintenance, and armament description. As of 0.9.8.1, the
+status labels use the mapping supplied by the user on 2026-10-03:
+
+| Saved Status | Game abbreviation | Privateer label |
+| --- | --- | --- |
+| 0 | AF | Active Fleet |
+| 1 | RF | Reserve Fleet |
+| 2 | MB | Mothballed |
+| 3 | TP | Trade Protection |
+| 4 | R | Raider |
+| 6 | FS | Foreign Service |
+| 9 | — | Museum Ship |
+
+Reserve Fleet (1) and Raider (4) are distinct saved statuses. Transfers preserve
+the saved status code; this mapping changes display labels, not budget formulas.
 Unverified live codes retain their number and are labelled unknown rather than
 being guessed. Crew quality remains a raw value.
 
@@ -49,3 +62,15 @@ handled in-game until their linked save structures are understood.
 Changes are staged in memory. **Save As** is recommended for the first game-level
 test. **Save** follows the configured backup policy before replacing the changed
 campaign and destination design-library files.
+
+## Cross-save experiment: HDP-64
+
+On 2026-10-03 the user confirmed that combat and advancing turns worked after
+18 HDP-64-class destroyers were copied from Game6 (USA, 1971) to Game7 (Italy,
+1902). The experiment copied complete hull and design records, remapped their
+identities and ownership, and preserved equipment and original builder history.
+
+This is user-reported in-game validation for this class and campaign pair. It
+supports further Ship Spawner work, but cross-save spawning is not yet a shipped
+manager feature. Carrier dependencies, other ship types and fresh-hull creation
+still need separate validation.

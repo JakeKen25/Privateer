@@ -2,8 +2,10 @@
 
 FLEET_STATUS_NAMES = {
     "0": "Active Fleet",
-    "1": "Reserve",
+    "1": "Reserve Fleet",
     "2": "Mothballed",
+    "3": "Trade Protection",
+    "4": "Raider",
     "6": "Foreign Service",
 }
 _LIVE_FATES = {"", "xxx"}
