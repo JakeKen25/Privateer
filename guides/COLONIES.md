@@ -16,12 +16,17 @@ and 123 possessions. Each MapAreaAPossessionBOwner value is a saved nation name 
 Neutral. Names and the Value, Oil, BaseValue, Rebellion, Invaded, InvasionSupport,
 BuildingBase, and TakenFrom fields are separate. Only Owner values are changed.
 The game's 16 map-area indices are displayed by name, from Northern Europe at
-index 0 through The Baltic at index 15. Each nation's saved BuildAreaName is its
-authoritative home area. A possession owned by a nation in that nation's home
-area is labelled Home area (locked) and cannot be staged or changed. The same
-restriction is enforced by the save mutation API, including callers outside the
-window. Neutral possessions and possessions outside their current owner's home
-area remain transferable.
+index 0 through The Baltic at index 15. Home provinces with saved Value >= 200
+are labelled Home province (locked) and cannot be staged or changed, regardless
+of current owner or map area. Other possessions remain transferable even inside
+a nation's home area. The save mutation API enforces the same rule. Invalid or
+missing Value fields prevent transfer classification rather than bypassing the
+protection. This value-based policy replaces the overly broad BuildAreaName lock.
+
+The Value column already displays each possession's saved Value; Oil and Base
+display the separate Oil and BaseValue fields. Value is not itself a verified
+cash-income amount.
+
 
 Campaign loading prefers RTWGameX.bcs over Autosave.bcs and associates only
 MapDataX.dat with that numbered campaign, even after the folder is renamed.

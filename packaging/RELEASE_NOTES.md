@@ -1,5 +1,7 @@
 # Privateer 0.9.8.1 — development, unpublished
 
+- Colony Manager now permits ordinary possessions inside home areas to transfer,
+  while protecting individual home provinces with saved Value >= 200.
 - Transfer Ships now labels status 1 as Reserve Fleet, 3 as Trade Protection,
   and 4 as Raider. Active Fleet, Mothballed, Foreign Service and Museum Ship
   retain their existing mappings and lifecycle safeguards.

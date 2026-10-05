@@ -5,6 +5,7 @@ from privateer.save import RTW3Save
 from privateer.colonies import (
     MAP_AREA_NAMES,
     is_home_area_possession,
+    is_home_province,
     map_area_name,
     map_document,
     nation_home_areas,
@@ -22,7 +23,7 @@ class ColonyTests(unittest.TestCase):
         (self.folder/'Autosave.bcs').write_bytes(b'[Nation0]\nName=Wrong autosave\n')
         self.map=(b'\xef\xbb\xbf[MapAreas]\r\nMapAreaCount=1\r\nMapArea0PossessionCount=2\r\n'
                   b'MapArea0Possession0Name=Test colony\r\nMapArea0Possession0Owner = Italy  \r\n'
-                  b'MapArea0Possession0Invaded=1\r\nMapArea0Possession0TakenFrom=8\r\n'
+                  b'MapArea0Possession0Value=2\r\nMapArea0Possession1Value=3\r\nMapArea0Possession0Invaded=1\r\nMapArea0Possession0TakenFrom=8\r\n'
                   b'MapArea0Possession1Name=Neutral port\r\nMapArea0Possession1Owner=Neutral\r\nUnknown=keep\r\n')
         (self.folder/'MapData1.dat').write_bytes(self.map)
         (self.folder/'MapData2.dat').write_bytes(b'Unrelated map')
@@ -82,15 +83,32 @@ class ColonyTests(unittest.TestCase):
         test_colony = possessions(self.save)[0]
         self.assertFalse(is_home_area_possession(self.save, test_colony))
 
-    def test_current_owners_home_area_cannot_be_transferred(self):
-        locked_map = self.map.replace(b'Owner = Italy', b'Owner = France')
-        (self.folder/'MapData1.dat').write_bytes(locked_map)
+    def test_low_value_possession_in_home_area_can_transfer(self):
+        data = self.map.replace(b'Owner = Italy', b'Owner = France')
+        (self.folder/'MapData1.dat').write_bytes(data)
         save = RTW3Save.load(self.folder)
-        locked = possessions(save)[0]
-        self.assertTrue(is_home_area_possession(save, locked))
-        with self.assertRaisesRegex(ValueError, 'home area.*cannot be transferred'):
-            save.set_colony_owners({(0, 0): 'Italy'})
+        self.assertTrue(is_home_area_possession(save, possessions(save)[0]))
+        self.assertFalse(is_home_province(possessions(save)[0]))
+        save.set_colony_owners({(0, 0): 'Italy'})
+        self.assertEqual(possessions(save)[0].owner, 'Italy')
+
+    def test_home_province_protection_is_owner_independent_and_atomic(self):
+        for value in (200, 250):
+            data = self.map.replace(b'Possession0Value=2', f'Possession0Value={value}'.encode())
+            (self.folder/'MapData1.dat').write_bytes(data)
+            save = RTW3Save.load(self.folder)
+            self.assertTrue(is_home_province(possessions(save)[0]))
+            with self.assertRaisesRegex(ValueError, 'home province.*cannot be transferred'):
+                save.set_colony_owners({(0, 1): 'France', (0, 0): 'Neutral'})
+            self.assertFalse(save.modified)
+            self.assertEqual(save.documents['MapData1.dat'].to_bytes(), data)
+
+    def test_invalid_value_blocks_transfer_without_writing(self):
+        data = self.map.replace(b'Possession0Value=2', b'Possession0Value=?')
+        (self.folder/'MapData1.dat').write_bytes(data)
+        save = RTW3Save.load(self.folder)
+        with self.assertRaisesRegex(ValueError, 'invalid possession Value'):
+            save.set_colony_owners({(0, 0): 'France'})
         self.assertFalse(save.modified)
-        self.assertEqual(save.documents['MapData1.dat'].to_bytes(), locked_map)
 
 if __name__=='__main__':unittest.main()

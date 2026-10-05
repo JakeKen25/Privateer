@@ -48,6 +48,14 @@ def is_home_area_possession(save, possession):
     return nation_home_areas(save).get(possession.owner) == possession.area
 
 
+def is_home_province(possession):
+    """Protect high-value home provinces, independent of owner or map area."""
+    try:
+        return int(possession.value) >= 200
+    except (TypeError, ValueError):
+        raise ValueError(f'{possession.name} has an invalid possession Value')
+
+
 @dataclass(frozen=True)
 class Possession:
     area: int
@@ -134,10 +142,10 @@ def set_owners(save, changes):
             raise ValueError('Choose a nation from the loaded save or Neutral')
         possession = records[pair]
         if possession.owner != owner:
-            if is_home_area_possession(save, possession):
+            if is_home_province(possession):
                 raise ValueError(
-                    f'{possession.name} is in {possession.owner}\'s home area '
-                    f'({map_area_name(possession.area)}) and cannot be transferred'
+                    f'{possession.name} is a home province '
+                    f'(Value {possession.value}) and cannot be transferred'
                 )
             writes.append((possession, owner))
     with save.transaction():

@@ -2,10 +2,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from .colonies import (
-    is_home_area_possession,
+    is_home_province,
     map_area_name,
     map_document,
-    nation_home_areas,
     possessions,
 )
 from .table_sort import heading_text, sorted_with_blanks
@@ -24,10 +23,9 @@ class ColoniesWindow(tk.Toplevel):
         self.transient(parent)
         try:
             self.records = {(p.area, p.index): p for p in possessions(save)}
-            self.home_areas = nation_home_areas(save)
             self.locked = {
                 pair for pair, possession in self.records.items()
-                if is_home_area_possession(save, possession)
+                if is_home_province(possession)
             }
             filename = map_document(save)[0]
         except ValueError as exc:
@@ -37,7 +35,7 @@ class ColoniesWindow(tk.Toplevel):
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text=f'Possession ownership - {filename}', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-        ttk.Label(body, text='Home-area possessions are shown but cannot be transferred. Ownership changes do not settle wars or move ships.').pack(anchor='w')
+        ttk.Label(body, text='Home provinces (Value 200 or higher) are locked; other possessions in home areas can be transferred. Ownership changes do not settle wars or move ships.').pack(anchor='w')
         filters = ttk.Frame(body)
         filters.pack(fill='x', pady=10)
         self.search = tk.StringVar()
@@ -83,7 +81,7 @@ class ColoniesWindow(tk.Toplevel):
         for pair,p in self.records.items():
             if self.owner_filter.get() not in ('All owners',p.owner):continue
             area_name = map_area_name(p.area)
-            transfer_status = 'Home area (locked)' if pair in self.locked else 'Transferable'
+            transfer_status = 'Home province (locked)' if pair in self.locked else 'Transferable'
             if self.search.get().strip().casefold() not in f'{p.name} {p.owner} {area_name} {transfer_status}'.casefold():continue
             values={'name':p.name,'area':area_name,'owner':p.owner,'new':self.pending.get(pair,''),
                     'status':transfer_status,
@@ -124,7 +122,7 @@ class ColoniesWindow(tk.Toplevel):
         if skipped:
             self.status.set(
                 f'{len(self.pending)} staged ownership change(s); '
-                f'{skipped} home-area possession(s) skipped'
+                f'{skipped} home province(s) skipped'
             )
 
     def reset_changes(self):
