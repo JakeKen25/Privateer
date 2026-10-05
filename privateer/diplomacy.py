@@ -68,7 +68,7 @@ class Diplomacy:
             lines.append('Matches the documented wartime pattern (raw 50, General/War=1).'
                          if war == 1 else 'Raw 50 is war-associated; full status is not decoded.')
         try:
-            lines.append('Alliance values (read-only; meaning unconfirmed): ' +
+            lines.append('Alliance values (60 observed; duration unconfirmed): ' +
                          ' / '.join(map(str, self.values(a, b, alliance=True))))
         except ValueError as exc:
             lines.append(f'Alliance data unavailable: {exc}')
@@ -110,3 +110,71 @@ def set_tensions(save, changes):
             save.modified = True
     if writes:
         save._tension_changes = True
+
+
+RELATION_ACTIONS = ('Create Alliance', 'Break Treaty', 'Reset Tension to 0', 'Start War', 'Ceasefire')
+
+
+def relation_plan(save, a, b, action):
+    """Validate an action and return exact writes without mutation."""
+    d = Diplomacy(save)
+    targets = d.targets(a, b)
+    if action not in RELATION_ACTIONS:
+        raise ValueError('Unknown relationship action')
+    if action == 'Reset Tension to 0':
+        if not d.editable(a, b):
+            raise ValueError('Use Ceasefire for active war; special tensions cannot be reset')
+        writes = [(s, k, 0) for s, k in targets]
+    elif action in ('Create Alliance', 'Break Treaty'):
+        if action == 'Create Alliance' and not d.editable(a, b):
+            raise ValueError('Cannot ally with a war-associated opponent')
+        writes = [(s, k, 60 if action == 'Create Alliance' else 0) for s, k in d.targets(a, b, True)]
+    else:
+        if 0 not in (a, b):
+            raise ValueError('War and ceasefire support player relationships only')
+        general = unique_section(save, 'General')
+        war = unique_integer(general, 'War')
+        opponents = [i for i in range(1, 9) if d.values(0, i) == (50,)]
+        if action == 'Start War':
+            if war > 0 or opponents or not d.editable(a, b):
+                raise ValueError('Start War requires peace and no existing war-associated opponents')
+            if any(d.values(a, b, True)):
+                raise ValueError('Break Treaty before starting war with this nation')
+            writes = [(general, 'War', 1), (targets[0][0], targets[0][1], 50)]
+        else:
+            if war <= 0 or opponents != [b if a == 0 else a]:
+                raise ValueError('Ceasefire requires exactly one matching active player opponent')
+            writes = [(general, 'War', -1), (targets[0][0], targets[0][1], 3),
+                      (d.sections[0], 'VP', 0), (general, 'EnemyVP', 0)]
+    return [(s, k, unique_integer(s, k), v) for s, k, v in writes]
+
+
+def apply_relations(save, tensions, actions):
+    """Preflight the dialog batch before atomic in-memory application."""
+    from copy import deepcopy
+    pairs = set()
+    for pair in list(tensions) + list(actions):
+        if not isinstance(pair, tuple) or len(pair) != 2:
+            raise ValueError('Choose a pair of nation slots')
+        Diplomacy(save).targets(*pair)
+        canonical = tuple(sorted(pair))
+        if canonical in pairs:
+            raise ValueError('Choose either a tension edit or an action for each pair')
+        pairs.add(canonical)
+    if sum(a in ('Start War', 'Ceasefire') for a in actions.values()) > 1:
+        raise ValueError('Apply one war or ceasefire operation at a time')
+    def apply(target):
+        set_tensions(target, tensions)
+        for (a, b), action in actions.items():
+            for section, key, old, value in relation_plan(target, a, b, action):
+                if old == value:
+                    continue
+                section.set(key, value)
+                if unique_integer(section, key) != value:
+                    raise ValueError('Relationship write verification failed')
+                target.audit.append(f'{action}: {section.name}/{key}: {old} -> {value}')
+                target.modified = True
+                target._tension_changes = True
+    apply(deepcopy(save))
+    with save.transaction():
+        apply(save)

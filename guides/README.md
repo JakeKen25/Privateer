@@ -44,3 +44,5 @@ feature guides take precedence over old implementation-status statements.
 - [Completed source-audit scope and unresolved questions](FEATURE_AUDIT_COMPLETION.md)
 - [Early RTW3 format observations](rtw3-format-observations.md)
 - [Development fixtures and original prototype notes](../developmentResources/README.md)
+
+- [Relations: tensions, alliances and experimental wars](RELATIONS.md)

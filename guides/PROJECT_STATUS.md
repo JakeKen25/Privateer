@@ -25,7 +25,7 @@ for this development update.
   and [later possession research](POSSESSION_BUDGET_RESEARCH.md).
 - Submarine inventory is shipped, with search, filters, sorting and raw details.
   Creation, transfer, removal and editing remain unimplemented.
-- Ship Spawner is a placeholder. War/alliance editing, custom nations and the
+- Ship Spawner is a placeholder. Custom nations and the
   AAR logger are not shipped features. The custom-nation prototype is separate.
 
 ## Which document to trust
@@ -62,3 +62,5 @@ Generated package metadata, caches, temporary test folders and release binaries
 are not source and must remain ignored. The intentionally supplied Game4/Game5
 fixtures are used by tests and must remain immutable. Never add live campaigns
 or installed game assets. This cleanup does not alter the published 0.9.8 binary.
+
+Experimental war, ceasefire and alliance actions are now implemented on develop; see [Relations](RELATIONS.md) for tested behavior and limits.

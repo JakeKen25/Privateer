@@ -1,5 +1,8 @@
 # Privateer 0.9.8.1 — development, unpublished
 
+- Relations adds Create Alliance, Break Treaty, Reset Tension to 0, Start War
+  and experimental Ceasefire. Financial values are preserved; ceasefire awaits
+  in-game testing. See guides/RELATIONS.md.
 - Colony Manager now permits ordinary possessions inside home areas to transfer,
   while protecting individual home provinces with saved Value >= 200.
 - Transfer Ships now labels status 1 as Reserve Fleet, 3 as Trade Protection,
