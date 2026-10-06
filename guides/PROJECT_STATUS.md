@@ -63,4 +63,4 @@ are not source and must remain ignored. The intentionally supplied Game4/Game5
 fixtures are used by tests and must remain immutable. Never add live campaigns
 or installed game assets. This cleanup does not alter the published 0.9.8 binary.
 
-Experimental war, ceasefire and alliance actions are now implemented on develop; see [Relations](RELATIONS.md) for tested behavior and limits.
+War, ceasefire and alliance actions are now implemented on develop; see [Relations](RELATIONS.md) for tested behavior and limits.

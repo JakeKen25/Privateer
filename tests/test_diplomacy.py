@@ -55,7 +55,7 @@ class TensionTests(unittest.TestCase):
         self.assertEqual(self.save.documents['game.bcs'].to_bytes(),self.before)
         self.save.set_tensions({(1,7):5})
         self.assertEqual(Diplomacy(self.save).values(0,2),(50,))
-        self.assertIn('wartime pattern',Diplomacy(self.save).description(0,2))
+        self.assertIn('At war',Diplomacy(self.save).description(0,2))
 
     def test_reject_invalid_self_extra_war_and_partial_batch(self):
         for changes in ({(0,1):2,(0,2):3},{(0,1):50},{(1,1):3},{(0,9):3},

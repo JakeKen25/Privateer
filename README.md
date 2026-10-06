@@ -45,7 +45,7 @@ and more capable.
   installation IDs and aircraft assignments. New installations are built instantly;
   construction and retired entries remain read-only.
 - **Relationship Manager** edits the tension level between nations. This area is
-  under development, with experimental Create Alliance, Break Treaty, Reset Tension,
+  under development, with Create Alliance, Break Treaty, Reset Tension,
   Start War and Ceasefire actions. See [Relations](guides/RELATIONS.md).
 - **Colony Manager** identifies colonies by their named map regions and changes
   ownership through the campaign's `MapDataX.dat` file. National home regions

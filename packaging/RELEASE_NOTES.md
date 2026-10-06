@@ -1,8 +1,10 @@
 # Privateer 0.9.8.1 — development, unpublished
 
+- Relationship Manager now includes a full relations matrix with intersecting
+  row/column zebra bands and War/Allied indicators; removed the startup disclaimer.
 - Relations adds Create Alliance, Break Treaty, Reset Tension to 0, Start War
-  and experimental Ceasefire. Financial values are preserved; ceasefire awaits
-  in-game testing. See guides/RELATIONS.md.
+  and Ceasefire. The user confirmed alliance creation, treaty breaking and
+  ceasefire work in-game. Financial values are preserved by design. See guides/RELATIONS.md.
 - Colony Manager now permits ordinary possessions inside home areas to transfer,
   while protecting individual home provinces with saved Value >= 200.
 - Transfer Ships now labels status 1 as Reserve Fleet, 3 as Trade Protection,

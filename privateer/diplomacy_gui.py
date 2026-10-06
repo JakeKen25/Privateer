@@ -1,4 +1,4 @@
-"""Basic tension management for a selected nation."""
+"""Relationship editing and a shared nation-by-nation overview."""
 import tkinter as tk
 from tkinter import ttk, messagebox
 from .diplomacy import Diplomacy, RELATION_ACTIONS, relation_plan, apply_relations
@@ -10,7 +10,7 @@ class TensionWindow(tk.Toplevel):
         self.save, self.nation_index = save, nation_index
         self.entries, self.original, self.actions = {}, {}, {}
         self.title(f'Relationship Manager — {save.nation(nation_index).name}')
-        self.geometry('1100x760')
+        self.geometry(f'{min(1240, self.winfo_screenwidth()-80)}x{min(1000, self.winfo_screenheight()-100)}')
         self.minsize(760, 570)
         self.transient(parent)
         try:
@@ -21,14 +21,27 @@ class TensionWindow(tk.Toplevel):
             messagebox.showerror('Unsupported diplomacy layout', str(exc), parent=parent)
             self.destroy()
             return
-        body = ttk.Frame(self, padding=14)
-        body.pack(fill='both', expand=True)
+        viewport = ttk.Frame(self)
+        viewport.pack(fill='both', expand=True)
+        canvas = tk.Canvas(viewport, highlightthickness=0)
+        vertical = ttk.Scrollbar(viewport, orient='vertical', command=canvas.yview)
+        horizontal = ttk.Scrollbar(viewport, orient='horizontal', command=canvas.xview)
+        canvas.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+        vertical.pack(side='right', fill='y')
+        horizontal.pack(side='bottom', fill='x')
+        canvas.pack(fill='both', expand=True)
+        body = ttk.Frame(canvas, padding=14)
+        content = canvas.create_window((0, 0), window=body, anchor='nw')
+        body.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+        canvas.bind('<Configure>', lambda e: canvas.itemconfigure(content, width=max(1120, e.width)))
+        self.bind('<MouseWheel>', lambda e: canvas.yview_scroll(-int(e.delta / 120), 'units'))
         ttk.Label(body, text=f'Relations for {save.nation(nation_index).name}', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
+        self.build_matrix(body)
         ttk.Label(body, text='Enter a new Tension Level for each pair to change; leave other entries blank.').pack(anchor='w')
-        ttk.Label(body, text='Basic editor range: 0-20. This is an editor guardrail, not a known game limit.').pack(anchor='w')
+        ttk.Label(body, text='Tension: 0–20. Use the actions below to manage wars and alliances.').pack(anchor='w')
         rows = ttk.Frame(body)
         rows.pack(fill='x', pady=10)
-        for col, text in enumerate(('Other nation', 'Current Tension Level', 'New Tension Level', 'Action', '')):
+        for col, text in enumerate(('Other nation', 'Current Tension Level', 'New Tension Level', 'Action', '', 'Status')):
             ttk.Label(rows, text=text).grid(row=0, column=col, sticky='w', padx=8, pady=6)
         rows.columnconfigure(0, weight=1)
         for row, other in enumerate((i for i in range(9) if i != nation_index), 1):
@@ -44,6 +57,11 @@ class TensionWindow(tk.Toplevel):
                     label += ' (read-only)'
             except ValueError:
                 label, editable = 'Missing/invalid', False
+            try:
+                state = self.diplomacy.status(nation_index, other)
+            except ValueError:
+                state = 'Unknown'
+            ttk.Label(rows, text=state, font=('Segoe UI', 9, 'bold')).grid(row=row, column=5, sticky='w', padx=8)
             ttk.Label(rows, text=label).grid(row=row, column=1, sticky='w', padx=8)
             variable = tk.StringVar()
             self.entries[other] = variable
@@ -55,22 +73,39 @@ class TensionWindow(tk.Toplevel):
             ttk.Combobox(rows, textvariable=action, values=('',) + RELATION_ACTIONS, state='readonly', width=20).grid(row=row, column=3, padx=8)
             action.trace_add('write', lambda *_, o=other: self.show_details(o))
             ttk.Button(rows, text='Details', command=lambda o=other: self.show_details(o)).grid(row=row, column=4, padx=8)
-        self.details = tk.Text(body, height=8, wrap='word', state='disabled')
+        self.details = tk.Text(body, height=5, wrap='word', state='disabled')
         self.details.pack(fill='both', expand=True)
         ttk.Label(body, text='Choose a tension edit OR action per pair. Apply changes memory; Save writes with backups.').pack(anchor='w', pady=8)
-        buttons = ttk.Frame(body)
-        buttons.pack(fill='x')
+        buttons = ttk.Frame(self, padding=10)
+        buttons.pack(side='bottom', fill='x', before=viewport)
         ttk.Button(buttons, text='Reset changes', command=self.reset_changes).pack(side='left')
         ttk.Button(buttons, text='Cancel', command=self.destroy).pack(side='right')
         ttk.Button(buttons, text='Apply', command=self.apply).pack(side='right', padx=8)
         self.show_details(next(iter(self.entries)))
         self.bind('<Escape>', lambda e: self.destroy())
         self.grab_set()
-        messagebox.showwarning(
-            "Relationship Manager — Under Development",
-            "This section is under development.\n\nWar and alliance actions are experimental. Ceasefire and Break Treaty await game testing. Finances are preserved.",
-            parent=self,
-        )
+
+    def build_matrix(self, body):
+        ttk.Label(body, text='All nations — current relations', font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(12, 4))
+        ttk.Label(body, text='Rows relate to columns. Numbers are tension; War and Allied mark status. Pending edits appear after Apply.').pack(anchor='w')
+        table = ttk.Frame(body)
+        table.pack(fill='x', pady=(6, 12))
+        self.matrix_labels = {}
+        names = [self.save.nation(i).name for i in range(9)]
+        for col, name in enumerate(['Nation'] + names):
+            tk.Label(table, text=name, bg='#d2d2d2', fg='#202020',
+                     font=('Segoe UI', 9, 'bold'), wraplength=105, padx=4, pady=6).grid(row=0, column=col, sticky='nsew', padx=1, pady=1)
+            table.columnconfigure(col, weight=1)
+        shades = (('#fafafa', '#ededed'), ('#e5e5e5', '#d8d8d8'))
+        for row, name in enumerate(names):
+            tk.Label(table, text=name, bg='#d2d2d2', fg='#202020', anchor='w',
+                     font=('Segoe UI', 9, 'bold'), padx=6, pady=5).grid(row=row+1, column=0, sticky='nsew', padx=1, pady=1)
+            for col in range(9):
+                cell = tk.Label(table, text=self.diplomacy.matrix_cell(row, col),
+                                bg=shades[row % 2][col % 2], fg='#202020',
+                                font=('Segoe UI', 9), wraplength=100, padx=4, pady=5)
+                cell.grid(row=row+1, column=col+1, sticky='nsew', padx=1, pady=1)
+                self.matrix_labels[row, col] = cell
 
     def show_details(self, other):
         try:

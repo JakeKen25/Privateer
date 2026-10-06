@@ -53,6 +53,47 @@ class Diplomacy:
     def editable(self, a, b):
         return all(0 <= v <= MAX_BASIC_TENSION for v in self.values(a, b))
 
+    def status(self, a, b):
+        """Summarize a pair without concealing asymmetric or conflicting records."""
+        tensions = self.values(a, b)
+        alliances = self.values(a, b, alliance=True)
+        war = all(v == 50 for v in tensions)
+        if 0 in (a, b):
+            war = war and unique_integer(unique_section(self.save, 'General'), 'War') > 0
+        allied = all(v > 0 for v in alliances)
+        if war and allied:
+            return 'War / Allied (conflict)'
+        if len(set(tensions)) > 1 or len(set(alliances)) > 1:
+            return 'Mixed relations'
+        if war:
+            return 'War'
+        if allied:
+            return 'Allied'
+        if any(v < 0 or v > MAX_BASIC_TENSION for v in tensions) or any(v < 0 for v in alliances):
+            return 'Special state'
+        return 'Peace'
+
+    def matrix_cell(self, a, b):
+        """Display row-to-column values; retain directional AI differences."""
+        if a == b:
+            return '—'
+        try:
+            tension = self.values(a, b)[0]
+            alliance = self.values(a, b, alliance=True)[0]
+            war = tension == 50
+            if 0 in (a, b):
+                war = war and unique_integer(unique_section(self.save, 'General'), 'War') > 0
+            labels = []
+            if war:
+                labels.append('War')
+            if alliance > 0:
+                labels.append('Allied')
+            if labels:
+                return f'{tension} · ' + ' / '.join(labels)
+            return str(tension)
+        except ValueError:
+            return 'Unknown'
+
     def description(self, a, b):
         values = self.values(a, b)
         lines = [f'{s.name}/{k} = {v}' for (s, k), v in zip(self.targets(a, b), values)]
@@ -65,8 +106,8 @@ class Diplomacy:
                 war = unique_integer(unique_section(self.save, 'General'), 'War')
             except ValueError:
                 war = None
-            lines.append('Matches the documented wartime pattern (raw 50, General/War=1).'
-                         if war == 1 else 'Raw 50 is war-associated; full status is not decoded.')
+            lines.append('At war (tension 50 and positive war counter).'
+                         if war is not None and war > 0 else 'Raw 50 is war-associated; full status is not decoded.')
         try:
             lines.append('Alliance values (60 observed; duration unconfirmed): ' +
                          ' / '.join(map(str, self.values(a, b, alliance=True))))
