@@ -12,6 +12,8 @@ class TechnologyWindow(tk.Toplevel):
         self.nation_index = nation_index
         self.pending = {}
         self.variables = {}
+        self.selected_area = tk.IntVar(value=-1)
+        self.area_buttons = {}
         nation = save.nation(nation_index)
         self.original = nation.section.fields()
         self.title(f'Technology Manager — {nation.name}')
@@ -130,6 +132,7 @@ class TechnologyWindow(tk.Toplevel):
         self.show_details(area, index, refresh=False)
 
     def show_details(self, area, index=None, refresh=True):
+        self.selected_area.set(area)
         if refresh:
             self.show_choices(area)
         technologies = self.edits.areas[area]
@@ -177,6 +180,7 @@ class TechnologyWindow(tk.Toplevel):
         for widget in self.rows.winfo_children():
             widget.destroy()
         self.variables.clear()
+        self.area_buttons.clear()
         query = self.search.get().strip().casefold()
         area_filter = self.areas[self.area.get()]
         visible = [(area, techs) for area, techs in self.edits.areas.items()
@@ -184,20 +188,33 @@ class TechnologyWindow(tk.Toplevel):
                    any(query in f'{t.area_name} {t.name} {t.description} {t.year}'.casefold()
                        for t in techs)]
         self.count.set(f'{len(visible)} / {len(self.edits.areas)} areas')
-        self.rows.columnconfigure(1, weight=1)
+        self.rows.columnconfigure(0, weight=1)
         for row, (area, technologies) in enumerate(visible):
-            name = ttk.Label(self.rows, text=technologies[0].area_name, wraplength=250)
-            name.grid(row=row, column=0, sticky='w', padx=6, pady=12)
+            background = '#fafafa' if row % 2 == 0 else '#e5e5e5'
+            band = tk.Frame(self.rows, background=background)
+            band.grid(row=row, column=0, sticky='ew')
+            band.columnconfigure(2, weight=1)
+            radio = tk.Radiobutton(band, variable=self.selected_area, value=area,
+                                   command=lambda a=area: self.show_details(a),
+                                   background=background, activebackground=background,
+                                   selectcolor=background, takefocus=True)
+            radio.grid(row=0, column=0, padx=(4, 0))
+            self.area_buttons[area] = radio
+            name = tk.Label(band, text=technologies[0].area_name, wraplength=185,
+                            width=25, anchor='w', background=background)
+            name.grid(row=0, column=1, sticky='w', padx=6, pady=12)
             name.bind('<Button-1>', lambda e, a=area: self.show_details(a))
             variable = tk.IntVar(value=self.edits.current(area))
             self.variables[area] = variable
-            label = ttk.Label(self.rows, width=23, text=self.level_label(area))
-            label.grid(row=row, column=2, padx=8)
-            slider = tk.Scale(self.rows, from_=0, to=len(technologies), resolution=1,
+            label = tk.Label(band, width=23, text=self.level_label(area), background=background)
+            label.grid(row=0, column=3, padx=8)
+            slider = tk.Scale(band, from_=0, to=len(technologies), resolution=1,
                               orient='horizontal', variable=variable, length=320,
+                              background=background, activebackground=background,
+                              highlightthickness=0,
                               showvalue=True, state='normal' if self.edits.editable(area) else 'disabled',
                               takefocus=True)
-            slider.grid(row=row, column=1, sticky='ew', padx=6)
+            slider.grid(row=0, column=2, sticky='ew', padx=6)
             variable.trace_add('write', lambda *_, a=area, v=variable, l=label: self.changed(a, v, l))
             slider.bind('<FocusIn>', lambda e, a=area: self.show_details(a))
             slider.bind('<Button-1>', lambda e, a=area: self.show_details(a))

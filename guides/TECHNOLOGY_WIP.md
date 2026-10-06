@@ -39,3 +39,11 @@ slider/checkbox synchronization and filtering without changing staged flags.
 
 Gun validation: three unit tests and GUI checks passed for all quality values,
 19 rows, 133 radio buttons, Reset, Apply, Cancel, and byte-preserving save/reload.
+
+## Research-area selection
+
+Research-area rows alternate light and gray backgrounds. A radio button at the left
+selects the area shown in Individual technologies and Selected technology without
+changing unlock flags. Clicking an area name, selecting an individual technology,
+or adjusting/focusing its slider synchronizes the radio selection. Slider edits
+retain their existing unlock behavior.
