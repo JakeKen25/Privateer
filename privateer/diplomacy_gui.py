@@ -1,7 +1,7 @@
 """Relationship editing and a shared nation-by-nation overview."""
 import tkinter as tk
 from tkinter import ttk, messagebox
-from .diplomacy import Diplomacy, RELATION_ACTIONS, relation_plan, apply_relations
+from .diplomacy import Diplomacy, RELATION_ACTIONS, apply_relations
 
 
 class TensionWindow(tk.Toplevel):
@@ -41,7 +41,7 @@ class TensionWindow(tk.Toplevel):
         ttk.Label(body, text='Tension: 0–20. Use the actions below to manage wars and alliances.').pack(anchor='w')
         rows = ttk.Frame(body)
         rows.pack(fill='x', pady=10)
-        for col, text in enumerate(('Other nation', 'Current Tension Level', 'New Tension Level', 'Action', '', 'Status')):
+        for col, text in enumerate(('Other nation', 'Current Tension Level', 'New Tension Level', 'Action', 'Status')):
             ttk.Label(rows, text=text).grid(row=0, column=col, sticky='w', padx=8, pady=6)
         rows.columnconfigure(0, weight=1)
         for row, other in enumerate((i for i in range(9) if i != nation_index), 1):
@@ -61,27 +61,21 @@ class TensionWindow(tk.Toplevel):
                 state = self.diplomacy.status(nation_index, other)
             except ValueError:
                 state = 'Unknown'
-            ttk.Label(rows, text=state, font=('Segoe UI', 9, 'bold')).grid(row=row, column=5, sticky='w', padx=8)
+            ttk.Label(rows, text=state, font=('Segoe UI', 9, 'bold')).grid(row=row, column=4, sticky='w', padx=8)
             ttk.Label(rows, text=label).grid(row=row, column=1, sticky='w', padx=8)
             variable = tk.StringVar()
             self.entries[other] = variable
             entry = ttk.Entry(rows, textvariable=variable, width=12, state='normal' if editable else 'disabled')
             entry.grid(row=row, column=2, padx=8)
-            entry.bind('<FocusIn>', lambda e, o=other: self.show_details(o))
             action = tk.StringVar()
             self.actions[other] = action
             ttk.Combobox(rows, textvariable=action, values=('',) + RELATION_ACTIONS, state='readonly', width=20).grid(row=row, column=3, padx=8)
-            action.trace_add('write', lambda *_, o=other: self.show_details(o))
-            ttk.Button(rows, text='Details', command=lambda o=other: self.show_details(o)).grid(row=row, column=4, padx=8)
-        self.details = tk.Text(body, height=5, wrap='word', state='disabled')
-        self.details.pack(fill='both', expand=True)
         ttk.Label(body, text='Choose a tension edit OR action per pair. Apply changes memory; Save writes with backups.').pack(anchor='w', pady=8)
         buttons = ttk.Frame(self, padding=10)
         buttons.pack(side='bottom', fill='x', before=viewport)
         ttk.Button(buttons, text='Reset changes', command=self.reset_changes).pack(side='left')
         ttk.Button(buttons, text='Cancel', command=self.destroy).pack(side='right')
         ttk.Button(buttons, text='Apply', command=self.apply).pack(side='right', padx=8)
-        self.show_details(next(iter(self.entries)))
         self.bind('<Escape>', lambda e: self.destroy())
         self.grab_set()
 
@@ -106,21 +100,6 @@ class TensionWindow(tk.Toplevel):
                                 font=('Segoe UI', 9), wraplength=100, padx=4, pady=5)
                 cell.grid(row=row+1, column=col+1, sticky='nsew', padx=1, pady=1)
                 self.matrix_labels[row, col] = cell
-
-    def show_details(self, other):
-        try:
-            text = self.diplomacy.description(self.nation_index, other)
-            action = self.actions[other].get()
-            if action:
-                plan = relation_plan(self.save, self.nation_index, other, action)
-                text += '\n\n' + action + ':\n' + '\n'.join(f'{s.name}/{k}: {old} -> {new}' for s, k, old, new in plan)
-                text += '\nFinances and territory remain unchanged.'
-        except ValueError as exc:
-            text = str(exc)
-        self.details.configure(state='normal')
-        self.details.delete('1.0', 'end')
-        self.details.insert('1.0', f'{self.save.nation(self.nation_index).name} / {self.save.nation(other).name}\n\n{text}')
-        self.details.configure(state='disabled')
 
     def reset_changes(self):
         for variable in list(self.entries.values()) + list(self.actions.values()):
