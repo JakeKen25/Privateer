@@ -13,3 +13,17 @@ to GitHub so previous versions remain available for reverting.
 - Verify the remote commit after pushing and report its link and any validation limitations.
 - If pushing is blocked, retain the local changes and clearly report that GitHub is not yet updated.
 - Never commit installed game data, live saves, credentials, virtual environments, or build caches.
+
+## Wiki maintenance
+
+All changes to Privateer must be reflected in the project wiki:
+https://github.com/JakeKen25/Privateer/wiki
+
+- Update the affected wiki pages as part of the same task, including behavior,
+  controls, workflows, limitations, fixes, and validation status.
+- Keep published-release instructions distinct from development-only features.
+  Update version and feature status, navigation, and screenshot callouts when affected.
+- Verify the published wiki updates before reporting a change complete. If wiki
+  publication is blocked, retain the prepared edits and explicitly report the gap.
+- For internal-only changes, record a concise maintenance note on the relevant
+  status page without adding implementation detail to user instructions.
