@@ -3,8 +3,9 @@
 **Development version 0.9.8.1** — latest published release: **0.9.8**
 
 The calculator shows numeric estimates in every budget field,
-including total expenses and monthly balance. Unresolved costs use adjustable,
-explicit reference assumptions. See [budget estimates](guides/BUDGET_ESTIMATES.md).
+including total expenses and monthly balance. Unresolved costs use built-in
+reference assumptions. The development interface has no bottom information panel
+or estimate-assumption controls. See [budget estimates](guides/BUDGET_ESTIMATES.md).
 The final monthly balance includes a ±10% planning range alongside its estimate because the underlying calculations are still under review. This is not a validated confidence interval.
 
 Privateer is a save editor for **Rule the Waves 3**. It turns many manual,

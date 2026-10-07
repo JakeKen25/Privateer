@@ -1,6 +1,6 @@
-# Numeric budget estimates (Privateer 0.9.8)
+# Numeric budget estimates (development Privateer 0.9.8.1)
 
-Updated 2026-09-29. The owner requested a value in every calculator field while
+Updated 2026-10-07. The owner requested a value in every calculator field while
 awaiting formulas from the RTW3 developer. This supersedes the earlier policy of
 showing unavailable costs and withholding monthly balance. It does not establish
 that the missing game formulas have been solved.
@@ -19,16 +19,16 @@ Funds, resources and unrest edits still require the normal Apply and Save flow.
 | Monthly income | Annual estimate / 12, nearest integer | Display relationship observed in nine screenshots; exact engine tie behavior unknown. |
 | Research | Monthly estimate × ResearchPct / 100, nearest integer | Observed relationship, but inherits income errors. |
 | Surface maintenance | Saved Maintenance plus class-2 radar adjustment (DD +2, CL/CV +4); AF full, RF half, MB fifth, nearest-even | Measured examples; other equipment, officers, age, repair and war effects unresolved. Historical/museum hulls excluded. |
-| Battery/airbase maintenance | Saved Maintenance × 0.75, nearest-even | Game3 fit, generalized as an adjustable assumption. MTB uses full saved value. Other installation families use the same provisional factor. |
+| Battery/airbase maintenance | Saved Maintenance × 0.75, nearest-even | Game3 fit, generalized as a reference assumption. MTB uses full saved value. Other installation families use the same provisional factor. |
 | Submarine maintenance | Saved Maintenance if supplied; otherwise 55 per live completed boat | 55 is the observed Game3 long-range cost. Applying it to other types/eras is a fallback, not a discovery. Sunk/history excluded. |
 | Surface construction | MonthlyCost; accelerated ×1.15 with half-up rounding; halted floor(Maintenance / 2) takes precedence | Controlled comparisons. Monthly premium is not a claim about total build-cost premium. |
 | Installation construction | Saved MonthlyCost for unfinished live records | Completed records excluded even if MonthlyCost remains positive. |
-| Submarine construction | Saved MonthlyCost if supplied; otherwise 295 per unfinished live boat | Game3 Ho Hsie reference; generalized as an adjustable fallback. |
+| Submarine construction | Saved MonthlyCost if supplied; otherwise 295 per unfinished live boat | Game3 Ho Hsie reference; generalized as a reference fallback. |
 | Special sub/installation construction | Surface halt/hurry rules borrowed provisionally | Unverified beyond surface ships. Missing halted maintenance uses submarine fallback or zero for installations. |
-| Dock expansion | 324 monthly while DockBuilding > 0 | Unresolved Game8 charge used as an adjustable reference amount, not an engine formula. |
+| Dock expansion | 324 monthly while DockBuilding > 0 | Unresolved Game8 charge used as a reference amount, not an engine formula. |
 | Naval aircraft | Explicit saved spending if supplied; otherwise assigned aircraft × (18,194 / 1,956) | Blended Game3 average, approximately 9.301636. No role/era/elite-pilot or carrier-readiness correction. Includes sentinel-model units by aircraft count. |
 | Extra training | Explicit saved spending if supplied; otherwise surface maintenance × 0.8 × combined priority percentage, plus academy | Percentages: gunnery 30%, night/torpedo/damage control 20% each. The 0.8 base factor fits Game3, not universally verified. Uses current flags, not pending flags. |
-| Academy | 340 when NavalAcademy is enabled | Game3 observed amount; adjustable reference, not a derived formula. |
+| Academy | 340 when NavalAcademy is enabled | Game3 observed amount; reference estimate, not a derived formula. |
 | Player intelligence | 80 × sum of valid target spending levels 0–3 | User-confirmed universal rate; no fleet-size multiplier. AI-owned budgets cannot be inferred from these fields. |
 
 Aircraft pools are displayed in the explanation but not separately priced: the
@@ -44,14 +44,18 @@ installation charges lacking a saved value use a disclosed zero fallback.
 A numeric zero in these cases is not a confirmed absence of expense. Every result
 retains the incomplete/estimated flag even when an example happens to match.
 
-## Adjusting assumptions
+## Built-in assumptions and interface
 
-Choose **Estimate assumptions…** to change the aircraft rate, submarine costs,
-infrastructure/training factors, academy, dock expansion or income adjustment.
-Defaults restores the reference values; Use estimates recalculates all affected
-rows together. Entries must be finite, nonnegative numbers. These choices last
-only while this calculator window remains open, and never alter game records.
-The scrollable explanation identifies formulas, fallbacks and remaining gaps.
+Development 0.9.8.1 removes the bottom disclaimer, scrollable calculation notes,
+and **Estimate assumptions…** button and dialog. The calculator uses the same
+built-in default rates and formulas; this interface cleanup does not change
+estimated totals or the ±10% balance range. Estimated/provisional row labels remain.
+Only Funds, Base resources and Unrest level are editable campaign values here.
+
+The backend still accepts explicit assumptions for research and automated checks,
+but users cannot change these rates in the manager. The rules and limitations in
+this guide document the fallbacks previously explained inside the window.
+Published 0.9.8 still contains the older assumption controls and information panel.
 
 This implementation adds no general age, officer, missile, aircraft-development,
 pilot-training or possession formula. Replace the fallbacks when developer

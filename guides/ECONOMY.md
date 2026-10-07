@@ -1,8 +1,9 @@
 # Economy and infrastructure managers
 
-**Current calculator: released 0.9.8.** Every budget row displays
+**Current interface: development 0.9.8.1.** Every budget row displays
 a numeric estimate. [Budget estimates](BUDGET_ESTIMATES.md) defines the current
-rules and adjustable reference costs.
+rules and built-in reference costs. Published 0.9.8 retains the older information
+panel and assumption controls; the development interface removes both.
 
 Right-click a nation and choose **Economy and Unrest Manager** to edit Funds, Base Resources, and Unrest Level
 in one window. Each value retains the existing Set value, Adjust by amount, and
@@ -29,14 +30,16 @@ Aircraft, training, academy, submarine and dock costs use reference estimates
 when saved costs are absent. Recurring installations use the observed Game3 factor
 provisionally. **Total expenses (estimated)** sums expense rows; **Monthly balance
 (estimated)** subtracts that total from estimated income. All-active maintenance
-is displayed separately and is not added to expenses. Choose **Estimate
-assumptions…** to adjust fallback rates for this window. The scrollable explanation
-discloses missing-data zero fallbacks and unresolved modifiers. No projected
-expense, income or assumption fields are written to the save.
+is displayed separately and is not added to expenses. The calculator uses its
+built-in default rates; there is no assumption editor. The bottom disclaimer and
+scrollable calculation notes have been removed. Estimated/provisional labels and
+the ±10% monthly-balance planning range remain. Invalid input still displays an
+actionable error; the message disappears when the input is corrected.
 
-The warning is always visible, including during input validation:
-**Estimated budget: every amount is numeric, but unresolved formulas use the
-assumptions below. Total expenses and balance are estimates, not verified game costs.**
+No projected expense, income or assumption fields are written to the save.
+Calculations remain provisional. Consult [Budget estimates](BUDGET_ESTIMATES.md)
+for missing-data zero fallbacks and unresolved modifiers; a numeric zero does not
+necessarily establish that no cost exists.
 
 Choose **Infrastructure and Fortifications Manager** to edit the selected nation's existing `DockSize`
 field. This controls the maximum displacement that can be built in that nation's

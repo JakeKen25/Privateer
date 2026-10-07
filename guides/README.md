@@ -11,7 +11,7 @@ operating instructions or proof that an experimental game formula is exact.
 - [Ship transfers](SHIPS.md)
 - [Technology and gun caliber](TECHNOLOGY_WIP.md)
 - [Economy and unrest](ECONOMY.md)
-- [Budget estimates and adjustable assumptions](BUDGET_ESTIMATES.md)
+- [Budget estimates and built-in assumptions](BUDGET_ESTIMATES.md)
 - [Infrastructure and fortifications](FORTIFICATIONS.md)
 - [Aircraft models](AIRCRAFT.md)
 - [Colony ownership](COLONIES.md)
