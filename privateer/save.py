@@ -111,7 +111,7 @@ class RTW3Save:
         from .diplomacy import set_tensions
         set_tensions(self, changes)
 
-    def create_aircraft_type(self, nation, template_slot: int, changes: dict[str, str], *, purpose: int | None = None):
+    def create_aircraft_type(self, nation, template_slot: int | None, changes: dict[str, str], *, purpose: int | None = None):
         from .aircraft import create_aircraft_type
         return create_aircraft_type(self, nation, template_slot, changes, purpose=purpose)
 

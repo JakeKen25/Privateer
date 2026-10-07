@@ -16,7 +16,6 @@ from .economy_gui import EconomyWindow
 from .infrastructure_gui import InfrastructureWindow
 from .admiral_gui import AdmiralWindow
 from .aircraft_gui import AircraftWindow
-from .aircraft import aircraft_types
 from .submarines_gui import SubmarineWindow
 from .busy import run_background, show_while_opening
 from .settings import AppSettings
@@ -173,16 +172,9 @@ class MainWindow(tk.Tk):
         if not self.save_model or not self.table.selection():
             return
         nation_index = int(self.table.selection()[0])
-        def open_window():
-            if window_class is AircraftWindow and not aircraft_types(self.save_model):
-                messagebox.showinfo(
-                    "Aircraft Manager", "No aircraft are detected in this save", parent=self)
-                return
-            return window_class(self, self.save_model, nation_index)
-
         show_while_opening(
             self, message,
-            open_window,
+            lambda: window_class(self, self.save_model, nation_index),
             lambda exc: messagebox.showerror("Unable to open window", str(exc), parent=self),
         )
 

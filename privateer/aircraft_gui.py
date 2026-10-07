@@ -48,7 +48,7 @@ class AircraftWindow(tk.Toplevel):
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(body, text=(
             "Choose an aircraft type and edit the Game 6 average stats. The design year is "
-            "the current campaign year. A saved model supplies the remaining internal fields; "
+            "the current campaign year. Saved models or built-in defaults supply the remaining fields; "
             "squadrons are managed separately."
         ), wraplength=970).pack(anchor="w", pady=(2, 10))
 
@@ -94,6 +94,8 @@ class AircraftWindow(tk.Toplevel):
         ttk.Combobox(source_heading, textvariable=self.source_filter,
                      values=("Selected nation", "All nations"),
                      state="readonly", width=17).pack(side="right")
+        if not self.types:
+            ttk.Label(body, text="No aircraft are detected in this save").pack(anchor="w")
         self.count = tk.StringVar()
         ttk.Label(source_heading, textvariable=self.count).pack(side="right", padx=(0, 12))
         list_frame = ttk.Frame(body)
@@ -172,7 +174,7 @@ class AircraftWindow(tk.Toplevel):
                               for model in self.types)
         self.source_filter.set("Selected nation" if own_role_models else "All nations")
         self.render()
-        if self.table.exists(str(self.template.slot)):
+        if self.template is not None and self.table.exists(str(self.template.slot)):
             self.table.selection_set(str(self.template.slot))
             self.table.see(str(self.template.slot))
 
@@ -233,9 +235,6 @@ class AircraftWindow(tk.Toplevel):
             self.template = self.types[int(self.table.selection()[0])]
 
     def apply(self):
-        if self.template is None:
-            self.status.set("This save has no aircraft model available as a source")
-            return
         changes = {
             "Manufacturer": self.manufacturer.get(), "Name": self.name.get(),
             "Year": self.design_year.get(), "BaseModelYear": self.base_model_year.get(),
@@ -243,7 +242,7 @@ class AircraftWindow(tk.Toplevel):
         }
         try:
             created = self.save.create_aircraft_type(
-                self.nation.index, self.template.slot, changes,
+                self.nation.index, self.template.slot if self.template else None, changes,
                 purpose=self._purpose(),
             )
         except (ValueError, TypeError) as error:

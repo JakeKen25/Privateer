@@ -178,3 +178,40 @@ def test_equivalent_year_slider_keeps_campaign_design_date(tmp_path):
         assert created.fields["MaxSpeed"] == average_defaults(13, 1960)["MaxSpeed"]
     finally:
         root.destroy()
+
+@pytest.mark.parametrize('purpose', [0, 1, 2, 3, 4, 5, 10, 11, 12, 13])
+def test_first_aircraft_creation_roundtrip(tmp_path, purpose):
+    from privateer.aircraft import FIELD_NAMES, validate_aircraft_only_changes
+    folder = tmp_path / 'Game7'
+    folder.mkdir()
+    (folder / 'RTWGame7.bcs').write_text(
+        '[General]\nYear=1900\nIDNo=700\n[Nation0]\nName=Italy\nShipCount=0\n'
+        '[AircraftTypes]\nACTypesNo=0\n[AirUnits]\nAirUnitNo=0\n', encoding='utf-8')
+    save = RTW3Save.load(folder)
+    assert suggested_template([], purpose, 0, 1900) is None
+    created = save.create_aircraft_type(0, None, {'Name': 'First model'}, purpose=purpose)
+    assert created.slot == 0
+    assert created.fields['Id'] == '700'
+    assert created.fields['Nation'] == '0'
+    assert created.fields['Year'] == created.fields['BaseModelYear'] == '1900'
+    assert created.fields['Purpose'] == str(purpose)
+    assert created.fields['AvailableAircraft'] == '0'
+    assert set(FIELD_NAMES).issubset(created.fields)
+    assert created.fields['Version'] == '0'
+    validate_aircraft_only_changes(save)
+    save.save(create_backup=False)
+    reloaded = RTW3Save.load(folder)
+    assert aircraft_types(reloaded)[0].fields == created.fields
+    second = reloaded.create_aircraft_type(0, 0, {'Name': 'Second model'}, purpose=purpose)
+    assert (second.slot, second.fields['Id']) == (1, '701')
+
+
+def test_first_aircraft_invalid_changes_leave_save_unchanged(tmp_path):
+    save = aircraft_save(tmp_path)
+    section = next(s for s in save.documents[save.main_file].sections if s.name == 'AircraftTypes')
+    section.lines = ['ACTypesNo=0\n']
+    before = save.documents[save.main_file].to_bytes()
+    with pytest.raises(ValueError, match='whole number'):
+        save.create_aircraft_type(0, None, {'MaxSpeed': 'bad'}, purpose=0)
+    assert save.documents[save.main_file].to_bytes() == before
+    assert not save.modified

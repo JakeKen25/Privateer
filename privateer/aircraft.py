@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import re
 
 from .document import FIELD, Section, TextDocument
-from .aircraft_game6_averages import FIELD_NAMES
+from .aircraft_game6_averages import APPLICABLE_FIELDS, FIELD_NAMES
 from .aircraft_year_defaults import YEAR_DEFAULTS
 
 
@@ -76,9 +76,9 @@ def manufacturers_for_nation(types: list[AircraftType], nation_index: int) -> li
 
 
 def suggested_template(types: list[AircraftType], purpose: int, nation_index: int,
-                       year: int) -> AircraftType:
+                       year: int) -> AircraftType | None:
     if not types:
-        raise ValueError("This save has no aircraft models to use as a template")
+        return None
     matching = [model for model in types if int(model.fields["Purpose"]) == purpose]
     candidates = matching or types
     return min(candidates, key=lambda model: (
@@ -105,6 +105,24 @@ def average_defaults(purpose: int, year: int) -> dict[str, str]:
     except KeyError as error:
         raise ValueError("Equivalent year is outside the table for this aircraft type") from error
     return dict(zip(FIELD_NAMES, map(str, row)))
+
+
+def initial_aircraft_fields(purpose: int, year: int) -> dict[str, str]:
+    """Build a new record using the observed schema and bundled role/year stats.
+
+    Version 0 is a fresh design; knowledge flags use the observed 1/0 baseline.
+    No source-campaign names, IDs, owners, or aircraft stock are copied.
+    """
+    first, last = aircraft_year_range(purpose)
+    stats = average_defaults(purpose, max(first, min(year, last)))
+    applicable = set(APPLICABLE_FIELDS[purpose])
+    fields = {key: value if key in applicable else ("-1" if key == "Radar" else "0")
+              for key, value in stats.items()}
+    fields.update(Name=f"{ROLE_NAMES[purpose]} {year}", Manufacturer="Privateer",
+                  Year=str(year), BaseModelYear=str(year), Purpose=str(purpose),
+                  Version="0", ReliabilityKnown="1", ValuesKnown="0",
+                  AvailableAircraft="0", Obsolete="0", DevelopmentTime="0")
+    return fields
 
 
 def validate_aircraft_only_changes(save) -> None:
@@ -217,16 +235,21 @@ def aircraft_types(save) -> list[AircraftType]:
     return result
 
 
-def create_aircraft_type(save, nation, template_slot: int, changes: dict[str, str],
+def create_aircraft_type(save, nation, template_slot: int | None, changes: dict[str, str],
                          *, purpose: int | None = None) -> AircraftType:
-    """Clone a model, edit known fields, and allocate a fresh slot and global ID."""
+    """Clone a model or initialize the first one, then allocate its slot and ID."""
     target = save.nation(nation)
     types = aircraft_types(save)
-    if type(template_slot) is not int or not 0 <= template_slot < len(types):
-        raise ValueError("Choose an existing aircraft model as a template")
-    template = types[template_slot]
     if purpose is not None and (type(purpose) is not int or purpose not in ROLE_NAMES):
         raise ValueError("Choose a supported aircraft type")
+    if template_slot is None and not types:
+        if purpose is None:
+            raise ValueError("Choose a supported aircraft type")
+        template = AircraftType(-1, initial_aircraft_fields(purpose, campaign_year(save)))
+    elif type(template_slot) is int and 0 <= template_slot < len(types):
+        template = types[template_slot]
+    else:
+        raise ValueError("Choose an existing aircraft model as a template")
     if (purpose is not None and purpose != int(template.fields["Purpose"]) and
             not set(FIELD_NAMES).issubset(changes)):
         raise ValueError("Changing aircraft type requires a complete set of role-based stats")
@@ -274,7 +297,9 @@ def create_aircraft_type(save, nation, template_slot: int, changes: dict[str, st
             counter = int(general.fields()["IDNo"])
         except ValueError as error:
             raise ValueError("[General] IDNo is not a whole number") from error
-    new_id = max(max(int(model.fields["Id"]) for model in types) + 1,
+    if not types and (counter is None or counter < 0):
+        raise ValueError("First aircraft creation needs a valid [General] IDNo counter")
+    new_id = max(max((int(model.fields["Id"]) for model in types), default=-1) + 1,
                  counter if counter is not None else 0)
     if not 0 <= new_id < 2**31 - 1:
         raise ValueError("No signed 32-bit aircraft model ID is available")

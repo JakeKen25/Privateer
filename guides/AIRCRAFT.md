@@ -23,7 +23,7 @@ The source aggregates remain in `privateer/aircraft_game6_averages.py`.
 Privateer reads models from `[AircraftTypes]` in `RTWGameX.bcs`. Each `ATn` model
 contains a manufacturer, model name, year, role (`Purpose`), nation index,
 performance values, weapons, available-aircraft stock, and a unique `Id`.
-Creation copies a compatible saved source model's full record so unknown fields
+When existing models are present, creation copies a compatible saved source model's full record so unknown fields
 survive, assigns the next contiguous `ATn` slot and an unused global ID, changes
 `Nation` and `Purpose` to the selected nation and type, advances `[General]IDNo`,
 and increments `ACTypesNo`. The new model starts non-obsolete and with no
@@ -40,7 +40,23 @@ and other state. Creating a model and available stock does not create a
 squadron, assign a carrier air group, or change existing units. Those linked
 operations need separate management and validation.
 
-In development 0.9.8.1, a save with no aircraft models shows an informational
-**Aircraft Manager** message: "No aircraft are detected in this save". No creation
-window opens because a saved model is required as a template. Invalid or ambiguous
-aircraft data still reports an error.
+## Creating the first aircraft model
+
+Development 0.9.8.1 opens the manager even when `ACTypesNo=0`. The empty list
+shows "No aircraft are detected in this save" without an error dialog. Choose
+a type, adjust the statistics, and Apply as usual; no source model is required.
+
+The first model uses bundled role/year statistics, with the equivalent year
+clamped to the available table and the design/base year kept at the campaign
+year. The observed record schema supplies Version=0, ReliabilityKnown=1,
+ValuesKnown=0, Obsolete=0 and DevelopmentTime=0. These are initialization choices,
+not newly verified interpretations of the engine's knowledge flags. Initial
+stock is zero unless changed in the form. Fields not applicable to the selected
+role are zeroed (Radar uses -1). Creation assigns AT0, the target nation, and a
+fresh ID from General/IDNo, then increments ACTypesNo and IDNo. Subsequent models
+can use that saved model as their source. Squadrons and nation technology are
+not changed. Missing/ambiguous sections and invalid counters still report errors.
+
+Automated checks cover all ten roles, save/reload, sequential IDs, and rejected
+invalid edits. First-model creation still needs in-game load and turn validation,
+including campaigns predating aviation; creating a model does not unlock aviation.
