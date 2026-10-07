@@ -1,7 +1,8 @@
 # Submarine Manager: read-only inventory
 
 Privateer 0.9.8 includes a Submarine Manager to each nation's right-click
-menu. Search saved values, filter by state, sort columns, and select a row to
+menu. In development 0.9.8.1, the menu label is **Submarine Manager (WIP)**;
+the inventory remains read-only. Search saved values, filter by state, sort columns, and select a row to
 inspect all saved fields. Reused names remain separate rows identified by local
 roster slot. Missing locations stay blank. No save changes are made.
 

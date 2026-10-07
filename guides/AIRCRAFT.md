@@ -39,3 +39,8 @@ save file and does not directly create aircraft.
 and other state. Creating a model and available stock does not create a
 squadron, assign a carrier air group, or change existing units. Those linked
 operations need separate management and validation.
+
+In development 0.9.8.1, a save with no aircraft models shows an informational
+**Aircraft Manager** message: "No aircraft are detected in this save". No creation
+window opens because a saved model is required as a template. Invalid or ambiguous
+aircraft data still reports an error.
