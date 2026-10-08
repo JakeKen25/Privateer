@@ -19,6 +19,7 @@ from .aircraft_gui import AircraftWindow
 from .submarines_gui import SubmarineWindow
 from .busy import run_background, show_while_opening
 from .settings import AppSettings
+from .theme import ThemeManager
 from .settings_gui import SettingsWindow
 from .table_sort import heading_text, sorted_with_blanks
 from .version import display_version
@@ -38,6 +39,7 @@ class MainWindow(tk.Tk):
             self.settings = AppSettings()
             self.after_idle(lambda: messagebox.showwarning(
                 "Settings reset", f"{exc}\n\nDefault settings will be used.", parent=self))
+        self.theme = ThemeManager(self, self.settings.dark_mode)
         bar = ttk.Frame(self, padding=8); bar.pack(fill="x")
         self.path = tk.StringVar(value="Select Rule the Waves 3 Save Folder")
         ttk.Label(bar, textvariable=self.path).pack(side="left", fill="x", expand=True)

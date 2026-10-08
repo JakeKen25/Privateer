@@ -78,3 +78,13 @@ class SettingsTests(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 
+def test_dark_mode_preference_roundtrip(tmp_path):
+    path = tmp_path / 'settings.json'
+    assert not AppSettings.load(path).dark_mode
+    settings = AppSettings(dark_mode=True)
+    settings.save(path)
+    assert AppSettings.load(path).dark_mode
+    path.write_text('{"dark_mode": "yes"}', encoding='utf-8')
+    import pytest
+    with pytest.raises(ValueError, match='dark mode'):
+        AppSettings.load(path)

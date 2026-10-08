@@ -28,6 +28,7 @@ class AppSettings:
     rtw3_install_directory: str = ""
     save_game_directory: str = ""
     first_run_complete: bool = False
+    dark_mode: bool = False
 
     @classmethod
     def load(cls, path=None):
@@ -42,6 +43,8 @@ class AppSettings:
             raise ValueError("Invalid Create backups setting")
         if type(data.get("first_run_complete", False)) is not bool:
             raise ValueError("Invalid first-run setting")
+        if type(data.get("dark_mode", False)) is not bool:
+            raise ValueError("Invalid dark mode setting")
         paths = {}
         for key, label in (
                 ("backup_directory", "backup directory"),
@@ -57,6 +60,7 @@ class AppSettings:
             rtw3_install_directory=paths["rtw3_install_directory"],
             save_game_directory=paths["save_game_directory"],
             first_run_complete=data.get("first_run_complete", False),
+            dark_mode=data.get("dark_mode", False),
         )
 
     def save(self, path=None):
@@ -73,4 +77,3 @@ class AppSettings:
             if temporary is not None and temporary.exists():
                 temporary.unlink()
         return target
-

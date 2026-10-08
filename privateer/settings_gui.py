@@ -73,8 +73,12 @@ class SettingsWindow(tk.Toplevel):
             body, text="Leave blank to place each backup beside its original save folder.")
         self.directory_hint.grid(row=7, column=1, columnspan=2, sticky="w", pady=(4, 16))
 
+        self.dark_mode = tk.BooleanVar(value=settings.dark_mode)
+        ttk.Checkbutton(body, text="Dark mode", variable=self.dark_mode).grid(
+            row=8, column=0, columnspan=3, sticky="w", pady=(0, 12))
+
         buttons = ttk.Frame(body)
-        buttons.grid(row=8, column=0, columnspan=3, sticky="e")
+        buttons.grid(row=9, column=0, columnspan=3, sticky="e")
         cancel_text = "Skip for now" if first_run else "Cancel"
         apply_text = "Save configuration" if first_run else "Apply"
         ttk.Button(buttons, text=cancel_text, command=self.destroy).pack(side="right")
@@ -127,6 +131,7 @@ class SettingsWindow(tk.Toplevel):
                 return
         updated = AppSettings(
             create_backups=self.create_backups.get(),
+            dark_mode=self.dark_mode.get(),
             backup_directory=self.backup_directory.get().strip(),
             rtw3_install_directory=install_directory,
             save_game_directory=save_directory,
@@ -138,5 +143,5 @@ class SettingsWindow(tk.Toplevel):
             messagebox.showerror("Unable to save settings", str(exc), parent=self)
             return
         self.master.settings = updated
+        self.master.theme.apply(updated.dark_mode)
         self.destroy()
-

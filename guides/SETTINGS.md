@@ -29,3 +29,12 @@ When retained backups are disabled, the backup-location controls are unavailable
 Privateer still makes an internal temporary recovery copy during the multi-file
 commit and deletes it after a successful save. This protects against a partial
 write without retaining a user backup afterward.
+
+## Appearance
+
+In development 0.9.8.1, enable **Dark mode** in Settings and choose **Apply**.
+The theme updates immediately across Privateer and persists between launches.
+Clear the checkbox and Apply to restore light mode (the default). Cancel leaves
+the theme unchanged. Striped tables retain their alternating bands. This is an
+application preference and never changes game saves. Windows-owned file pickers,
+message dialogs and title bars may follow the Windows theme instead.
