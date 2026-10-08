@@ -1,6 +1,6 @@
 # Privateer
 
-**Development version 0.9.8.1** — latest published release: **0.9.8**
+**Latest published release: [Privateer 0.9.9.1](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.9.1)**
 
 The calculator shows numeric estimates in every budget field,
 including total expenses and monthly balance. Unresolved costs use built-in
