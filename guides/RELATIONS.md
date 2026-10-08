@@ -1,6 +1,6 @@
 # Relations: tensions, alliances and wars
 
-Development 0.9.8.1 includes relationship actions. Select an action
+Privateer 0.9.9 includes relationship actions. Select an action
 beside a nation in Relationship Manager. The matrix and Status column show current relations.
 Use either a numerical tension edit or an action for a pair. Reset/Cancel discard
 pending choices; Apply updates memory. Save or Save As uses existing backup and

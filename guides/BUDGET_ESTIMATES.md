@@ -1,4 +1,4 @@
-# Numeric budget estimates (development Privateer 0.9.8.1)
+# Numeric budget estimates (Privateer 0.9.9)
 
 Updated 2026-10-07. The owner requested a value in every calculator field while
 awaiting formulas from the RTW3 developer. This supersedes the earlier policy of
@@ -46,7 +46,7 @@ retains the incomplete/estimated flag even when an example happens to match.
 
 ## Built-in assumptions and interface
 
-Development 0.9.8.1 removes the bottom disclaimer, scrollable calculation notes,
+Privateer 0.9.9 removes the bottom disclaimer, scrollable calculation notes,
 and **Estimate assumptions…** button and dialog. The calculator uses the same
 built-in default rates and formulas; this interface cleanup does not change
 estimated totals or the ±10% balance range. Estimated/provisional row labels remain.

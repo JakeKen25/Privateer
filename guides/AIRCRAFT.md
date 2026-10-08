@@ -42,7 +42,7 @@ operations need separate management and validation.
 
 ## Creating the first aircraft model
 
-Development 0.9.8.1 opens the manager even when `ACTypesNo=0`. The empty list
+Privateer 0.9.9 opens the manager even when `ACTypesNo=0`. The empty list
 shows "No aircraft are detected in this save" without an error dialog. Choose
 a type, adjust the statistics, and Apply as usual; no source model is required.
 

@@ -32,7 +32,7 @@ write without retaining a user backup afterward.
 
 ## Appearance
 
-In development 0.9.8.1, enable **Dark mode** in Settings and choose **Apply**.
+In 0.9.9, enable **Dark mode** in Settings and choose **Apply**.
 The theme updates immediately across Privateer and persists between launches.
 Clear the checkbox and Apply to restore light mode (the default). Cancel leaves
 the theme unchanged. Striped tables retain their alternating bands. This is an

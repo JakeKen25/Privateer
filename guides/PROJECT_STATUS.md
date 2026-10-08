@@ -1,16 +1,10 @@
 # Current project status and documentation policy
 
-Reviewed 2026-10-03 against development **Privateer 0.9.8.1**. The latest
-published release remains **0.9.8**.
-The [release notes](../packaging/RELEASE_NOTES.md) separate development changes
-from shipped changes.
-`develop` also contains subsequent research and documentation; `main` follows
-the [release workflow](../BRANCHING.md).
-
-Development 0.9.8.1 adds the supplied ship-status mapping, distinguishing RF from
-R and identifying TP. The [ship guide](SHIPS.md) also records the user-confirmed
-HDP-64 cross-save combat and turn-advancement experiment. No release was published
-for this development update.
+Reviewed 2026-10-07 for **Privateer 0.9.9**. This release promotes the 0.9.8.1
+development features: relationship actions and compact matrix, dark mode,
+technology selection, colony and ship-status corrections, first-aircraft creation,
+and the simplified economy interface. See [release notes](../packaging/RELEASE_NOTES.md)
+and the [user wiki](https://github.com/JakeKen25/Privateer/wiki).
 
 ## Current boundaries
 

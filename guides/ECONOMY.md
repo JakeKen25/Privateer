@@ -1,9 +1,9 @@
 # Economy and infrastructure managers
 
-**Current interface: development 0.9.8.1.** Every budget row displays
+**Current interface: 0.9.9.** Every budget row displays
 a numeric estimate. [Budget estimates](BUDGET_ESTIMATES.md) defines the current
 rules and built-in reference costs. Published 0.9.8 retains the older information
-panel and assumption controls; the development interface removes both.
+panel and assumption controls; the 0.9.9 interface removes both.
 
 Right-click a nation and choose **Economy and Unrest Manager** to edit Funds, Base Resources, and Unrest Level
 in one window. Each value retains the existing Set value, Adjust by amount, and
