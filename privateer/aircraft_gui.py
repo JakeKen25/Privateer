@@ -39,11 +39,22 @@ class AircraftWindow(tk.Toplevel):
         self.sort_column = "year"
         self.sort_reverse = True
         self.title(f"Aircraft Manager — {self.nation.name}")
-        self.geometry("1020x760")
-        self.minsize(860, 630)
+        self.geometry(f"{min(1020, self.winfo_screenwidth()-80)}x{min(760, self.winfo_screenheight()-100)}")
+        self.minsize(720, 460)
         self.transient(parent)
-        body = ttk.Frame(self, padding=12)
-        body.pack(fill="both", expand=True)
+        viewport = ttk.Frame(self)
+        viewport.pack(fill="both", expand=True)
+        self.viewport = tk.Canvas(viewport, highlightthickness=0)
+        vertical = ttk.Scrollbar(viewport, orient="vertical", command=self.viewport.yview)
+        horizontal = ttk.Scrollbar(viewport, orient="horizontal", command=self.viewport.xview)
+        self.viewport.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+        vertical.pack(side="right", fill="y")
+        horizontal.pack(side="bottom", fill="x")
+        self.viewport.pack(fill="both", expand=True)
+        body = ttk.Frame(self.viewport, padding=12)
+        content = self.viewport.create_window((0, 0), window=body, anchor="nw")
+        body.bind("<Configure>", lambda _e: self.viewport.configure(scrollregion=self.viewport.bbox("all")))
+        self.viewport.bind("<Configure>", lambda e: self.viewport.itemconfigure(content, width=max(860, e.width)))
         ttk.Label(body, text=f"Create aircraft model — {self.nation.name}",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(body, text=(
@@ -94,8 +105,9 @@ class AircraftWindow(tk.Toplevel):
         ttk.Combobox(source_heading, textvariable=self.source_filter,
                      values=("Selected nation", "All nations"),
                      state="readonly", width=17).pack(side="right")
+        self.empty_message = ttk.Label(body, text="No aircraft are detected in this save")
         if not self.types:
-            ttk.Label(body, text="No aircraft are detected in this save").pack(anchor="w")
+            self.empty_message.pack(anchor="w")
         self.count = tk.StringVar()
         ttk.Label(source_heading, textvariable=self.count).pack(side="right", padx=(0, 12))
         list_frame = ttk.Frame(body)
@@ -119,7 +131,7 @@ class AircraftWindow(tk.Toplevel):
 
         editor = ttk.LabelFrame(body, text="Average stats for this aircraft type and year", padding=10)
         editor.pack(fill="both", expand=True)
-        canvas = tk.Canvas(editor, highlightthickness=0)
+        canvas = tk.Canvas(editor, height=240, highlightthickness=0)
         form_scroll = ttk.Scrollbar(editor, orient="vertical", command=canvas.yview)
         canvas.configure(yscrollcommand=form_scroll.set)
         form_scroll.pack(side="right", fill="y")
@@ -137,12 +149,16 @@ class AircraftWindow(tk.Toplevel):
             entry = ttk.Entry(form, textvariable=self.stats[key], width=24)
             self.stat_widgets[key] = (label, entry)
 
+        self.footer = ttk.Frame(self, padding=(12, 8))
+        self.footer.pack(side="bottom", fill="x", before=viewport)
         self.status = tk.StringVar()
-        ttk.Label(body, textvariable=self.status, wraplength=970).pack(anchor="w", pady=(8, 4))
-        buttons = ttk.Frame(body)
+        status_label = ttk.Label(self.footer, textvariable=self.status, wraplength=970)
+        status_label.pack(anchor="w", fill="x", pady=(0, 6))
+        self.footer.bind("<Configure>", lambda e: status_label.configure(wraplength=max(200, e.width-24)))
+        buttons = ttk.Frame(self.footer)
         buttons.pack(fill="x")
-        ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="right")
-        ttk.Button(buttons, text="Apply", command=self.apply).pack(side="right", padx=(0, 8))
+        ttk.Button(buttons, text="Close", command=self.destroy).pack(side="right")
+        ttk.Button(buttons, text="Create", command=self.apply).pack(side="right", padx=(0, 8))
         self.role.trace_add("write", lambda *_: self.change_role())
         self.source_filter.trace_add("write", lambda *_: self.render())
         self.change_role()
@@ -187,7 +203,7 @@ class AircraftWindow(tk.Toplevel):
             self.stats[key].set(value if key in applicable else ("-1" if key == "Radar" else "0"))
         self.status.set(
             f"Stats loaded for {self.role.get().lower()}, {equivalent_year}. "
-            f"Design year remains {self.year}. All shown values can be edited before Apply.")
+            f"Design year remains {self.year}. All shown values can be edited before Create.")
 
     def render(self):
         selected = self.table.selection()[0] if self.table.selection() else None
@@ -249,4 +265,13 @@ class AircraftWindow(tk.Toplevel):
             messagebox.showerror("Unable to create aircraft", str(error), parent=self)
             return
         self.master.status.set(f"Unsaved changes — created {created.name}")
-        self.destroy()
+        self.types = aircraft_types(self.save)
+        self.template = created
+        self.empty_message.pack_forget()
+        self.source_filter.set("Selected nation")
+        self.render()
+        self.table.selection_set(str(created.slot))
+        self.table.see(str(created.slot))
+        self.status.set(f"Created {created.name}. Change the model name to create another aircraft. "
+                        "Use Save or Save As in the main window to write your changes.")
+

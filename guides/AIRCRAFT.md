@@ -60,3 +60,12 @@ not changed. Missing/ambiguous sections and invalid counters still report errors
 Automated checks cover all ten roles, save/reload, sequential IDs, and rejected
 invalid edits. First-model creation still needs in-game load and turn validation,
 including campaigns predating aviation; creating a model does not unlock aviation.
+
+## Development update after 0.9.9
+
+The status text and **Create**/**Close** buttons stay fixed below the scrolling
+content, including at the minimum window size. **Create** stages a model without
+closing the window and refreshes the saved-source list. Change the model name
+before creating another. **Close** leaves already-created models staged; it does
+not undo them. Save or Save As in the main window writes the changes. The published
+0.9.9 build still uses Apply/Cancel and closes after successful creation.
