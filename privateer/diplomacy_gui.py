@@ -10,7 +10,7 @@ class TensionWindow(tk.Toplevel):
         self.save, self.nation_index = save, nation_index
         self.entries, self.original, self.actions = {}, {}, {}
         self.title(f'Relationship Manager — {save.nation(nation_index).name}')
-        self.geometry(f'{min(1240, self.winfo_screenwidth()-80)}x{min(1000, self.winfo_screenheight()-100)}')
+        self.geometry(f'{min(960, self.winfo_screenwidth()-80)}x{min(780, self.winfo_screenheight()-100)}')
         self.minsize(760, 570)
         self.transient(parent)
         try:
@@ -30,22 +30,22 @@ class TensionWindow(tk.Toplevel):
         vertical.pack(side='right', fill='y')
         horizontal.pack(side='bottom', fill='x')
         canvas.pack(fill='both', expand=True)
-        body = ttk.Frame(canvas, padding=14)
+        body = ttk.Frame(canvas, padding=10)
         content = canvas.create_window((0, 0), window=body, anchor='nw')
         body.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
-        canvas.bind('<Configure>', lambda e: canvas.itemconfigure(content, width=max(1120, e.width)))
+        canvas.bind('<Configure>', lambda e: canvas.itemconfigure(content, width=max(900, e.width)))
         self.bind('<MouseWheel>', lambda e: canvas.yview_scroll(-int(e.delta / 120), 'units'))
         ttk.Label(body, text=f'Relations for {save.nation(nation_index).name}', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
         self.build_matrix(body)
         ttk.Label(body, text='Enter a new Tension Level for each pair to change; leave other entries blank.').pack(anchor='w')
         ttk.Label(body, text='Tension: 0–20. Use the actions below to manage wars and alliances.').pack(anchor='w')
         rows = ttk.Frame(body)
-        rows.pack(fill='x', pady=10)
+        rows.pack(fill='x', pady=6)
         for col, text in enumerate(('Other nation', 'Current Tension Level', 'New Tension Level', 'Action', 'Status')):
             ttk.Label(rows, text=text).grid(row=0, column=col, sticky='w', padx=8, pady=6)
         rows.columnconfigure(0, weight=1)
         for row, other in enumerate((i for i in range(9) if i != nation_index), 1):
-            ttk.Label(rows, text=save.nation(other).name).grid(row=row, column=0, sticky='w', padx=8, pady=8)
+            ttk.Label(rows, text=save.nation(other).name).grid(row=row, column=0, sticky='w', padx=8, pady=4)
             try:
                 values = self.diplomacy.values(nation_index, other)
                 editable = self.diplomacy.editable(nation_index, other)
@@ -70,7 +70,7 @@ class TensionWindow(tk.Toplevel):
             action = tk.StringVar()
             self.actions[other] = action
             ttk.Combobox(rows, textvariable=action, values=('',) + RELATION_ACTIONS, state='readonly', width=20).grid(row=row, column=3, padx=8)
-        ttk.Label(body, text='Choose a tension edit OR action per pair. Apply changes memory; Save writes with backups.').pack(anchor='w', pady=8)
+        ttk.Label(body, text='Choose a tension edit OR action per pair. Apply changes memory; Save writes with backups.').pack(anchor='w', pady=4)
         buttons = ttk.Frame(self, padding=10)
         buttons.pack(side='bottom', fill='x', before=viewport)
         ttk.Button(buttons, text='Reset changes', command=self.reset_changes).pack(side='left')
@@ -88,16 +88,16 @@ class TensionWindow(tk.Toplevel):
         names = [self.save.nation(i).name for i in range(9)]
         for col, name in enumerate(['Nation'] + names):
             tk.Label(table, text=name, bg='#d2d2d2', fg='#202020',
-                     font=('Segoe UI', 9, 'bold'), wraplength=105, padx=4, pady=6).grid(row=0, column=col, sticky='nsew', padx=1, pady=1)
+                     font=('Segoe UI', 9, 'bold'), wraplength=78, padx=3, pady=3).grid(row=0, column=col, sticky='nsew', padx=1, pady=1)
             table.columnconfigure(col, weight=1)
         shades = (('#fafafa', '#ededed'), ('#e5e5e5', '#d8d8d8'))
         for row, name in enumerate(names):
             tk.Label(table, text=name, bg='#d2d2d2', fg='#202020', anchor='w',
-                     font=('Segoe UI', 9, 'bold'), padx=6, pady=5).grid(row=row+1, column=0, sticky='nsew', padx=1, pady=1)
+                     font=('Segoe UI', 9, 'bold'), wraplength=100, padx=4, pady=2).grid(row=row+1, column=0, sticky='nsew', padx=1, pady=1)
             for col in range(9):
                 cell = tk.Label(table, text=self.diplomacy.matrix_cell(row, col),
                                 bg=shades[row % 2][col % 2], fg='#202020',
-                                font=('Segoe UI', 9), wraplength=100, padx=4, pady=5)
+                                font=('Segoe UI', 9), wraplength=78, padx=3, pady=2)
                 cell.grid(row=row+1, column=col+1, sticky='nsew', padx=1, pady=1)
                 self.matrix_labels[row, col] = cell
 

@@ -41,3 +41,8 @@ status colors. The window scrolls both ways and keeps Apply/Cancel accessible.
 The matrix shows current in-memory relations, not unapplied dialog choices.
 The startup development disclaimer has been removed following user validation of
 ceasefire, treaty breaking and alliance creation on 2026-10-05.
+
+The development window opens at up to 960 � 780 pixels. The matrix uses compact
+cell padding and wrapped nation headers; editing rows have reduced vertical
+spacing. Both scrollbars remain available, and Apply/Cancel stay outside the
+scrolling area. Window size can still be adjusted.
