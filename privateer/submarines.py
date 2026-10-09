@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import re
 
-from .document import FIELD
+from .document import FIELD, Section
 
 
 SUBMARINE_TYPES = {
@@ -85,37 +85,37 @@ def submarine_roster(save, nation_index):
     return records, tuple(warnings)
 
 
-def spawn_templates(save, nation_index):
-    records, warnings = submarine_roster(save, nation_index)
-    if warnings:
-        return ()
-    return tuple(r for r in records if r.status == 'In service'
-                 and r.fields.get('SubType') in SUBMARINE_TYPES)
+# Completed Game6 references, S-120 through S-125, inspected 2026-10-08.
+# Only reusable type/stat values are bundled, never save identities or locations.
+SUBMARINE_REFERENCES = {
+    'SSC': ('2', '135', '0', 'SSC — Coastal submarine'),
+    'SS': ('0', '135', '0', 'SS — Submarine'),
+    'SSM-122': ('1', '135', '1', 'SSM — Minelaying submarine (S-122 reference)'),
+    'SSM-123': ('1', '135', '0', 'SSM — Minelaying submarine (S-123 reference)'),
+    'SSL': ('3', '135', '0', 'SSL — Long range submarine'),
+    'SSG': ('4', '135', '1', 'SSG — Missile submarine'),
+}
 
 
-def create_submarine(save, nation_index, *, template_slot, name, location):
+def create_submarine(save, nation_index, *, submarine_type, name, location):
     """Append a completed same-nation submarine at an observed service location."""
     nation = save.nation(nation_index)
     records, warnings = submarine_roster(save, nation.index)
-    if warnings:
+    missing_roster = not any(sec.name.casefold() == f'nation{nation.index}submarines'
+                             for sec in save.documents[save.main_file].sections)
+    if warnings and not missing_roster:
         raise ValueError('Cannot create submarines with an incomplete or inconsistent roster.')
     name = name.strip()
     if not name or any(ord(c) < 32 for c in name) or any(c in name for c in '=[]'):
         raise ValueError('Enter a name without control characters, brackets or equals signs.')
     if any(r.fields.get('Name', '').casefold() == name.casefold() for r in records):
         raise ValueError('A submarine with this name already exists in this nation.')
-    template = next((r for r in spawn_templates(save, nation.index)
-                     if r.slot == template_slot), None)
-    if template is None:
-        raise ValueError('Select an in-service submarine in this nation.')
-    fields = dict(template.fields)
-    required = ('Availability', 'Accuracy')
-    try:
-        values = {key: int(fields[key]) for key in required}
-    except (KeyError, ValueError) as error:
-        raise ValueError('Construction template has missing or invalid statistics.') from error
+    if submarine_type not in SUBMARINE_REFERENCES:
+        raise ValueError('Select a supported submarine type.')
+    kind, availability, accuracy, label = SUBMARINE_REFERENCES[submarine_type]
+    fields = dict(SubType=kind, Availability=availability, Accuracy=accuracy)
     if location not in spawn_locations(save, nation.index):
-        raise ValueError('Select an existing submarine service location for this nation.')
+        raise ValueError('Select a valid home or submarine service location for this nation.')
     document = save.documents[save.main_file]
     generals = [s for s in document.sections if s.name.casefold() == 'general']
     try:
@@ -140,13 +140,17 @@ def create_submarine(save, nation_index, *, template_slot, name, location):
             raise ValueError()
     except ValueError as error:
         raise ValueError('Nation SubNumber counter is missing or invalid.') from error
-    section = next(s for s in document.sections
-                   if s.name.casefold() == f'nation{nation.index}submarines')
+    section = next((s for s in document.sections
+                    if s.name.casefold() == f'nation{nation.index}submarines'), None)
     fields.update(Name=name, Fate='', YearBuilt=str(year), RemainingBuildTime='0', Halted='0', Sunk='0',
                   Active='0', InPlay='1', DestinationAreaName='XXX', OrderedAreaName='XXX')
     fields['LocationAreaName'] = location
     slot = len(records)
     with save.transaction():
+        if section is None:
+            section = Section(f'Nation{nation.index}Submarines',
+                              f'[Nation{nation.index}Submarines]{document.newline}')
+            document.add_section(section)
         if section.lines and not section.lines[-1].endswith(('\n', '\r')):
             section.lines[-1] += document.newline
         for key, value in fields.items():
@@ -155,15 +159,19 @@ def create_submarine(save, nation_index, *, template_slot, name, location):
         nations[0].set('SubNumber', counter + 1, document.newline)
         save.modified = True
         save.audit.append(f'Spawned {name} ({SUBMARINE_TYPES[fields["SubType"]]}) for '
-                          f'{nation.name} from template Sub{template.slot}')
+                          f'{nation.name} using Game6 reference {submarine_type}')
     return Submarine(slot, fields)
 
 
 def spawn_locations(save, nation_index):
     records, _ = submarine_roster(save, nation_index)
-    return tuple(sorted({r.fields['LocationAreaName'] for r in records
-                         if r.status == 'In service' and
-                         r.fields.get('LocationAreaName', '').strip() not in ('', 'XXX')}))
+    locations = {r.fields['LocationAreaName'] for r in records
+                 if r.status == 'In service' and
+                 r.fields.get('LocationAreaName', '').strip() not in ('', 'XXX')}
+    home = save.nation(nation_index).section.fields().get('BuildAreaName', '').strip()
+    if home and home != 'XXX':
+        locations.add(home)
+    return tuple(sorted(locations))
 
 
 def next_submarine_name(save, nation_index):

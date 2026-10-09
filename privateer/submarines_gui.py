@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter.scrolledtext import ScrolledText
 
-from .submarines import submarine_roster, spawn_templates, create_submarine, spawn_locations, next_submarine_name
+from .submarines import submarine_roster, SUBMARINE_REFERENCES, create_submarine, spawn_locations, next_submarine_name
 from .table_sort import sorted_with_blanks, heading_text
 
 
@@ -23,7 +23,7 @@ class SubmarineWindow(tk.Toplevel):
         footer.pack(side='bottom', fill='x')
         self.template_choice = tk.StringVar()
         self.new_name = tk.StringVar(value=next_submarine_name(save, nation_index))
-        ttk.Label(footer, text='Submarine template').grid(row=0, column=0, sticky='w')
+        ttk.Label(footer, text='Submarine Type').grid(row=0, column=0, sticky='w')
         self.template_box = ttk.Combobox(footer, textvariable=self.template_choice,
                                        state='readonly', width=48)
         self.template_box.grid(row=0, column=1, sticky='ew', padx=6)
@@ -45,7 +45,7 @@ class SubmarineWindow(tk.Toplevel):
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text='Submarine inventory and spawning', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-        ttk.Label(body, text='Spawn a completed boat from a same-nation template. Save or Save As writes your changes.').pack(anchor='w', pady=(2, 8))
+        ttk.Label(body, text='Spawn a completed boat using built-in Game6 references. Save or Save As writes your changes.').pack(anchor='w', pady=(2, 8))
         bar = ttk.Frame(body); bar.pack(fill='x')
         ttk.Label(bar, text='Search').pack(side='left')
         ttk.Entry(bar, textvariable=self.search, width=35).pack(side='left', padx=8)
@@ -113,25 +113,22 @@ class SubmarineWindow(tk.Toplevel):
 
 
     def refresh_templates(self):
-        templates = spawn_templates(self.save, self.nation_index)
-        self.templates = {f'{r.fields.get("Name", "")} — {r.type_label} '
-                          f'({r.status})': r.slot
-                          for r in templates}
+        self.templates = {values[3]: key for key, values in SUBMARINE_REFERENCES.items()}
         self.template_box.configure(values=tuple(self.templates))
         if self.template_choice.get() not in self.templates:
             self.template_choice.set(next(iter(self.templates), ''))
         self.create_button.configure(state='normal' if self.templates and self.location.get() else 'disabled')
         if not self.templates or not self.location.get():
-            self.creation_status.set('A template and an existing submarine service location are required. '
-                                     'Load a campaign with an in-service submarine for this nation.')
+            self.creation_status.set('A valid spawn location is required. '
+                                     'The nation needs a saved home area or submarine service location.')
         else:
-            self.creation_status.set('Spawns completed at the selected location with template stats. '
+            self.creation_status.set('Spawns completed at the selected location with Game6 reference stats. '
                                      'Spawning needs in-game validation.')
 
     def create(self):
         try:
             created = create_submarine(self.save, self.nation_index,
-                                       template_slot=self.templates.get(self.template_choice.get()),
+                                       submarine_type=self.templates.get(self.template_choice.get()),
                                        name=self.new_name.get(), location=self.location.get())
         except (ValueError, KeyError) as error:
             messagebox.showerror('Unable to create submarine', str(error), parent=self)

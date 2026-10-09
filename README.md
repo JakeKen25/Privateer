@@ -2,8 +2,8 @@
 
 **Latest published release: [Privateer 0.9.9.1](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.9.1)**
 
-**Development 0.9.9.4:** Submarine Manager can spawn completed boats from
-same-nation in-service templates. In-game validation is pending; see
+**Development 0.9.9.5:** Submarine Manager can spawn completed boats from
+built-in Game6 references. In-game validation is pending; see
 [submarine guide](guides/SUBMARINES.md).
 
 The calculator shows numeric estimates in every budget field,
