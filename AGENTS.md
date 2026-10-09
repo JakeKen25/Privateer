@@ -21,9 +21,10 @@ https://github.com/JakeKen25/Privateer/wiki
 
 - Update the affected wiki pages as part of the same task, including behavior,
   controls, workflows, limitations, fixes, and validation status.
-- Keep published-release instructions distinct from development-only features.
-  Update version and feature status, navigation, and screenshot callouts when affected.
+- The wiki is the primary end-user manual. Manager pages describe the current
+  published release for new users. Keep development logs, test counts, raw save
+  fields and research history in repository guides, not user-facing pages.
+  Include only limitations and changes that affect users; preserve screenshots.
 - Verify the published wiki updates before reporting a change complete. If wiki
   publication is blocked, retain the prepared edits and explicitly report the gap.
-- For internal-only changes, record a concise maintenance note on the relevant
-  status page without adding implementation detail to user instructions.
+- Record internal-only changes in repository documentation, not the user wiki.

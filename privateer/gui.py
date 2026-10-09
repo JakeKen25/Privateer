@@ -93,7 +93,7 @@ class MainWindow(tk.Tk):
         self.nation_menu.add_command(label="Colony Manager", command=self._manage_colonies)
         self.nation_menu.add_command(label="Transfer Ships", command=self._manage_ships)
         self.nation_menu.add_command(label="Aircraft Manager", command=self._manage_aircraft)
-        self.nation_menu.add_command(label="Submarine Manager (WIP)", command=self._manage_submarines)
+        self.nation_menu.add_command(label="Submarine Manager", command=self._manage_submarines)
         self.nation_menu.add_separator()
         self.nation_menu.add_command(label="Ship Spawner (WIP)",
                                      command=lambda: self._show_coming_soon("Ship Spawner (WIP)"))

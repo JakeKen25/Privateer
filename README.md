@@ -1,10 +1,10 @@
 # Privateer
 
-**Latest published release: [Privateer 0.9.9.1](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.9.1)**
+**Latest published release: [Privateer 0.9.10](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.10)**
 
-**Development 0.9.9.7:** Submarine Manager can spawn completed boats from
-built-in Game6 references. In-game validation is pending; see
-[submarine guide](guides/SUBMARINES.md).
+The [wiki](https://github.com/JakeKen25/Privateer/wiki) is the primary end-user manual.
+Submarine Manager supports spawning, renaming, deleting and repairing boats, with
+Apply/Cancel for pending changes. See the wiki for instructions.
 
 The calculator shows numeric estimates in every budget field,
 including total expenses and monthly balance. Unresolved costs use built-in
