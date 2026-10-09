@@ -2,8 +2,8 @@
 
 **Latest published release: [Privateer 0.9.9.1](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.9.1)**
 
-**Development 0.9.9.2:** Submarine Manager can create construction orders from
-same-nation construction templates. In-game validation is pending; see
+**Development 0.9.9.3:** Submarine Manager can spawn completed boats from
+same-nation in-service templates. In-game validation is pending; see
 [submarine guide](guides/SUBMARINES.md).
 
 The calculator shows numeric estimates in every budget field,

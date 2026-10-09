@@ -48,28 +48,38 @@ from privateer.submarines import create_submarine, SUBMARINE_TYPES
 
 
 def construction_save(kind='0'):
-    return save('SubNumber=126\n[Nation0Submarines]\nSubCount=1\n'
-                'Sub0Name=Template\nSub0Sunk=0\nSub0InPlay=0\nSub0Halted=0\n'
+    s = save('SubNumber=126\n[Nation0Submarines]\nSubCount=1\n'
+                'Sub0Name=Template\nSub0Sunk=0\nSub0InPlay=1\nSub0Halted=0\n'
                 f'Sub0SubType={kind}\nSub0Availability=135\nSub0Accuracy=1\n'
                 'Sub0RemainingBuildTime=12\nSub0Fate=\nSub0YearBuilt=0\n'
                 'Sub0Active=0\nSub0DestinationAreaName=XXX\nSub0OrderedAreaName=XXX\n'
                 'Sub0UnknownField=preserve\n[Nation1]\nName=Other\nSubNumber=5\n')
+    doc=s.documents['test.bcs']
+    from privateer.document import Section
+    doc.add_section(Section('General','[General]\n',['Year=1968\n']))
+    section=next(x for x in doc.sections if x.name=='Nation0Submarines')
+    for k,v in {'Name':'Service boat','InPlay':'1','Sunk':'0','Fate':'',
+                'LocationAreaName':'Home','SubType':'0','Availability':'135','Accuracy':'0'}.items():
+        section.set('Sub1'+k,v)
+    section.set('SubCount',2)
+    return s
 
 
 @pytest.mark.parametrize('kind', SUBMARINE_TYPES)
 def test_create_preserves_template_and_appends_valid_construction(kind):
     s=construction_save(kind)
     before=submarine_roster(s,0)[0][0].fields.copy()
-    a=create_submarine(s,0,template_slot=0,name='New boat')
-    b=create_submarine(s,0,template_slot=0,name='Second boat')
-    assert (a.slot,b.slot)==(1,2)
-    assert a.type_label==SUBMARINE_TYPES[kind] and a.status=='Under construction'
+    a=create_submarine(s,0,template_slot=0,location='Home',name='New boat')
+    b=create_submarine(s,0,template_slot=0,location='Home',name='Second boat')
+    assert (a.slot,b.slot)==(2,3)
+    assert a.type_label==SUBMARINE_TYPES[kind] and a.status=='In service'
     assert a.fields['UnknownField']=='preserve' and a.fields['Accuracy']=='1'
-    assert a.fields['YearBuilt']=='0' and a.fields['RemainingBuildTime']=='12'
+    assert a.fields['YearBuilt']=='1968' and a.fields['RemainingBuildTime']=='0'
+    assert a.fields['LocationAreaName']=='Home'
     doc=s.documents['test.bcs']
     restored=RTW3Save(Path('.'),{'test.bcs':TextDocument.parse(doc.render())},'test.bcs')
     rows,warnings=submarine_roster(restored,0)
-    assert not warnings and len(rows)==3 and rows[0].fields==before
+    assert not warnings and len(rows)==4 and rows[0].fields==before
     assert restored.nation(0).section.fields()['SubNumber']=='128'
     assert restored.nation(1).section.fields()['SubNumber']=='5'
     assert s.modified and len(s.audit)==2
@@ -79,17 +89,30 @@ def test_create_preserves_template_and_appends_valid_construction(kind):
 def test_invalid_names_do_not_mutate(name):
     s=construction_save(); before=s.documents['test.bcs'].render()
     with pytest.raises(ValueError):
-        create_submarine(s,0,template_slot=0,name=name)
+        create_submarine(s,0,template_slot=0,location='Home',name=name)
     assert s.documents['test.bcs'].render()==before and not s.modified
 
 
-@pytest.mark.parametrize('old,new', [('SubCount=1','SubCount=2'),
-    ('Sub0InPlay=0','Sub0InPlay=1'),('Sub0Sunk=0','Sub0Sunk=1'),
-    ('Sub0Halted=0','Sub0Halted=1'),('SubNumber=126','SubNumber=bad'),
-    ('Sub0RemainingBuildTime=12','Sub0RemainingBuildTime=0')])
+@pytest.mark.parametrize('old,new', [('SubCount=2','SubCount=3'),
+    ('Sub0Sunk=0','Sub0Sunk=1'),
+    ('Sub0InPlay=1','Sub0InPlay=0'),('SubNumber=126','SubNumber=bad'),
+    ('Year=1968','Year=bad')])
 def test_unsafe_templates_and_counts_rejected(old,new):
     base=construction_save(); body=base.documents['test.bcs'].render().replace(old,new)
     s=RTW3Save(Path('.'),{'test.bcs':TextDocument.parse(body)},'test.bcs')
     with pytest.raises(ValueError):
-        create_submarine(s,0,template_slot=0,name='New')
+        create_submarine(s,0,template_slot=0,location='Home',name='New')
     assert s.documents['test.bcs'].render()==body and not s.modified
+
+
+def test_spawn_rejects_unknown_location_without_mutation():
+    s=construction_save(); before=s.documents['test.bcs'].render()
+    with pytest.raises(ValueError,match='location'):
+        create_submarine(s,0,template_slot=0,name='New',location='Unknown')
+    assert s.documents['test.bcs'].render()==before
+
+
+def test_in_service_template_can_spawn():
+    s=construction_save()
+    r=create_submarine(s,0,template_slot=1,name='New',location='Home')
+    assert r.status=='In service' and r.fields['RemainingBuildTime']=='0'
