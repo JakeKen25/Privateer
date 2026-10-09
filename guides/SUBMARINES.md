@@ -9,7 +9,9 @@ It supersedes the destination-template restriction in 0.9.9.4.
 Choose **Submarine Type**, review the editable **Privateer X** default name,
 choose a spawn location, and select **Spawn**. The window stays open and proposes
 the next unused positive number after each spawn. Historical names reserve
-numbers too. Close retains spawned boats in memory; Save or Save As writes them.
+numbers too. Spawn, Rename, Delete and Repair remain in a private draft until Apply.
+Apply accepts the draft and closes the manager; Save or Save As then writes it.
+Cancel, Escape and the window close button discard the entire pending draft.
 
 No existing submarine or local Game6 installation is required. Empty rosters
 are supported; an absent submarine section is created after validation.
@@ -44,9 +46,20 @@ Stats are fixed Game6 values, not adapted to destination technology or year.
 
 ## Validation and remaining work
 
-26 targeted tests cover all five selectable references in empty and absent rosters,
+30 targeted tests cover all five selectable references in empty and absent rosters,
 round-trip parsing, naming and rejected inputs without mutation. Validate game
 loading, readiness/deployment, maintenance, turn progression and naming continuity
 with an ordinary in-game submarine order. In-game behavior across eras remains
 unverified; Availability/Accuracy and naming-counter semantics are unresolved.
-The menu retains (WIP). Editing, transfer and deletion are not implemented.
+The menu retains (WIP). Transfer is not implemented.
+
+## Right-click actions (development 0.9.9.7)
+
+Right-click a row to select it and choose Rename, Delete or Repair. Rename
+requires a unique nonblank name. Delete removes the selected record and compacts
+local Sub slots and SubCount; it does not lower the naming counter. Repair sets
+only Availability to 135 and does not change sunk, historical or service flags.
+All actions, including Spawn, require Apply. Cancel discards them together.
+Apply merges only the selected nation's submarine roster and naming counter,
+preserves unrelated edits and rejects a conflicting roster change.
+

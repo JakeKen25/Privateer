@@ -99,3 +99,55 @@ def test_invalid_metadata_is_atomic(old,new):
     with pytest.raises(ValueError):
         create_submarine(s,0,submarine_type='SS',name='Privateer 1',location='Home')
     assert s.documents['test.bcs'].render()==body
+
+
+from privateer.submarines import SubmarineDraft, edit_submarine
+
+
+def test_draft_isolation_apply_and_reindex():
+    s=empty_save()
+    for name in ['One','Two','Three']:
+        create_submarine(s,0,submarine_type='SS',name=name,location='Home')
+    before=s.documents['test.bcs'].render()
+    draft=SubmarineDraft(s,0)
+    edit_submarine(draft.save,0,0,'delete')
+    edit_submarine(draft.save,0,0,'rename','Renamed')
+    edit_submarine(draft.save,0,1,'repair')
+    assert s.documents['test.bcs'].render()==before
+    s.nation(0).section.set('Funds','123')
+    assert draft.apply()
+    rows,warnings=submarine_roster(s,0)
+    assert not warnings and [r.fields['Name'] for r in rows]==['Renamed','Three']
+    assert rows[1].fields['Availability']=='135'
+    assert s.nation(0).section.fields()['Funds']=='123'
+    assert s.nation(0).section.fields()['SubNumber']=='4'
+
+
+def test_cancel_draft_and_noop_do_not_change_original():
+    s=empty_save(False); before=s.documents['test.bcs'].render()
+    d=SubmarineDraft(s,0)
+    create_submarine(d.save,0,submarine_type='SS',name='Pending',location='Home')
+    del d
+    assert not s.modified and s.documents['test.bcs'].render()==before
+    assert not SubmarineDraft(s,0).apply()
+
+
+def test_draft_conflict_rejects_without_lost_update():
+    s=empty_save();d=SubmarineDraft(s,0)
+    create_submarine(d.save,0,submarine_type='SS',name='Pending',location='Home')
+    create_submarine(s,0,submarine_type='SS',name='Outside',location='Home')
+    with pytest.raises(ValueError,match='outside'):d.apply()
+    assert submarine_roster(s,0)[0][0].fields['Name']=='Outside'
+
+
+def test_repair_only_changes_availability_and_rename_rejects_duplicate():
+    s=empty_save()
+    for name in ['One','Two']:
+        create_submarine(s,0,submarine_type='SS',name=name,location='Home')
+    section=next(x for x in s.documents['test.bcs'].sections if x.name=='Nation0Submarines')
+    section.set('Sub0Availability',42)
+    before=submarine_roster(s,0)[0][0].fields.copy()
+    edit_submarine(s,0,0,'repair')
+    assert submarine_roster(s,0)[0][0].fields==dict(before,Availability='135')
+    with pytest.raises(ValueError):edit_submarine(s,0,0,'rename','Two')
+    assert submarine_roster(s,0)[0][0].fields['Name']=='One'

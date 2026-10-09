@@ -181,3 +181,83 @@ def next_submarine_name(save, nation_index):
     while f'privateer {number}' in used:
         number += 1
     return f'Privateer {number}'
+
+
+def edit_submarine(save, nation_index, slot, action, name=None):
+    """Mutate one validated local roster; deletion compacts local slots."""
+    records, warnings = submarine_roster(save, nation_index)
+    if warnings:
+        raise ValueError('Cannot edit an inconsistent submarine roster.')
+    record = next((r for r in records if r.slot == slot), None)
+    if record is None:
+        raise ValueError('Select an existing submarine.')
+    if action not in ('rename', 'delete', 'repair'):
+        raise ValueError('Unknown submarine action.')
+    if action == 'rename':
+        name = (name or '').strip()
+        if not name or any(ord(c) < 32 or c in '=[]' for c in name):
+            raise ValueError('Enter a valid submarine name.')
+        if any(r.slot != slot and r.fields.get('Name','').casefold() == name.casefold()
+               for r in records):
+            raise ValueError('A submarine with this name already exists in this nation.')
+    doc = save.documents[save.main_file]
+    section = next(s for s in doc.sections if s.name.casefold() == f'nation{nation_index}submarines')
+    with save.transaction():
+        if action == 'delete':
+            lines = []
+            for line in section.lines:
+                m = FIELD.match(line)
+                key = re.fullmatch(r'Sub(\d+)(\D.+)', m.group(2).strip()) if m else None
+                if key and int(key[1]) == slot:
+                    continue
+                if key and int(key[1]) > slot:
+                    start, end = m.span(2)
+                    line = line[:start] + f'Sub{int(key[1])-1}{key[2]}' + line[end:]
+                lines.append(line)
+            section.lines = lines
+            section.set('SubCount', len(records)-1, doc.newline)
+        else:
+            section.set(f'Sub{slot}'+('Name' if action == 'rename' else 'Availability'),
+                        name if action == 'rename' else 135, doc.newline)
+        save.modified = True
+        save.audit.append(f'Submarine {action}: {record.fields.get("Name",slot)}')
+
+
+class SubmarineDraft:
+    """Isolated manager edits; Apply merges only this nation's roster/counter."""
+    def __init__(self, save, nation_index):
+        from copy import deepcopy
+        self.original = save
+        self.nation_index = nation_index
+        self.baseline = self.signature(save)
+        self.save = deepcopy(save)
+        self.audit_start = len(save.audit)
+
+    def signature(self, save):
+        sections = [s for s in save.documents[save.main_file].sections
+                    if s.name.casefold() == f'nation{self.nation_index}submarines']
+        return ([s.header + ''.join(s.lines) for s in sections],
+                save.nation(self.nation_index).section.fields().get('SubNumber'))
+
+    def apply(self):
+        from copy import deepcopy
+        if self.signature(self.original) != self.baseline:
+            raise ValueError('Submarines changed outside this window. Reopen the manager.')
+        if self.signature(self.save) == self.baseline:
+            return False
+        target = self.original
+        doc = target.documents[target.main_file]
+        source = next(s for s in self.save.documents[self.save.main_file].sections
+                      if s.name.casefold() == f'nation{self.nation_index}submarines')
+        with target.transaction():
+            existing = next((s for s in doc.sections if s.name.casefold() == source.name.casefold()), None)
+            if existing is None:
+                doc.add_section(deepcopy(source))
+            else:
+                existing.lines = deepcopy(source.lines)
+            counter = self.save.nation(self.nation_index).section.fields().get('SubNumber')
+            if counter is not None:
+                target.nation(self.nation_index).section.set('SubNumber',counter,doc.newline)
+            target.audit.extend(self.save.audit[self.audit_start:])
+            target.modified = True
+        return True

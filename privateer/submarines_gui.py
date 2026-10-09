@@ -1,14 +1,16 @@
 """Searchable submarine inventory with explicit raw-data boundaries."""
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 from tkinter.scrolledtext import ScrolledText
 
-from .submarines import submarine_roster, SUBMARINE_REFERENCES, create_submarine, spawn_locations, next_submarine_name
+from .submarines import submarine_roster, SUBMARINE_REFERENCES, create_submarine, spawn_locations, next_submarine_name, SubmarineDraft, edit_submarine
 from .table_sort import sorted_with_blanks, heading_text
 
 
 class SubmarineWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
+        self.draft = SubmarineDraft(save, nation_index)
+        save = self.draft.save
         records, warnings = submarine_roster(save, nation_index)
         super().__init__(parent)
         self.title(f'Submarine Manager — {save.nation(nation_index).name}')
@@ -31,7 +33,8 @@ class SubmarineWindow(tk.Toplevel):
         ttk.Entry(footer, textvariable=self.new_name).grid(row=1, column=1, sticky='ew', padx=6)
         self.create_button = ttk.Button(footer, text='Spawn', command=self.create)
         self.create_button.grid(row=0, column=2, padx=6)
-        ttk.Button(footer, text='Close', command=self.destroy).grid(row=1, column=2, padx=6)
+        ttk.Button(footer, text='Apply', command=self.apply).grid(row=1, column=2, padx=6)
+        ttk.Button(footer, text='Cancel', command=self.destroy).grid(row=2, column=2, padx=6)
         self.location = tk.StringVar()
         ttk.Label(footer, text='Spawn location').grid(row=2, column=0, sticky='w')
         self.location_box = ttk.Combobox(footer, textvariable=self.location, state='readonly',
@@ -45,7 +48,7 @@ class SubmarineWindow(tk.Toplevel):
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text='Submarine inventory and spawning', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-        ttk.Label(body, text='Spawn a completed boat using built-in Game6 references. Save or Save As writes your changes.').pack(anchor='w', pady=(2, 8))
+        ttk.Label(body, text='Spawn a completed boat using built-in Game6 references. Changes remain pending until Apply.').pack(anchor='w', pady=(2, 8))
         bar = ttk.Frame(body); bar.pack(fill='x')
         ttk.Label(bar, text='Search').pack(side='left')
         ttk.Entry(bar, textvariable=self.search, width=35).pack(side='left', padx=8)
@@ -76,6 +79,10 @@ class SubmarineWindow(tk.Toplevel):
         self.search.trace_add('write',lambda *_:self.render())
         self.filter.trace_add('write',lambda *_:self.render())
         self.table.bind('<<TreeviewSelect>>',self.show_details)
+        self.context_menu = tk.Menu(self, tearoff=False)
+        for label in ('Rename', 'Delete', 'Repair'):
+            self.context_menu.add_command(label=label, command=lambda a=label.lower():self.edit(a))
+        self.table.bind('<Button-3>', self.popup)
         self.bind('<Escape>',lambda _:self.destroy())
         self.render();self.grab_set()
 
@@ -141,8 +148,52 @@ class SubmarineWindow(tk.Toplevel):
         self.table.selection_set(str(created.slot))
         self.table.see(str(created.slot))
         self.show_details()
-        self.master.status.set(f'Unsaved changes — spawned submarine {created.fields["Name"]}')
+
         self.refresh_templates()
         self.creation_status.set(f'Created {created.fields["Name"]} in service. '
-                                 'Use Save or Save As in the main window to write changes.')
+                                 'Choose Apply to accept pending changes.')
         self.new_name.set(next_submarine_name(self.save, self.nation_index))
+
+
+    def popup(self, event):
+        row = self.table.identify_row(event.y)
+        if not row:
+            return
+        self.table.selection_set(row)
+        self.show_details()
+        try:
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.context_menu.grab_release()
+
+    def edit(self, action):
+        selected = self.table.selection()
+        if not selected:
+            return
+        slot = int(selected[0])
+        name = None
+        if action == 'rename':
+            name = simpledialog.askstring('Rename submarine', 'New name:',
+                initialvalue=self.by_slot[selected[0]].fields.get('Name',''), parent=self)
+            if name is None:
+                return
+        try:
+            edit_submarine(self.save, self.nation_index, slot, action, name)
+        except ValueError as error:
+            messagebox.showerror('Unable to edit submarine',str(error),parent=self)
+            return
+        self.records, _ = submarine_roster(self.save, self.nation_index)
+        self.by_slot = {str(r.slot):r for r in self.records}
+        self.render()
+        self.new_name.set(next_submarine_name(self.save,self.nation_index))
+        self.creation_status.set('Pending submarine changes. Choose Apply to accept or Cancel to discard.')
+
+    def apply(self):
+        try:
+            changed = self.draft.apply()
+        except ValueError as error:
+            messagebox.showerror('Unable to apply submarines',str(error),parent=self)
+            return
+        if changed:
+            self.master.status.set('Unsaved changes — submarines updated')
+        self.destroy()
