@@ -1,9 +1,9 @@
 """Searchable submarine inventory with explicit raw-data boundaries."""
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from tkinter.scrolledtext import ScrolledText
 
-from .submarines import submarine_roster
+from .submarines import submarine_roster, construction_templates, create_submarine
 from .table_sort import sorted_with_blanks, heading_text
 
 
@@ -14,14 +14,32 @@ class SubmarineWindow(tk.Toplevel):
         self.title(f'Submarine Manager — {save.nation(nation_index).name}')
         self.geometry('1100x620')
         self.transient(parent)
+        self.save, self.nation_index = save, nation_index
         self.records = records
         self.by_slot = {str(r.slot): r for r in records}
         self.sort_column, self.reverse = 'slot', False
         self.search, self.filter = tk.StringVar(), tk.StringVar(value='All')
+        footer = ttk.Frame(self, padding=12)
+        footer.pack(side='bottom', fill='x')
+        self.template_choice = tk.StringVar()
+        self.new_name = tk.StringVar()
+        ttk.Label(footer, text='Construction template').grid(row=0, column=0, sticky='w')
+        self.template_box = ttk.Combobox(footer, textvariable=self.template_choice,
+                                       state='readonly', width=48)
+        self.template_box.grid(row=0, column=1, sticky='ew', padx=6)
+        ttk.Label(footer, text='New name').grid(row=1, column=0, sticky='w')
+        ttk.Entry(footer, textvariable=self.new_name).grid(row=1, column=1, sticky='ew', padx=6)
+        self.create_button = ttk.Button(footer, text='Create', command=self.create)
+        self.create_button.grid(row=0, column=2, padx=6)
+        ttk.Button(footer, text='Close', command=self.destroy).grid(row=1, column=2, padx=6)
+        self.creation_status = tk.StringVar()
+        ttk.Label(footer, textvariable=self.creation_status, wraplength=850).grid(
+            row=2, column=0, columnspan=3, sticky='w', pady=(6,0))
+        footer.columnconfigure(1, weight=1)
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
-        ttk.Label(body, text='Submarine inventory — read-only', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-        ttk.Label(body, text='View saved records and history. Creation, transfer and editing need further validation.').pack(anchor='w', pady=(2, 8))
+        ttk.Label(body, text='Submarine inventory and construction', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
+        ttk.Label(body, text='Create a boat from a same-nation construction template. Save or Save As writes your changes.').pack(anchor='w', pady=(2, 8))
         bar = ttk.Frame(body); bar.pack(fill='x')
         ttk.Label(bar, text='Search').pack(side='left')
         ttk.Entry(bar, textvariable=self.search, width=35).pack(side='left', padx=8)
@@ -48,7 +66,7 @@ class SubmarineWindow(tk.Toplevel):
         self.details.configure(state='disabled')
         if warnings:
             ttk.Label(body,text='\n'.join(warnings),wraplength=1000).pack(anchor='w')
-        ttk.Button(body,text='Close',command=self.destroy).pack(anchor='e')
+        self.refresh_templates()
         self.search.trace_add('write',lambda *_:self.render())
         self.filter.trace_add('write',lambda *_:self.render())
         self.table.bind('<<TreeviewSelect>>',self.show_details)
@@ -86,3 +104,42 @@ class SubmarineWindow(tk.Toplevel):
             text='\n'.join(f'Sub{record.slot}{key}={value}' for key,value in record.fields.items())
         self.details.configure(state='normal');self.details.delete('1.0','end')
         self.details.insert('1.0',text);self.details.configure(state='disabled')
+
+
+    def refresh_templates(self):
+        templates = construction_templates(self.save, self.nation_index)
+        self.templates = {f'{r.fields.get("Name", "")} — {r.type_label} '
+                          f'({r.fields.get("RemainingBuildTime")} remaining)': r.slot
+                          for r in templates}
+        self.template_box.configure(values=tuple(self.templates))
+        if self.template_choice.get() not in self.templates:
+            self.template_choice.set(next(iter(self.templates), ''))
+        self.create_button.configure(state='normal' if self.templates else 'disabled')
+        if not self.templates:
+            self.creation_status.set('No suitable construction template in this nation. '
+                                     'Order the desired type in RTW3, save, and reload Privateer.')
+        else:
+            self.creation_status.set('Copies the template type, remaining build time and saved stats. '
+                                     'New construction needs in-game validation.')
+
+    def create(self):
+        try:
+            created = create_submarine(self.save, self.nation_index,
+                                       template_slot=self.templates.get(self.template_choice.get()),
+                                       name=self.new_name.get())
+        except (ValueError, KeyError) as error:
+            messagebox.showerror('Unable to create submarine', str(error), parent=self)
+            return
+        self.records, _ = submarine_roster(self.save, self.nation_index)
+        self.by_slot = {str(r.slot): r for r in self.records}
+        self.search.set('')
+        self.filter.set('All')
+        self.render()
+        self.table.selection_set(str(created.slot))
+        self.table.see(str(created.slot))
+        self.show_details()
+        self.master.status.set(f'Unsaved changes — created submarine {created.fields["Name"]}')
+        self.refresh_templates()
+        self.creation_status.set(f'Created {created.fields["Name"]} under construction. '
+                                 'Use Save or Save As in the main window to write changes.')
+        self.new_name.set('')

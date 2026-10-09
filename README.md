@@ -2,6 +2,10 @@
 
 **Latest published release: [Privateer 0.9.9.1](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.9.1)**
 
+**Development 0.9.9.2:** Submarine Manager can create construction orders from
+same-nation construction templates. In-game validation is pending; see
+[submarine guide](guides/SUBMARINES.md).
+
 The calculator shows numeric estimates in every budget field,
 including total expenses and monthly balance. Unresolved costs use built-in
 reference assumptions. The 0.9.9 interface has no bottom information panel

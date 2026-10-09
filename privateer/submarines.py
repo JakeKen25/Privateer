@@ -1,8 +1,17 @@
-"""Read-only campaign submarine inventory; local slots are not permanent IDs."""
+"""Campaign submarine inventory and construction from observed saved templates."""
 from dataclasses import dataclass
 import re
 
 from .document import FIELD
+
+
+SUBMARINE_TYPES = {
+    '0': 'SS — Submarine',
+    '1': 'SSM — Minelaying submarine',
+    '2': 'SSC — Coastal submarine',
+    '3': 'SSL — Long range submarine',
+    '4': 'SSG — Missile submarine',
+}
 
 
 @dataclass(frozen=True)
@@ -31,7 +40,7 @@ class Submarine:
     @property
     def type_label(self):
         value = self.fields.get('SubType', '')
-        return 'Long range (3)' if value == '3' else f'Unverified type ({value or "missing"})'
+        return SUBMARINE_TYPES.get(value, f'Unverified type ({value or "missing"})')
 
     def value(self, column):
         if column == 'slot':
@@ -74,3 +83,68 @@ def submarine_roster(save, nation_index):
     except (KeyError, ValueError):
         warnings.append('SubCount is missing or invalid; all parsed entries are retained.')
     return records, tuple(warnings)
+
+
+def construction_templates(save, nation_index):
+    records, warnings = submarine_roster(save, nation_index)
+    if warnings:
+        return ()
+    return tuple(r for r in records if r.status == 'Under construction'
+                 and r.fields.get('SubType') in SUBMARINE_TYPES)
+
+
+def create_submarine(save, nation_index, *, template_slot, name):
+    """Append one same-nation construction clone; never deploy or price it here."""
+    nation = save.nation(nation_index)
+    records, warnings = submarine_roster(save, nation.index)
+    if warnings:
+        raise ValueError('Cannot create submarines with an incomplete or inconsistent roster.')
+    name = name.strip()
+    if not name or any(ord(c) < 32 for c in name) or any(c in name for c in '=[]'):
+        raise ValueError('Enter a name without control characters, brackets or equals signs.')
+    if any(r.fields.get('Name', '').casefold() == name.casefold() for r in records):
+        raise ValueError('A submarine with this name already exists in this nation.')
+    template = next((r for r in construction_templates(save, nation.index)
+                     if r.slot == template_slot), None)
+    if template is None:
+        raise ValueError('Select a submarine currently under construction in this nation.')
+    fields = dict(template.fields)
+    required = ('Availability', 'Accuracy', 'RemainingBuildTime')
+    try:
+        values = {key: int(fields[key]) for key in required}
+    except (KeyError, ValueError) as error:
+        raise ValueError('Construction template has missing or invalid statistics.') from error
+    if values['RemainingBuildTime'] <= 0:
+        raise ValueError('Construction template must have positive remaining build time.')
+    document = save.documents[save.main_file]
+    nations = [s for s in document.sections if s.name.casefold() == f'nation{nation.index}']
+    if len(nations) != 1:
+        raise ValueError('Nation section is missing or ambiguous.')
+    counter_lines = [FIELD.match(line) for line in nations[0].lines]
+    counter_values = [m.group(4).strip() for m in counter_lines
+                      if m and m.group(2).strip().casefold() == 'subnumber']
+    try:
+        if len(counter_values) != 1:
+            raise ValueError()
+        counter = int(counter_values[0])
+        if not 0 <= counter < 2**31 - 1:
+            raise ValueError()
+    except ValueError as error:
+        raise ValueError('Nation SubNumber counter is missing or invalid.') from error
+    section = next(s for s in document.sections
+                   if s.name.casefold() == f'nation{nation.index}submarines')
+    fields.update(Name=name, Fate='', YearBuilt='0', Halted='0', Sunk='0',
+                  Active='0', InPlay='0', DestinationAreaName='XXX', OrderedAreaName='XXX')
+    fields.pop('LocationAreaName', None)
+    slot = len(records)
+    with save.transaction():
+        if section.lines and not section.lines[-1].endswith(('\n', '\r')):
+            section.lines[-1] += document.newline
+        for key, value in fields.items():
+            section.set(f'Sub{slot}{key}', value, document.newline)
+        section.set('SubCount', slot + 1, document.newline)
+        nations[0].set('SubNumber', counter + 1, document.newline)
+        save.modified = True
+        save.audit.append(f'Ordered {name} ({SUBMARINE_TYPES[fields["SubType"]]}) for '
+                          f'{nation.name} from construction template Sub{template.slot}')
+    return Submarine(slot, fields)

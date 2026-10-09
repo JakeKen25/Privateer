@@ -16,7 +16,7 @@ def test_history_wins_over_inplay_and_positive_build_time():
     assert not warnings
     assert [r.status for r in rows]==['Sunk','Under construction','In service']
     assert rows[0].slot!=rows[1].slot
-    assert rows[1].type_label=='Long range (3)'
+    assert rows[1].type_label=='SSL — Long range submarine'
     assert rows[1].value('LocationAreaName')==''
     assert rows[2].fields['Extra']=='keep'
     assert before==s.documents['test.bcs'].render() and not s.modified
@@ -40,5 +40,56 @@ def test_ambiguity_is_reported(body):
 def test_halted_and_unknown_type_and_fate():
     rows,_=submarine_roster(save('[Nation0Submarines]\nSubCount=2\nSub0Sunk=0\nSub0InPlay=0\nSub0Halted=1\nSub0SubType=4\nSub1Sunk=0\nSub1Fate=Scrapped\nSub1InPlay=1\n'),0)
     assert rows[0].status=='Construction halted'
-    assert rows[0].type_label=='Unverified type (4)'
+    assert rows[0].type_label=='SSG — Missile submarine'
     assert rows[1].status=='Historical'
+
+
+from privateer.submarines import create_submarine, SUBMARINE_TYPES
+
+
+def construction_save(kind='0'):
+    return save('SubNumber=126\n[Nation0Submarines]\nSubCount=1\n'
+                'Sub0Name=Template\nSub0Sunk=0\nSub0InPlay=0\nSub0Halted=0\n'
+                f'Sub0SubType={kind}\nSub0Availability=135\nSub0Accuracy=1\n'
+                'Sub0RemainingBuildTime=12\nSub0Fate=\nSub0YearBuilt=0\n'
+                'Sub0Active=0\nSub0DestinationAreaName=XXX\nSub0OrderedAreaName=XXX\n'
+                'Sub0UnknownField=preserve\n[Nation1]\nName=Other\nSubNumber=5\n')
+
+
+@pytest.mark.parametrize('kind', SUBMARINE_TYPES)
+def test_create_preserves_template_and_appends_valid_construction(kind):
+    s=construction_save(kind)
+    before=submarine_roster(s,0)[0][0].fields.copy()
+    a=create_submarine(s,0,template_slot=0,name='New boat')
+    b=create_submarine(s,0,template_slot=0,name='Second boat')
+    assert (a.slot,b.slot)==(1,2)
+    assert a.type_label==SUBMARINE_TYPES[kind] and a.status=='Under construction'
+    assert a.fields['UnknownField']=='preserve' and a.fields['Accuracy']=='1'
+    assert a.fields['YearBuilt']=='0' and a.fields['RemainingBuildTime']=='12'
+    doc=s.documents['test.bcs']
+    restored=RTW3Save(Path('.'),{'test.bcs':TextDocument.parse(doc.render())},'test.bcs')
+    rows,warnings=submarine_roster(restored,0)
+    assert not warnings and len(rows)==3 and rows[0].fields==before
+    assert restored.nation(0).section.fields()['SubNumber']=='128'
+    assert restored.nation(1).section.fields()['SubNumber']=='5'
+    assert s.modified and len(s.audit)==2
+
+
+@pytest.mark.parametrize('name',['','Template','template','bad\nname','bad=name'])
+def test_invalid_names_do_not_mutate(name):
+    s=construction_save(); before=s.documents['test.bcs'].render()
+    with pytest.raises(ValueError):
+        create_submarine(s,0,template_slot=0,name=name)
+    assert s.documents['test.bcs'].render()==before and not s.modified
+
+
+@pytest.mark.parametrize('old,new', [('SubCount=1','SubCount=2'),
+    ('Sub0InPlay=0','Sub0InPlay=1'),('Sub0Sunk=0','Sub0Sunk=1'),
+    ('Sub0Halted=0','Sub0Halted=1'),('SubNumber=126','SubNumber=bad'),
+    ('Sub0RemainingBuildTime=12','Sub0RemainingBuildTime=0')])
+def test_unsafe_templates_and_counts_rejected(old,new):
+    base=construction_save(); body=base.documents['test.bcs'].render().replace(old,new)
+    s=RTW3Save(Path('.'),{'test.bcs':TextDocument.parse(body)},'test.bcs')
+    with pytest.raises(ValueError):
+        create_submarine(s,0,template_slot=0,name='New')
+    assert s.documents['test.bcs'].render()==body and not s.modified
