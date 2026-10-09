@@ -90,8 +90,7 @@ def submarine_roster(save, nation_index):
 SUBMARINE_REFERENCES = {
     'SSC': ('2', '135', '0', 'SSC — Coastal submarine'),
     'SS': ('0', '135', '0', 'SS — Submarine'),
-    'SSM-122': ('1', '135', '1', 'SSM — Minelaying submarine (S-122 reference)'),
-    'SSM-123': ('1', '135', '0', 'SSM — Minelaying submarine (S-123 reference)'),
+    'SSM': ('1', '135', '0', 'SSM — Minelaying submarine'),
     'SSL': ('3', '135', '0', 'SSL — Long range submarine'),
     'SSG': ('4', '135', '1', 'SSG — Missile submarine'),
 }

@@ -1,6 +1,6 @@
 # Submarine Manager
 
-Published 0.9.9.1 remains read-only. Development 0.9.9.5 spawns completed
+Published 0.9.9.1 remains read-only. Development 0.9.9.6 spawns completed
 submarines using built-in references from the completed Game6 boats below.
 It supersedes the destination-template restriction in 0.9.9.4.
 
@@ -30,8 +30,9 @@ Completed Game6/RTWGame6.bcs Nation0Submarines, inspected October 8, 2026:
 | S-124 / Sub96 | SSL Long range | 3 | 135 | 0 |
 | S-125 / Sub97 | SSG Missile | 4 | 135 | 1 |
 
-Both minelayer variants appear separately in Submarine Type, labeled by their
-source boat. Accuracy semantics remain unresolved; no capability is inferred.
+Only the S-123 minelayer reference (Accuracy=0) is offered, by user choice.
+S-122 remains in the evidence table above but is not a selectable type.
+Accuracy semantics remain unresolved.
 The reference type, Availability and Accuracy values are bundled in source code.
 Privateer does not read Game6 at runtime or copy US ownership/location/name.
 
@@ -43,7 +44,7 @@ Stats are fixed Game6 values, not adapted to destination technology or year.
 
 ## Validation and remaining work
 
-28 targeted tests cover all six references in empty and absent rosters,
+26 targeted tests cover all five selectable references in empty and absent rosters,
 round-trip parsing, naming and rejected inputs without mutation. Validate game
 loading, readiness/deployment, maintenance, turn progression and naming continuity
 with an ordinary in-game submarine order. In-game behavior across eras remains
