@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter.scrolledtext import ScrolledText
 
-from .submarines import submarine_roster, spawn_templates, create_submarine, spawn_locations
+from .submarines import submarine_roster, spawn_templates, create_submarine, spawn_locations, next_submarine_name
 from .table_sort import sorted_with_blanks, heading_text
 
 
@@ -22,7 +22,7 @@ class SubmarineWindow(tk.Toplevel):
         footer = ttk.Frame(self, padding=12)
         footer.pack(side='bottom', fill='x')
         self.template_choice = tk.StringVar()
-        self.new_name = tk.StringVar()
+        self.new_name = tk.StringVar(value=next_submarine_name(save, nation_index))
         ttk.Label(footer, text='Submarine template').grid(row=0, column=0, sticky='w')
         self.template_box = ttk.Combobox(footer, textvariable=self.template_choice,
                                        state='readonly', width=48)
@@ -148,4 +148,4 @@ class SubmarineWindow(tk.Toplevel):
         self.refresh_templates()
         self.creation_status.set(f'Created {created.fields["Name"]} in service. '
                                  'Use Save or Save As in the main window to write changes.')
-        self.new_name.set('')
+        self.new_name.set(next_submarine_name(self.save, self.nation_index))

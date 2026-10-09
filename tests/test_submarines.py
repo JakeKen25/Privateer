@@ -116,3 +116,14 @@ def test_in_service_template_can_spawn():
     s=construction_save()
     r=create_submarine(s,0,template_slot=1,name='New',location='Home')
     assert r.status=='In service' and r.fields['RemainingBuildTime']=='0'
+
+
+def test_default_names_skip_used_and_historical_names():
+    from privateer.submarines import next_submarine_name
+    s=construction_save()
+    assert next_submarine_name(s,0)=='Privateer 1'
+    create_submarine(s,0,template_slot=0,name='Privateer 1',location='Home')
+    create_submarine(s,0,template_slot=0,name='PRIVATEER 3',location='Home')
+    assert next_submarine_name(s,0)=='Privateer 2'
+    create_submarine(s,0,template_slot=0,name=next_submarine_name(s,0),location='Home')
+    assert next_submarine_name(s,0)=='Privateer 4'

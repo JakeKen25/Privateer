@@ -1,10 +1,10 @@
 # Submarine Manager
 
-Published 0.9.9.1 provides a read-only inventory. Development 0.9.9.3 adds
+Published 0.9.9.1 provides a read-only inventory. Development 0.9.9.4 adds
 **Spawn** for completed submarines, superseding the construction-only 0.9.9.2
 implementation. The menu retains **(WIP)** pending in-game validation.
 
-## Spawn a submarine (development 0.9.9.3)
+## Spawn a submarine (development 0.9.9.4)
 
 Select a same-nation in-service template, enter a unique name,
 choose a spawn location, and select **Spawn**. The boat appears in service and
@@ -55,3 +55,15 @@ SubNumber once per boat. Game6 has SubNumber=126 after S-125; its precise naming
 behavior remains an inference. No global ID was observed in submarine records.
 Existing boats, other nations, funds and technology remain unchanged. Unknown
 fields are preserved from the template. Missing/ambiguous layouts are rejected.
+
+## Default names and completed Game6 references
+
+The name field starts at the first unused positive Privateer number in the
+selected nation's roster (Privateer 1, Privateer 2, etc.). Historical names
+also reserve numbers, matching duplicate-name checks. After each successful
+spawn the field advances to the next available name; users can still edit it.
+
+Game6 S-120 through S-125 were rechecked after completion: all six now have
+InPlay=1, YearBuilt=1971, RemainingBuildTime=0 and LocationAreaName=North American
+East Coast. They are eligible in-service templates, covering all five types
+and both observed minelayer Accuracy variants. No live save was edited.

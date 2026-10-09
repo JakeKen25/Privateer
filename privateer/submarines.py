@@ -164,3 +164,13 @@ def spawn_locations(save, nation_index):
     return tuple(sorted({r.fields['LocationAreaName'] for r in records
                          if r.status == 'In service' and
                          r.fields.get('LocationAreaName', '').strip() not in ('', 'XXX')}))
+
+
+def next_submarine_name(save, nation_index):
+    """First unused positive Privateer number, including historical names."""
+    records, _ = submarine_roster(save, nation_index)
+    used = {r.fields.get('Name', '').strip().casefold() for r in records}
+    number = 1
+    while f'privateer {number}' in used:
+        number += 1
+    return f'Privateer {number}'
