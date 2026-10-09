@@ -27,6 +27,12 @@ welcome for future updates. I still have a lot to learn about the game's file
 formats, and independent review and new discoveries will make the editor safer
 and more capable.
 
+## Development build 0.9.10.1
+
+Ship Spawner now offers **Copy from another save**. Copies are staged until Apply,
+then written with Save or Save As. Built-in designs are listed but not implemented.
+See [ship spawning](guides/SHIP_SPAWNER.md). This is not included in the published 0.9.10 package.
+
 ## Major features
 
 - **Transfer Ships** moves complete ships between nations. The transfer keeps

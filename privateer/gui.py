@@ -12,6 +12,7 @@ from .guns_gui import GunCalibersWindow
 from .diplomacy_gui import TensionWindow
 from .colonies_gui import ColoniesWindow
 from .ships_gui import ShipTransfersWindow
+from .ship_spawner_gui import ShipSpawnerWindow
 from .economy_gui import EconomyWindow
 from .infrastructure_gui import InfrastructureWindow
 from .admiral_gui import AdmiralWindow
@@ -95,8 +96,7 @@ class MainWindow(tk.Tk):
         self.nation_menu.add_command(label="Aircraft Manager", command=self._manage_aircraft)
         self.nation_menu.add_command(label="Submarine Manager", command=self._manage_submarines)
         self.nation_menu.add_separator()
-        self.nation_menu.add_command(label="Ship Spawner (WIP)",
-                                     command=lambda: self._show_coming_soon("Ship Spawner (WIP)"))
+        self.nation_menu.add_command(label="Ship Spawner (WIP)", command=self._spawn_ships)
 
     def _manage_economy(self):
         self._open_manager(EconomyWindow, "Preparing economy and unrest data…")
@@ -121,6 +121,9 @@ class MainWindow(tk.Tk):
 
     def _manage_ships(self):
         self._open_manager(ShipTransfersWindow, "Preparing ship data…")
+
+    def _spawn_ships(self):
+        self._open_manager(ShipSpawnerWindow, "Opening ship spawner…")
 
     def _manage_aircraft(self):
         self._open_manager(AircraftWindow, "Loading aircraft models…")

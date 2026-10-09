@@ -92,5 +92,5 @@ class ThemeManager:
                 widget.configure(**colors)
         if isinstance(widget, ttk.Treeview):
             for tag in ('home', 'blocked'):
-                if tag in widget.tag_names():
+                if tag in widget.tk.splitlist(widget.tk.call(widget._w, 'tag', 'names')):
                     widget.tag_configure(tag, foreground='#aab3bf' if self.dark else '#777777')
