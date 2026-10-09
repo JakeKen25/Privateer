@@ -1,6 +1,6 @@
 """Privateer's single source of release-version metadata."""
 
-__version__ = "0.9.10.1"
+__version__ = "0.9.10.2"
 __channel__ = ""
 
 

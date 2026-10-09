@@ -1,6 +1,6 @@
 # Ship Spawner: cross-save copy
 
-Development build 0.9.10.1 implements the first of two entry choices:
+Development build 0.9.10.2 implements the first of two entry choices:
 Copy from another save and Use built-in designs (disabled until implemented).
 The currently loaded save and right-clicked nation are the destination.
 
@@ -23,9 +23,9 @@ Main-window Save/Save As remains necessary to write the destination.
 - One opaque design copy per source nation/design pair per batch is appended to
   the receiving DesignFilesN.des. Its ordinal and internal ID are remapped;
   DesignIDCount and each hull's DesignRefId are updated. Existing designs remain.
-- BuildingNationIdx is mapped by a unique case-insensitive nation name so the
-  original builder survives different campaign nation ordering. Missing or
-  ambiguous matches block the batch, rather than inventing a builder.
+- BuildingNationIdx is set to the receiving nation. The source builder does not
+  need to exist in the destination campaign. Existing log text remains unchanged.
+  This copy rule does not change ordinary transfers, which preserve the builder.
 - CommanderId becomes -1. No source officers or division assignments are copied.
   Fresh hull IDs are not added to destination divisions; existing divisions remain.
 - LocationAreaName becomes the destination BuildAreaName; DestinationAreaName and

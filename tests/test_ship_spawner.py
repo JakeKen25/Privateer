@@ -28,7 +28,7 @@ def test_copy_preserves_source_and_existing_hulls_roundtrip(campaigns, tmp_path)
     ship = source.nation(0).ships[0]
     old_source, old_target = payloads(source), payloads(target)
     existing = {s.record_index: dict(s.section.fields()) for n in target.nations for s in n.ships}
-    # Builder identity must survive different nation-slot arrangements.
+    # Copies use the receiver even when nation slots differ.
     target.nation(0).section.set('Name', source.nation(1).name)
     target.nation(1).section.set('Name', source.nation(0).name)
     target.nations = []
@@ -37,7 +37,7 @@ def test_copy_preserves_source_and_existing_hulls_roundtrip(campaigns, tmp_path)
     result = copy_ships(target, source, [ship.record_index], 0)
     added = next(s for s in target.nation(0).ships if s.record_index == result[0]['id'])
     fields = added.section.fields()
-    assert fields['BuildingNationIdx'] == '1'
+    assert fields['BuildingNationIdx'] == '0'
     assert fields['CommanderId'] == '-1'
     assert fields['LocationAreaName'] == target.nation(0).section.fields()['BuildAreaName']
     assert fields['DestinationAreaName'] == fields['OrderedAreaName'] == 'XXX'
@@ -90,15 +90,13 @@ def test_construction_state_and_assigned_commander(campaigns):
         assert copied.section.fields()[key] == fields[key]
 
 
-@pytest.mark.parametrize('problem', ['carrier', 'builder', 'overflow', 'duplicate', 'missing', 'source_changed'])
+@pytest.mark.parametrize('problem', ['carrier', 'overflow', 'duplicate', 'missing', 'source_changed'])
 def test_rejected_batch_leaves_target_unchanged(campaigns, problem):
     source, target = campaigns
     ships = source.nation(1).ships[:2]
     ids = [s.record_index for s in ships]
     if problem == 'carrier':
         ships[1].section.set('AircraftCapacity', 20)
-    elif problem == 'builder':
-        source.nation(1).name = 'Absent builder nation'
     elif problem == 'overflow':
         unique_section(target, 'General').set('IDNo', 2147483647)
     elif problem == 'duplicate':
@@ -118,3 +116,14 @@ def test_same_folder_refused(campaigns):
     source, _ = campaigns
     with pytest.raises(ValueError, match='different source'):
         copy_ships(source, deepcopy(source), [source.nation(0).ships[0].record_index], 0)
+
+
+def test_copy_uses_receiver_when_source_builder_is_absent(campaigns):
+    source, target = campaigns
+    ship = source.nation(1).ships[0]
+    source.nation(1).name = 'Nation absent from destination'
+    original_builder = ship.section.fields()['BuildingNationIdx']
+    result = copy_ships(target, source, [ship.record_index], 2)
+    copied = next(s for s in target.nation(2).ships if s.record_index == result[0]['id'])
+    assert copied.section.fields()['BuildingNationIdx'] == '2'
+    assert ship.section.fields()['BuildingNationIdx'] == original_builder

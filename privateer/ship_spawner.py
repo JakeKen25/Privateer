@@ -14,14 +14,6 @@ def copy_block_reason(ship):
     return reason.replace('transferred', 'copied').replace('transfers', 'copies') if reason else None
 
 
-def _builder_index(source, target, index):
-    name = source.nation(index).name.strip().casefold()
-    matches = [n.index for n in target.nations if n.name.strip().casefold() == name]
-    if len(matches) != 1:
-        raise ValueError(f'Original builder {source.nation(index).name} has no unique match in the destination')
-    return matches[0]
-
-
 def _next_hull_id(save):
     counter = unique_integer(unique_section(save, 'General'), 'IDNo')
     if counter < 0:
@@ -86,7 +78,7 @@ def copy_ships(target, source, hull_ids, nation_index):
         if owner.index not in source_rosters:
             source_rosters[owner.index] = roster(source, owner)
             source_libraries[owner.index] = library(source, owner)
-        builder = _builder_index(source, working, ship.building_nation_index)
+        builder = nation.index
         key = (owner.index, ship.design_ref_id)
         if key not in design_map:
             matches = [d for d in source_libraries[owner.index][3]

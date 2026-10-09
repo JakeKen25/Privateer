@@ -27,7 +27,7 @@ welcome for future updates. I still have a lot to learn about the game's file
 formats, and independent review and new discoveries will make the editor safer
 and more capable.
 
-## Development build 0.9.10.1
+## Development build 0.9.10.2
 
 Ship Spawner now offers **Copy from another save**. Copies are staged until Apply,
 then written with Save or Save As. Built-in designs are listed but not implemented.
