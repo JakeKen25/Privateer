@@ -1,6 +1,6 @@
 # Ship Spawner: cross-save copy
 
-Development build 0.9.10.2 implements the first of two entry choices:
+Development build 1.0 implements the first of two entry choices:
 Copy from another save and Use built-in designs (disabled until implemented).
 The currently loaded save and right-clicked nation are the destination.
 

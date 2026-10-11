@@ -27,11 +27,11 @@ welcome for future updates. I still have a lot to learn about the game's file
 formats, and independent review and new discoveries will make the editor safer
 and more capable.
 
-## Beta 0.9.10.2
+## Beta 1.0
 
 Ship Spawner now offers **Copy from another save**. Copies are staged until Apply,
 then written with Save or Save As. Built-in designs are listed but not implemented.
-See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.10.2-beta). The stable 0.9.10 package does not include ship copying.
+See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.com/JakeKen25/Privateer/releases/tag/v1.0-beta). The stable 0.9.10 package does not include ship copying.
 
 ## Major features
 

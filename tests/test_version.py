@@ -9,7 +9,7 @@ import privateer
 def test_package_and_project_versions_match():
     project = Path(__file__).parents[1]
     metadata = tomllib.loads((project / "pyproject.toml").read_text(encoding="utf-8"))
-    assert privateer.__version__ == "0.9.10.2"
+    assert privateer.__version__ == "1.0"
     assert metadata["project"]["version"] == privateer.__version__
 
 
@@ -20,4 +20,4 @@ def test_cli_reports_version():
         capture_output=True,
         text=True,
     )
-    assert result.stdout.strip() == "Privateer 0.9.10.2 Beta"
+    assert result.stdout.strip() == "Privateer 1.0 Beta"

@@ -1,4 +1,4 @@
-# Privateer 0.9.10.2 Beta
+# Privateer 1.0 Beta
 
 This beta adds cross-save ship copying to Privateer 0.9.10.
 
@@ -14,4 +14,4 @@ The budget calculator remains an estimate with a ±10% monthly-balance planning 
 
 The ship-copy workflow has passed targeted automated checks and user testing. This is a prerelease for broader testing; Privateer 0.9.10 remains the latest stable release.
 
-Download **Privateer-0.9.10.2-Windows-x64.zip**, extract the complete folder, and run **Privateer.exe**. Python is not required. See the [Ship Spawner guide](https://github.com/JakeKen25/Privateer/wiki/Ship-Spawner).
+Download **Privateer-1.0-Windows-x64.zip**, extract the complete folder, and run **Privateer.exe**. Python is not required. See the [Ship Spawner guide](https://github.com/JakeKen25/Privateer/wiki/Ship-Spawner).
