@@ -1,7 +1,7 @@
 """Privateer's single source of release-version metadata."""
 
 __version__ = "0.9.10.2"
-__channel__ = ""
+__channel__ = "Beta"
 
 
 def display_version() -> str:

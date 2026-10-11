@@ -20,4 +20,4 @@ def test_cli_reports_version():
         capture_output=True,
         text=True,
     )
-    assert result.stdout.strip() == "Privateer 0.9.10.2"
+    assert result.stdout.strip() == "Privateer 0.9.10.2 Beta"

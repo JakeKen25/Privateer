@@ -1,25 +1,17 @@
-# Privateer 0.9.10
+# Privateer 0.9.10.2 Beta
 
-This release adds submarine spawning and management to the features in 0.9.9.1.
+This beta adds cross-save ship copying to Privateer 0.9.10.
 
-## Submarine Manager
+- Ship Spawner offers **Copy from another save** and **Use built-in designs**. Built-in designs are not available yet.
+- Browse another campaign, select ships from its nations, and stage copies. Apply accepts the batch; Cancel discards it. Save or Save As writes the destination campaign.
+- Source saves remain unchanged. Copies receive new hull/design identities and use the receiving nation as their builder, including when the source nation does not exist in the destination.
+- Copies retain equipment, crew, history, build year, damage, fleet status and construction progress. They arrive in the receiving nation's home area without commanders or movement orders. Duplicate names get a copy suffix.
+- Fixed a table theme callback error.
 
-- Spawn completed coastal, standard, minelaying, long-range and missile submarines using built-in reference data. No existing submarine or Game6 save is required.
-- Choose Submarine Type and a destination home/service location. Editable names default to the next available Privateer number.
-- Right-click to Rename, Delete or Repair. Repair sets Availability to 135 without changing other state.
-- Spawn and right-click actions remain pending until Apply. Cancel discards the pending changes; Save or Save As writes accepted changes to disk.
-- Removed the Submarine Manager (WIP) label. One minelayer choice uses Accuracy=0.
+Carriers and aircraft-capable ships remain unsupported, as do historical losses, scrapped and museum ships. Copied equipment is not scaled to campaign technology or date. Built-in designs are disabled. Back up your campaign before testing.
 
-## User guide
+The budget calculator remains an estimate with a ±10% monthly-balance planning range; underlying calculations are still under review. Aircraft creation still needs further in-game validation.
 
-The wiki is the primary end-user manual. Manager pages now describe the current released controls and workflows, without development logs or superseded instructions. Existing screenshots are retained.
+The ship-copy workflow has passed targeted automated checks and user testing. This is a prerelease for broader testing; Privateer 0.9.10 remains the latest stable release.
 
-## Notes
-
-Submarine reference stats are fixed rather than scaled to campaign technology or year. Submarine transfers are unavailable. Aircraft creation still needs further in-game validation. The budget calculator remains an estimate with a +/-10% monthly-balance planning range; its underlying calculations remain under review.
-
-30 targeted submarine/version tests and GUI Apply/Cancel checks passed during preparation of the submarine features.
-
-## Installation
-
-Download Privateer-0.9.10-Windows-x64.zip, extract the complete folder, and run Privateer.exe. Keep the runtime folder beside it. Python is not required. Close RTW3 before saving campaign edits and keep a known-good backup.
+Download **Privateer-0.9.10.2-Windows-x64.zip**, extract the complete folder, and run **Privateer.exe**. Python is not required. See the [Ship Spawner guide](https://github.com/JakeKen25/Privateer/wiki/Ship-Spawner).
