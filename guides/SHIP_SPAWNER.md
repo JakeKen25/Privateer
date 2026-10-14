@@ -1,7 +1,7 @@
 # Ship Spawner: cross-save copy
 
-Development build 1.0 implements the first of two entry choices:
-Copy from another save and Use built-in designs (disabled until implemented).
+Development build 1.0.1 Beta adds Import from SDF file alongside
+Copy from another save and Use built-in designs (still disabled).
 The currently loaded save and right-clicked nation are the destination.
 
 Browse selects a separate campaign folder, loads it read-only, and lists current
@@ -51,3 +51,48 @@ reuse, repeated copies, name/ID collisions, and atomic rejection of invalid batc
 The prior HDP-64 Game6-to-Game7 experiment passed user-reported combat and turn
 advancement. The generalized manager still needs user testing across more classes
 and campaigns. Built-in designs are not implemented in this build.
+
+
+## Standalone SDF import (1.0.1 Beta development build)
+
+The importer reads a current-format SDF independently of all source campaigns.
+No Game6, template hull, or installed design is needed at runtime. The schema
+module contains field names only, not bundled game designs. Older SDF layouts
+are rejected explicitly; exporting from the current game may provide the needed
+layout. Schema detection, not the filename extension alone, decides support.
+
+Choose Import from SDF file, Browse SDF, and a count from 1 to 100. Preview shows
+the ship names and shared class. Apply accepts the whole batch in memory; Cancel,
+Escape and window-close leave the campaign unchanged. Save/Save As is separate.
+
+Names use Privateer TYPE N, continuing above the highest existing number in the
+receiving nation's roster, including historical hulls. Each import batch creates
+one new TYPE NAME N class shared by its copies, e.g. Destroyer 2 or Battleship 7.
+Class numbering considers both roster class names and destination design names.
+A subsequent import creates another class. The original SDF name is not used.
+
+Serialization follows the v10139 structure observed in the Vicksburg experiment:
+explicit named-field order, duplicate exported Helipad collapsed, mount/equipment
+counts inserted, and deck color moved to the tail. Campaign-only metadata uses
+neutral defaults except the observed fixed value 8. These metadata meanings are
+not fully verified. Full field sets and contiguous component numbering are
+required so unrecognized schemas cannot silently shift the positional record.
+
+Completed hulls receive new IDs, the destination nation as builder, the current
+campaign year, full cost as build progress, zero monthly construction cost, AF
+status, default crew, no commander, and no service history. SDF specifications,
+cost, maintenance and capacity are preserved; technology is not scaled to the
+receiving campaign. No aviation record or aircraft assignment is created, as
+explicitly requested for this experiment. No radar fit is inferred from the SDF
+RadarLimit field; fresh hull radar classes start at zero. HSSM is derived from
+MT=4 launchers; other missile-fit defaults need broader in-game verification.
+Funds are not charged. No source design file is modified.
+
+The user verified the one-off Vicksburg import in Game7. That experiment reused
+some Game6 campaign metadata and hull defaults. The generalized converter uses
+fresh defaults instead and still needs in-game acceptance/turn/combat testing;
+passing Privateer's structural validation does not prove RTW3 acceptance for
+all ship types, carrier behavior, or the meaning of every positional field.
+Automated coverage includes batch naming/class numbering, shared design IDs,
+round-trip persistence, existing-hull preservation, source changes, invalid
+counts, malformed components, encoding failures, and duplicate field handling.

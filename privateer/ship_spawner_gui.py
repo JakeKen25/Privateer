@@ -21,6 +21,7 @@ class ShipSpawnerWindow(tk.Toplevel):
         ttk.Label(body, text=f'Spawn ships for {save.nation(nation_index).name}',
                   font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=(0, 12))
         ttk.Button(body, text='Copy from another save', command=self.open_copy).pack(fill='x', pady=5)
+        ttk.Button(body, text='Import from SDF file', command=self.open_sdf).pack(fill='x', pady=5)
         ttk.Button(body, text='Use built-in designs', state='disabled').pack(fill='x', pady=5)
         ttk.Label(body, text='Built-in designs are not available yet.').pack(anchor='w', pady=5)
         ttk.Button(body, text='Close', command=self.destroy).pack(anchor='e', pady=(12, 0))
@@ -31,6 +32,89 @@ class ShipSpawnerWindow(tk.Toplevel):
         parent, save, index = self.master, self.save, self.nation_index
         self.destroy()
         ShipCopyWindow(parent, save, index)
+
+    def open_sdf(self):
+        parent, save, index = self.master, self.save, self.nation_index
+        self.destroy()
+        SDFImportWindow(parent, save, index)
+
+
+class SDFImportWindow(tk.Toplevel):
+    def __init__(self, parent, save, nation_index):
+        super().__init__(parent)
+        self.save, self.nation_index, self.design = save, nation_index, None
+        self.title(f'Import SDF — {save.nation(nation_index).name}')
+        self.geometry('680x370')
+        self.minsize(560, 330)
+        self.transient(parent)
+        footer = ttk.Frame(self, padding=12)
+        footer.pack(side='bottom', fill='x')
+        ttk.Label(footer, text='Apply adds ships in Privateer. Save or Save As writes the campaign.').pack(anchor='w')
+        buttons = ttk.Frame(footer)
+        buttons.pack(fill='x', pady=(10, 0))
+        ttk.Button(buttons, text='Cancel', command=self.destroy).pack(side='right')
+        self.apply_button = ttk.Button(buttons, text='Apply', command=self.apply, state='disabled')
+        self.apply_button.pack(side='right', padx=8)
+        body = ttk.Frame(self, padding=12)
+        body.pack(fill='both', expand=True)
+        ttk.Label(body, text='Import completed ships from an SDF design', font=('Segoe UI', 12, 'bold')).pack(anchor='w')
+        ttk.Button(body, text='Browse SDF…', command=self.browse).pack(anchor='w', pady=10)
+        self.path = tk.StringVar(value='No design selected')
+        ttk.Label(body, textvariable=self.path, wraplength=530).pack(anchor='w')
+        row = ttk.Frame(body)
+        row.pack(fill='x', pady=10)
+        ttk.Label(row, text='Number of copies').pack(side='left')
+        self.count = tk.StringVar(value='1')
+        ttk.Spinbox(row, from_=1, to=100, textvariable=self.count, width=6).pack(side='left', padx=8)
+        self.preview = tk.StringVar(value='Select an SDF to preview the names and class.')
+        ttk.Label(body, textvariable=self.preview, wraplength=530).pack(anchor='w')
+        ttk.Label(body, text='Ships arrive in the home area, with no commander or assigned aircraft.', wraplength=530).pack(anchor='w', pady=10)
+        self.count.trace_add('write', lambda *_: self.refresh())
+        self.bind('<Escape>', lambda _: self.destroy())
+        self.grab_set()
+
+    def browse(self):
+        from .sdf_import import read_sdf
+        folder = self.save.folder.parent.parent / 'Custom Files'
+        path = filedialog.askopenfilename(parent=self, title='Choose a ship design', initialdir=str(folder),
+                                         filetypes=[('Ship design files', '*.sdf')])
+        if not path:
+            return
+        try:
+            design = read_sdf(path)
+        except (ValueError, OSError, UnicodeError) as exc:
+            messagebox.showerror('Unable to read design', str(exc), parent=self)
+            return
+        self.design = design
+        self.path.set(str(design.path))
+        self.refresh()
+
+    def refresh(self):
+        from .sdf_import import import_names
+        self.apply_button.configure(state='disabled')
+        if not self.design:
+            return
+        try:
+            names, class_name = import_names(self.save, self.nation_index, self.design, int(self.count.get()))
+        except ValueError:
+            self.preview.set('Enter a whole number from 1 to 100.')
+            return
+        label = names[0] if len(names) == 1 else f'{names[0]} through {names[-1]}'
+        self.preview.set(f'{self.design.data["Displacement"]} tons • {self.design.ship_type}\nNames: {label}\nClass: {class_name} (shared by this batch)')
+        self.apply_button.configure(state='normal')
+
+    def apply(self):
+        from .sdf_import import import_sdf
+        if not self.design:
+            return
+        try:
+            names, class_name = import_sdf(self.save, self.design, self.nation_index, int(self.count.get()))
+        except (ValueError, KeyError, OSError, UnicodeError) as exc:
+            messagebox.showerror('Unable to import ships', str(exc), parent=self)
+            return
+        self.master.render_main_table()
+        self.master.status.set(f'Unsaved changes — {len(names)} ships added as {class_name}')
+        self.destroy()
 
 
 class ShipCopyWindow(tk.Toplevel):
