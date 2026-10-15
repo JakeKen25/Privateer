@@ -57,9 +57,10 @@ class SDFImportWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
         super().__init__(parent)
         self.save, self.nation_index, self.design = save, nation_index, None
+        self.name_fields = []
         self.title(f'Import SDF — {save.nation(nation_index).name}')
-        self.geometry('680x370')
-        self.minsize(560, 330)
+        self.geometry('760x590')
+        self.minsize(620, 430)
         self.transient(parent)
         footer = ttk.Frame(self, padding=12)
         footer.pack(side='bottom', fill='x')
@@ -83,10 +84,34 @@ class SDFImportWindow(tk.Toplevel):
         ttk.Label(row, text='Number of copies').pack(side='left')
         self.count = tk.StringVar(value='1')
         ttk.Spinbox(row, from_=1, to=100, textvariable=self.count, width=6).pack(side='left', padx=8)
-        self.preview = tk.StringVar(value='Select an SDF to preview the names and class.')
-        ttk.Label(body, textvariable=self.preview, wraplength=530).pack(anchor='w')
-        ttk.Label(body, text='Ships arrive in the home area, with no commander or assigned aircraft.', wraplength=530).pack(anchor='w', pady=10)
+        class_row = ttk.Frame(body)
+        class_row.pack(fill='x', pady=(0, 8))
+        ttk.Label(class_row, text='Class name').pack(side='left')
+        self.class_name = tk.StringVar()
+        self.class_entry = ttk.Entry(class_row, textvariable=self.class_name)
+        self.class_entry.pack(side='left', fill='x', expand=True, padx=(8, 0))
+        self.class_entry.configure(state='disabled')
+
+        self.names_group = ttk.LabelFrame(body, text='Individual ship names', padding=6)
+        self.names_group.pack(fill='both', expand=True)
+        self.names_canvas = tk.Canvas(self.names_group, highlightthickness=0, borderwidth=0)
+        self.names_scroll = ttk.Scrollbar(self.names_group, orient='vertical', command=self.names_canvas.yview)
+        self.names_canvas.configure(yscrollcommand=self.names_scroll.set)
+        self.names_scroll.pack(side='right', fill='y')
+        self.names_canvas.pack(side='left', fill='both', expand=True)
+        self.names_list = ttk.Frame(self.names_canvas)
+        self.names_window = self.names_canvas.create_window((0, 0), window=self.names_list, anchor='nw')
+        self.names_list.bind('<Configure>', lambda _: self.names_canvas.configure(
+            scrollregion=self.names_canvas.bbox('all')))
+        self.names_canvas.bind('<Configure>', lambda event: self.names_canvas.itemconfigure(
+            self.names_window, width=event.width))
+
+        self.preview = tk.StringVar(value='Select an SDF to show default ship and class names.')
+        ttk.Label(body, textvariable=self.preview, wraplength=680).pack(anchor='w', pady=(8, 0))
+        ttk.Label(body, text='Ships arrive in the home area, with no commander or assigned aircraft.',
+                  wraplength=680).pack(anchor='w', pady=(4, 0))
         self.count.trace_add('write', lambda *_: self.refresh())
+        self.class_name.trace_add('write', lambda *_: self.update_preview())
         self.bind('<Escape>', lambda _: self.destroy())
         self.grab_set()
 
@@ -112,20 +137,60 @@ class SDFImportWindow(tk.Toplevel):
             return
         self.design = design
         self.path.set(str(design.path))
-        self.refresh()
+        self.refresh(reset=True)
 
-    def refresh(self):
+    def refresh(self, reset=False):
         from .sdf_import import import_names
         self.apply_button.configure(state='disabled')
         if not self.design:
             return
         try:
-            names, class_name = import_names(self.save, self.nation_index, self.design, int(self.count.get()))
+            count = int(self.count.get())
+            defaults, default_class = import_names(self.save, self.nation_index, self.design, count)
         except ValueError:
-            self.preview.set('Enter a whole number from 1 to 100.')
+            self.preview.set('Enter a whole number from 1 to 100 copies.')
             return
-        label = names[0] if len(names) == 1 else f'{names[0]} through {names[-1]}'
-        self.preview.set(f'{self.design.data["Displacement"]} tons • {self.design.ship_type}\nNames: {label}\nClass: {class_name} (shared by this batch)')
+        self.class_entry.configure(state='normal')
+        if reset:
+            self.class_name.set(default_class)
+        self._resize_name_fields(defaults, reset)
+        self.update_preview()
+
+    def _resize_name_fields(self, defaults, reset=False):
+        if reset:
+            for _, row in self.name_fields:
+                row.destroy()
+            self.name_fields.clear()
+        while len(self.name_fields) > len(defaults):
+            _, row = self.name_fields.pop()
+            row.destroy()
+        while len(self.name_fields) < len(defaults):
+            index = len(self.name_fields)
+            row = ttk.Frame(self.names_list)
+            row.pack(fill='x', pady=2)
+            ttk.Label(row, text=f'Ship {index + 1}', width=12).pack(side='left')
+            name = tk.StringVar(value=defaults[index])
+            entry = ttk.Entry(row, textvariable=name)
+            entry.pack(side='left', fill='x', expand=True)
+            name.trace_add('write', lambda *_: self.update_preview())
+            self.name_fields.append((name, row))
+        self.names_canvas.yview_moveto(0)
+
+    def update_preview(self):
+        from .sdf_import import import_names
+        self.apply_button.configure(state='disabled')
+        if not self.design:
+            return
+        try:
+            count = int(self.count.get())
+            names = [value.get() for value, _ in self.name_fields]
+            import_names(self.save, self.nation_index, self.design, count,
+                         self.class_name.get(), names)
+        except ValueError as exc:
+            self.preview.set(str(exc))
+            return
+        self.preview.set(f'{self.design.data["Displacement"]} tons • {self.design.ship_type} • '
+                         f'{count} ship(s) ready. All ships share the class name above.')
         self.apply_button.configure(state='normal')
 
     def apply(self):
@@ -133,7 +198,9 @@ class SDFImportWindow(tk.Toplevel):
         if not self.design:
             return
         try:
-            names, class_name = import_sdf(self.save, self.design, self.nation_index, int(self.count.get()))
+            names, class_name = import_sdf(
+                self.save, self.design, self.nation_index, int(self.count.get()),
+                self.class_name.get(), [value.get() for value, _ in self.name_fields])
         except (ValueError, KeyError, OSError, UnicodeError) as exc:
             messagebox.showerror('Unable to import ships', str(exc), parent=self)
             return

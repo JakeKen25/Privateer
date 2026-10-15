@@ -78,6 +78,40 @@ def test_numbering_uses_highest_and_design_only_classes(target, tmp_path):
     assert import_names(target, 0, design, 2) == (['Privateer DD 20','Privateer DD 21'], 'Destroyer 8')
 
 
+def test_custom_class_and_per_ship_names_roundtrip(target, tmp_path):
+    design = write_design(tmp_path/'test.sdf', 'DD')
+    names, class_name = import_sdf(
+        target, design, 0, 3, 'Custom Destroyer Class', ['Resolute', 'Vigilant', 'Dauntless'])
+
+    assert names == ['Resolute', 'Vigilant', 'Dauntless']
+    assert class_name == 'Custom Destroyer Class'
+    added = [ship for ship in target.nation(0).ships if ship.name in names]
+    assert [ship.class_name for ship in added] == [class_name] * 3
+    assert all(ship.section.fields()['EnemyClassName'] == class_name for ship in added)
+    output = target.save_as(tmp_path/'roundtrip')
+    loaded = RTW3Save.load(output)
+    assert [ship.name for ship in loaded.nation(0).ships[-3:]] == names
+    assert {ship.class_name for ship in loaded.nation(0).ships[-3:]} == {class_name}
+
+
+@pytest.mark.parametrize('class_name,ship_names,count', [
+    ('', ['Atlas'], 1),
+    ('Destroyer 2', [''], 1),
+    ('Destroyer 2', ['Duplicate', 'duplicate'], 2),
+    ('Destroyer 2', ['Existing'], 1),
+    ('Destroyer 2', ['Only one'], 2),
+    ('Bad\nClass', ['Atlas'], 1),
+])
+def test_custom_names_and_class_are_validated_atomically(target, tmp_path, class_name, ship_names, count):
+    design = write_design(tmp_path/'test.sdf', 'DD')
+    if ship_names == ['Existing']:
+        target.nation(0).ships[0].name = 'Existing'
+    before = payloads(target)
+    with pytest.raises(ValueError):
+        import_sdf(target, design, 0, count, class_name, ship_names)
+    assert payloads(target) == before
+
+
 @pytest.mark.parametrize('count', [0, -1, 101, True, 1.5])
 def test_invalid_count_atomic(target, tmp_path, count):
     design = write_design(tmp_path/'test.sdf')
@@ -143,4 +177,3 @@ def test_older_installed_design_layout_gets_safe_defaults(target, tmp_path):
     assert block  # Legacy input still serializes as a complete campaign design.
     import_sdf(target, legacy, 0, 1)
     assert target.nation(0).ships[-1].class_name == 'Light Cruiser 1'
-

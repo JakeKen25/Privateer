@@ -110,7 +110,7 @@ def next_series(values, prefix):
     return max((int(m[1]) for value in values if (m := pattern.fullmatch(value))), default=0) + 1
 
 
-def import_names(save, nation_index, design, count):
+def import_names(save, nation_index, design, count, class_name=None, ship_names=None):
     if type(count) is not int or not 1 <= count <= 100:
         raise ValueError('Choose between 1 and 100 copies')
     nation = save.nation(nation_index)
@@ -118,8 +118,26 @@ def import_names(save, nation_index, design, count):
     number = next_series((s.name for s in nation.ships), prefix)
     class_prefix = TYPE_NAMES[design.ship_type]
     classes = [s.class_name or '' for s in nation.ships] + [d.class_name or '' for d in nation.designs]
-    class_name = f'{class_prefix} {next_series(classes, class_prefix)}'
-    return [f'{prefix} {i}' for i in range(number, number + count)], class_name
+    default_class = f'{class_prefix} {next_series(classes, class_prefix)}'
+    class_name = default_class if class_name is None else class_name.strip()
+    if not class_name or any(ord(char) < 32 or ord(char) == 127 for char in class_name):
+        raise ValueError('Enter a valid class name.')
+
+    defaults = [f'{prefix} {i}' for i in range(number, number + count)]
+    if ship_names is None:
+        ship_names = defaults
+    else:
+        ship_names = list(ship_names)
+        if len(ship_names) != count:
+            raise ValueError(f'Enter exactly {count} ship names.')
+        ship_names = [name.strip() if isinstance(name, str) else '' for name in ship_names]
+    if any(not name or any(ord(char) < 32 or ord(char) == 127 for char in name) for name in ship_names):
+        raise ValueError('Enter a valid name for every ship.')
+    normalized = [name.casefold() for name in ship_names]
+    existing = {ship.name.casefold() for ship in nation.ships}
+    if len(set(normalized)) != len(normalized) or any(name in existing for name in normalized):
+        raise ValueError('Ship names must be unique in the receiving nation.')
+    return ship_names, class_name
 
 
 def design_block(design, ordinal, design_id, class_name, nation_index, newline):
@@ -185,9 +203,9 @@ def hull_fields(design, name, class_name, hull_id, design_id, nation_index, home
     return fields
 
 
-def import_sdf(save, design, nation_index, count):
+def import_sdf(save, design, nation_index, count, class_name=None, ship_names=None):
     """Accept a batch in memory only; any error leaves the original save untouched."""
-    names, class_name = import_names(save, nation_index, design, count)
+    names, class_name = import_names(save, nation_index, design, count, class_name, ship_names)
     if hashlib.sha256(design.path.read_bytes()).hexdigest() != design.digest:
         raise ValueError('SDF changed since selection; browse to it again')
     if save._source_snapshot != save._folder_snapshot(save.folder):
@@ -235,4 +253,3 @@ def import_sdf(save, design, nation_index, count):
     save.documents, save.nations, save.audit = working.documents, working.nations, working.audit
     save.modified = save._ship_changes = True
     return names, class_name
-

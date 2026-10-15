@@ -67,11 +67,14 @@ Choose Import from SDF file, Browse SDF, and a count from 1 to 100. Preview show
 the ship names and shared class. Apply accepts the whole batch in memory; Cancel,
 Escape and window-close leave the campaign unchanged. Save/Save As is separate.
 
-Names use Privateer TYPE N, continuing above the highest existing number in the
-receiving nation's roster, including historical hulls. Each import batch creates
-one new TYPE NAME N class shared by its copies, e.g. Destroyer 2 or Battleship 7.
-Class numbering considers both roster class names and destination design names.
-A subsequent import creates another class. The original SDF name is not used.
+The importer pre-fills each ship name as Privateer TYPE N, continuing above the
+highest existing number in the receiving nation's roster, including historical
+hulls. Each copy has its own editable name field. The suggested class is TYPE NAME
+N (for example, Destroyer 2 or Battleship 7); edit the shared Class name field to
+use a different name for the entire batch. Class numbering considers roster class
+names and destination design names. A subsequent import suggests another class.
+The original SDF name is not used. Blank, duplicate, or already-used ship names
+are rejected before the batch is staged.
 
 Serialization follows the v10139 structure observed in the Vicksburg experiment:
 explicit named-field order, duplicate exported Helipad collapsed, mount/equipment
@@ -100,7 +103,7 @@ round-trip persistence, existing-hull preservation, source changes, invalid
 counts, malformed components, encoding failures, and duplicate field handling.
 
 
-### SDF source folders (1.0.3 Beta local build)
+### SDF source folders (1.0.4 Beta local build)
 
 Import from SDF file now offers Custom designs and Installed designs. Custom
 uses the configured save_game_directory's parent / Custom Files (a sibling of
@@ -111,4 +114,3 @@ instead of silently browsing an unrelated folder. Read settings at each browse,
 so changes apply without restarting Privateer. Both choices use the same importer.
 It supports the common older installed-ship layout as well as current exports;
 unknown layouts and non-ship designs remain unsupported.
-
