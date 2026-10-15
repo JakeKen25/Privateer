@@ -39,3 +39,11 @@ def test_release_workflow_builds_only_the_portable_archive():
     assert "END_USER_INSTALL.txt" in build
     assert "--onedir" in build
     assert "--windowed" in build
+
+
+def test_ship_spawner_launcher_only_shows_available_actions():
+    source = (ROOT / "privateer" / "ship_spawner_gui.py").read_text(encoding="utf-8")
+    gui = (ROOT / "privateer" / "gui.py").read_text(encoding="utf-8")
+    assert "Use built-in designs" not in source
+    assert 'label="Ship Spawner"' in gui
+    assert 'label="Ship Spawner (WIP)"' not in gui

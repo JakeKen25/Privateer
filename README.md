@@ -1,6 +1,6 @@
 # Privateer
 
-**Latest published release: [Privateer 0.9.10](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.10)**
+**Latest stable release: [Privateer 0.9.10](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.10)** · **[Latest beta prerelease](https://github.com/JakeKen25/Privateer/releases/tag/v1.0.1-beta)**
 
 The [wiki](https://github.com/JakeKen25/Privateer/wiki) is the primary end-user manual.
 Submarine Manager supports spawning, renaming, deleting and repairing boats, with
@@ -27,11 +27,11 @@ welcome for future updates. I still have a lot to learn about the game's file
 formats, and independent review and new discoveries will make the editor safer
 and more capable.
 
-## Beta 1.0
+## Beta 1.0.1
 
-Ship Spawner now offers **Copy from another save**. Copies are staged until Apply,
-then written with Save or Save As. Built-in designs are listed but not implemented.
-See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.com/JakeKen25/Privateer/releases/tag/v1.0-beta). The stable 0.9.10 package does not include ship copying.
+Ship Spawner offers **Copy from another save** and **Import from SDF file**.
+Copies and imports are staged until Apply, then written with Save or Save As.
+Ship Spawner presents only the available actions. See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.com/JakeKen25/Privateer/releases/tag/v1.0.1-beta). The stable 0.9.10 package does not include ship copying or SDF import.
 
 ## Major features
 
@@ -76,7 +76,7 @@ See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.
 - **Sortable tables and progress windows** make larger saves easier to browse
   and show when loading, validation, or saving is still in progress.
 
-Ship Spawner is still in beta; the published build supports copying ships from another save. SDF import and built-in design support are being refined in the local test build.
+Ship Spawner is still in beta. Built-in design spawning is not currently available.
 
 See the [guide index](guides/README.md) for all managers and the
 [current project status](guides/PROJECT_STATUS.md) for research boundaries.
@@ -161,5 +161,4 @@ year, with plausible values already filled in for missing years. No runtime
 interpolation is needed. Budget
 calculations remain estimates, and features identified as under development
 still require additional file-format research and in-game validation.
-
 

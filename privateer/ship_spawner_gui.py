@@ -28,7 +28,7 @@ class ShipSpawnerWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
         super().__init__(parent)
         self.save, self.nation_index = save, nation_index
-        self.title('Ship Spawner')
+        self.title(f'Ship Spawner — {save.nation(nation_index).name}')
         self.transient(parent)
         body = ttk.Frame(self, padding=20)
         body.pack(fill='both', expand=True)
@@ -36,8 +36,6 @@ class ShipSpawnerWindow(tk.Toplevel):
                   font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=(0, 12))
         ttk.Button(body, text='Copy from another save', command=self.open_copy).pack(fill='x', pady=5)
         ttk.Button(body, text='Import from SDF file', command=self.open_sdf).pack(fill='x', pady=5)
-        ttk.Button(body, text='Use built-in designs', state='disabled').pack(fill='x', pady=5)
-        ttk.Label(body, text='Built-in designs are not available yet.').pack(anchor='w', pady=5)
         ttk.Button(body, text='Close', command=self.destroy).pack(anchor='e', pady=(12, 0))
         self.bind('<Escape>', lambda _: self.destroy())
         self.grab_set()

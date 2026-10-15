@@ -96,7 +96,7 @@ class MainWindow(tk.Tk):
         self.nation_menu.add_command(label="Aircraft Manager", command=self._manage_aircraft)
         self.nation_menu.add_command(label="Submarine Manager", command=self._manage_submarines)
         self.nation_menu.add_separator()
-        self.nation_menu.add_command(label="Ship Spawner (WIP)", command=self._spawn_ships)
+        self.nation_menu.add_command(label="Ship Spawner", command=self._spawn_ships)
 
     def _manage_economy(self):
         self._open_manager(EconomyWindow, "Preparing economy and unrest data…")

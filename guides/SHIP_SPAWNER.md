@@ -1,7 +1,7 @@
 # Ship Spawner: cross-save copy
 
-Development build 1.0.1 Beta adds Import from SDF file alongside
-Copy from another save and Use built-in designs (still disabled).
+Development build 1.0.1 Beta offers Import from SDF file alongside
+Copy from another save. Built-in designs are not available as an option.
 The currently loaded save and right-clicked nation are the destination.
 
 Browse selects a separate campaign folder, loads it read-only, and lists current
@@ -103,7 +103,7 @@ round-trip persistence, existing-hull preservation, source changes, invalid
 counts, malformed components, encoding failures, and duplicate field handling.
 
 
-### SDF source folders (1.0.4 Beta local build)
+### SDF source folders
 
 Import from SDF file now offers Custom designs and Installed designs. Custom
 uses the configured save_game_directory's parent / Custom Files (a sibling of
