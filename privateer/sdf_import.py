@@ -16,6 +16,9 @@ TYPE_NAMES = {'DD': 'Destroyer', 'BB': 'Battleship', 'BC': 'Battlecruiser',
               'CV': 'Aircraft Carrier', 'CVL': 'Light Aircraft Carrier',
               'AV': 'Seaplane Carrier', 'KE': 'Corvette', 'AMC': 'Armed Merchant Cruiser'}
 FAMILIES = ('Turret', 'TorpedoMount', 'Equipment', 'Superstructure')
+# RTW3's installed Designs folder includes exports from older game versions.
+# These two fields were added later and older ship designs safely omit them.
+LEGACY_DATA_DEFAULTS = {'DeckColor': '', 'HighSpottingPos': '0'}
 
 
 @dataclass
@@ -67,7 +70,15 @@ def read_sdf(path):
     for name, fields in sections.items():
         schema_name = next((f + '0' for f in FAMILIES if re.fullmatch(f + r'\d+', name)), name)
         expected = set(SCHEMA.get(schema_name, ()))
-        if not expected or set(fields) != expected:
+        if not expected:
+            raise ValueError(f'Unsupported SDF layout in {name}; export the design with the current RTW3 version')
+        missing = expected - set(fields)
+        extra = set(fields) - expected
+        if name == 'Data' and missing <= LEGACY_DATA_DEFAULTS.keys() and not extra:
+            for key in SCHEMA['Data']:
+                if key in missing:
+                    fields[key] = LEGACY_DATA_DEFAULTS[key]
+        elif missing or extra:
             raise ValueError(f'Unsupported SDF layout in {name}; export the design with the current RTW3 version')
         for key, value in fields.items():
             if any(ord(c) < 32 for c in value):
@@ -224,3 +235,4 @@ def import_sdf(save, design, nation_index, count):
     save.documents, save.nations, save.audit = working.documents, working.nations, working.audit
     save.modified = save._ship_changes = True
     return names, class_name
+

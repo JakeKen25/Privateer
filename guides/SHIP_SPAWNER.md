@@ -55,11 +55,13 @@ and campaigns. Built-in designs are not implemented in this build.
 
 ## Standalone SDF import (1.0.1 Beta development build)
 
-The importer reads a current-format SDF independently of all source campaigns.
+The importer reads supported SDFs independently of all source campaigns.
 No Game6, template hull, or installed design is needed at runtime. The schema
-module contains field names only, not bundled game designs. Older SDF layouts
-are rejected explicitly; exporting from the current game may provide the needed
-layout. Schema detection, not the filename extension alone, decides support.
+module contains field names only, not bundled game designs. Alongside current
+exports, the importer supports the common older layout used by installed RTW3
+ship designs. That layout omits deck-color and high-spotting fields; the importer
+supplies empty and zero defaults. Unknown layouts are rejected explicitly.
+Schema detection, not the filename extension alone, decides support.
 
 Choose Import from SDF file, Browse SDF, and a count from 1 to 100. Preview shows
 the ship names and shared class. Apply accepts the whole batch in memory; Cancel,
@@ -98,7 +100,7 @@ round-trip persistence, existing-hull preservation, source changes, invalid
 counts, malformed components, encoding failures, and duplicate field handling.
 
 
-### SDF source folders (1.0.2 Beta local build)
+### SDF source folders (1.0.3 Beta local build)
 
 Import from SDF file now offers Custom designs and Installed designs. Custom
 uses the configured save_game_directory's parent / Custom Files (a sibling of
@@ -106,5 +108,7 @@ Save). If no save directory is configured, use the loaded Game folder's
 parent's parent / Custom Files. Installed uses rtw3_install_directory / Designs.
 A missing installation setting or missing folder gives an informational message
 instead of silently browsing an unrelated folder. Read settings at each browse,
-so changes apply without restarting Privateer. Both choices use the same importer;
-this does not expand support for older SDF schemas.
+so changes apply without restarting Privateer. Both choices use the same importer.
+It supports the common older installed-ship layout as well as current exports;
+unknown layouts and non-ship designs remain unsupported.
+

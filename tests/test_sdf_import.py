@@ -127,3 +127,20 @@ def test_unknown_schema_rejected(tmp_path):
     design.path.write_text(design.path.read_text() + '\nUnknownEquipment=7')
     with pytest.raises(ValueError, match='Unsupported SDF layout'):
         read_sdf(design.path)
+
+
+def test_older_installed_design_layout_gets_safe_defaults(target, tmp_path):
+    design = write_design(tmp_path/'legacy.sdf')
+    text = design.path.read_text(encoding='utf-8')
+    text = text.replace('DeckColor=clBlack\n', '').replace('HighSpottingPos=0\n', '')
+    design.path.write_text(text, encoding='utf-8')
+
+    legacy = read_sdf(design.path)
+
+    assert legacy.data['DeckColor'] == ''
+    assert legacy.data['HighSpottingPos'] == '0'
+    block = design_block(legacy, 0, 500, 'Light Cruiser 1', 0, '\n')
+    assert block  # Legacy input still serializes as a complete campaign design.
+    import_sdf(target, legacy, 0, 1)
+    assert target.nation(0).ships[-1].class_name == 'Light Cruiser 1'
+

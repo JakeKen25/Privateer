@@ -76,7 +76,7 @@ See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.
 - **Sortable tables and progress windows** make larger saves easier to browse
   and show when loading, validation, or saving is still in progress.
 
-Ship Spawner remains a work-in-progress placeholder.
+Ship Spawner is still in beta; the published build supports copying ships from another save. SDF import and built-in design support are being refined in the local test build.
 
 See the [guide index](guides/README.md) for all managers and the
 [current project status](guides/PROJECT_STATUS.md) for research boundaries.
@@ -161,4 +161,5 @@ year, with plausible values already filled in for missing years. No runtime
 interpolation is needed. Budget
 calculations remain estimates, and features identified as under development
 still require additional file-format research and in-game validation.
+
 
