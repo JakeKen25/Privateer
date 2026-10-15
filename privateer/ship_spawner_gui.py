@@ -1,5 +1,6 @@
 """Ship Spawner entry point and staged cross-save copying."""
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from .busy import run_background
@@ -8,6 +9,19 @@ from .ship_spawner import copy_block_reason, copy_ships
 from .ship_status import appears_in_transfer_window
 from .ships_gui import ship_stats
 from .table_sort import sorted_with_blanks
+
+
+def sdf_source_folder(settings, save_folder, source):
+    if source == 'installed':
+        install = getattr(settings, 'rtw3_install_directory', '').strip()
+        if not install:
+            raise ValueError('Set the Rule the Waves 3 location in Settings to browse installed designs.')
+        return Path(install).expanduser() / 'Designs'
+    if source == 'custom':
+        configured = getattr(settings, 'save_game_directory', '').strip()
+        saves = Path(configured).expanduser() if configured else Path(save_folder).parent
+        return saves.parent / 'Custom Files'
+    raise ValueError('Unknown design source')
 
 
 class ShipSpawnerWindow(tk.Toplevel):
@@ -58,7 +72,10 @@ class SDFImportWindow(tk.Toplevel):
         body = ttk.Frame(self, padding=12)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text='Import completed ships from an SDF design', font=('Segoe UI', 12, 'bold')).pack(anchor='w')
-        ttk.Button(body, text='Browse SDF…', command=self.browse).pack(anchor='w', pady=10)
+        sources = ttk.Frame(body)
+        sources.pack(fill='x', pady=10)
+        ttk.Button(sources, text='Custom designs…', command=lambda: self.browse('custom')).pack(side='left')
+        ttk.Button(sources, text='Installed designs…', command=lambda: self.browse('installed')).pack(side='left', padx=8)
         self.path = tk.StringVar(value='No design selected')
         ttk.Label(body, textvariable=self.path, wraplength=530).pack(anchor='w')
         row = ttk.Frame(body)
@@ -73,10 +90,18 @@ class SDFImportWindow(tk.Toplevel):
         self.bind('<Escape>', lambda _: self.destroy())
         self.grab_set()
 
-    def browse(self):
+    def browse(self, source):
         from .sdf_import import read_sdf
-        folder = self.save.folder.parent.parent / 'Custom Files'
-        path = filedialog.askopenfilename(parent=self, title='Choose a ship design', initialdir=str(folder),
+        try:
+            folder = sdf_source_folder(getattr(self.master, 'settings', None), self.save.folder, source)
+        except ValueError as exc:
+            messagebox.showinfo('Design folder', str(exc), parent=self)
+            return
+        if not folder.is_dir():
+            messagebox.showinfo('Design folder not found',
+                                f'{folder}\n\nCheck the corresponding directory in Settings. For custom designs, export an SDF from RTW3 first.', parent=self)
+            return
+        path = filedialog.askopenfilename(parent=self, title=f'Choose a {source} ship design', initialdir=str(folder),
                                          filetypes=[('Ship design files', '*.sdf')])
         if not path:
             return
