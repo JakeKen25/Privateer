@@ -1,6 +1,6 @@
-# Privateer 1.0.1 Beta
+# Privateer 1.0.5 Beta
 
-This beta builds on Privateer 1.0 Beta and includes cross-save ship copying and SDF ship import.
+This beta builds on Privateer 1.0.4 Beta and includes cross-save ship copying and SDF ship import.
 
 - Ship Spawner offers **Copy from another save** and **Import from SDF file**. Built-in designs are not available and are no longer shown as an option.
 - SDF import supports custom and installed design folders, multiple copies, editable shared class names, and editable individual ship names.
@@ -16,4 +16,4 @@ The budget calculator remains an estimate with a ±10% monthly-balance planning 
 
 Ship copying has passed user testing. SDF import is available for broader testing in this prerelease; Privateer 0.9.10 remains the latest stable release.
 
-Download **Privateer-1.0.1-Windows-x64.zip**, extract the complete folder, and run **Privateer.exe**. Python is not required. See the [Ship Spawner guide](https://github.com/JakeKen25/Privateer/wiki/Ship-Spawner).
+Download **Privateer-1.0.5-Windows-x64.zip**, extract the complete folder, and run **Privateer.exe**. Python is not required. See the [Ship Spawner guide](https://github.com/JakeKen25/Privateer/wiki/Ship-Spawner).

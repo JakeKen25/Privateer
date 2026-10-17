@@ -1,6 +1,6 @@
 # Ship Spawner: cross-save copy
 
-Development build 1.0.1 Beta offers Import from SDF file alongside
+Development build 1.0.5 Beta offers Import from SDF file alongside
 Copy from another save. Built-in designs are not available as an option.
 The currently loaded save and right-clicked nation are the destination.
 
@@ -53,7 +53,7 @@ advancement. The generalized manager still needs user testing across more classe
 and campaigns. Built-in designs are not implemented in this build.
 
 
-## Standalone SDF import (1.0.1 Beta development build)
+## Standalone SDF import (1.0.5 Beta development build)
 
 The importer reads supported SDFs independently of all source campaigns.
 No Game6, template hull, or installed design is needed at runtime. The schema

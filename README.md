@@ -1,6 +1,6 @@
 # Privateer
 
-**Latest stable release: [Privateer 0.9.10](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.10)** · **[Latest beta prerelease](https://github.com/JakeKen25/Privateer/releases/tag/v1.0.1-beta)**
+**Latest stable release: [Privateer 0.9.10](https://github.com/JakeKen25/Privateer/releases/tag/v0.9.10)** · **[Latest beta prerelease](https://github.com/JakeKen25/Privateer/releases/tag/v1.0.5-beta)**
 
 The [wiki](https://github.com/JakeKen25/Privateer/wiki) is the primary end-user manual.
 Submarine Manager supports spawning, renaming, deleting and repairing boats, with
@@ -27,11 +27,11 @@ welcome for future updates. I still have a lot to learn about the game's file
 formats, and independent review and new discoveries will make the editor safer
 and more capable.
 
-## Beta 1.0.1
+## Beta 1.0.5
 
 Ship Spawner offers **Copy from another save** and **Import from SDF file**.
 Copies and imports are staged until Apply, then written with Save or Save As.
-Ship Spawner presents only the available actions. See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.com/JakeKen25/Privateer/releases/tag/v1.0.1-beta). The stable 0.9.10 package does not include ship copying or SDF import.
+Ship Spawner presents only the available actions. See [ship spawning](guides/SHIP_SPAWNER.md). [Download the beta](https://github.com/JakeKen25/Privateer/releases/tag/v1.0.5-beta). The stable 0.9.10 package does not include ship copying or SDF import.
 
 ## Major features
 
