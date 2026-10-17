@@ -54,10 +54,12 @@ caches its display rows and sort values, and search input is debounced briefly.
 Changing owners, filters, sorting, or staged destinations therefore does not scan
 the complete raw nation roster once per ship.
 
-The manager blocks carriers and other ships with aircraft capacity because their
-air-group dependencies have not been decoded. It also blocks transfers involving
-the player while active campaign divisions are present. These cases must be
-handled in-game until their linked save structures are understood.
+When a carrier or other aircraft-capable ship transfers, air wings whose
+`HomeBase` points to that permanent hull ID move with it by updating their
+`Nation` field. Their aircraft model IDs, counts, roles, and base reference are
+preserved. A missing, duplicate, or mismatched air-wing record blocks the batch
+instead of allowing the ship and its air groups to separate. Transfers involving
+the player remain blocked while active campaign divisions are present.
 
 Changes are staged in memory. **Save As** is recommended for the first game-level
 test. **Save** follows the configured backup policy before replacing the changed
