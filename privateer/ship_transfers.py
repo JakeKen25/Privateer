@@ -5,6 +5,7 @@ import re
 from .document import FIELD, TextDocument
 from .diplomacy import unique_section, unique_integer
 from .ship_status import final_fate_transfer_block_reason
+from .air_wings import _flat_records
 
 SHIP_KEY = re.compile(r'^Ship(\d+)(.+)$')
 
@@ -103,8 +104,6 @@ def transfer_batch(save, assignments):
         fields=ship.section.fields()
         if reason := final_fate_transfer_block_reason(ship, fields):
             raise ValueError(f'{ship.name}: {reason}')
-        if int(fields.get('AircraftCapacity','0'))>0 or ship.ship_type in ('CV','CVL','AV'):
-            raise ValueError(f'{ship.name}: carrier/air-group migration is not decoded')
         for key in ('DesignRefId','BuildingNationIdx','CommanderId'):
             if key not in fields:raise ValueError(f'{ship.name}: missing {key}')
         commander=int(fields['CommanderId'])
@@ -118,6 +117,29 @@ def transfer_batch(save, assignments):
             raise ValueError('Ambiguous player metadata')
         planned.append((ship,source,target));affected.update((source.index,target.index))
     if not planned:return
+    air_sections=[s for s in working.documents[working.main_file].sections
+                  if s.name.casefold()=='airunits']
+    has_carrier=any(int(ship.section.fields().get('AircraftCapacity','0') or '0')>0 or
+                    (ship.ship_type or '').upper() in {'CV','CVL','AV'}
+                    for ship,_,_ in planned)
+    if len(air_sections)>1:
+        raise ValueError('Ship transfers need one unambiguous [AirUnits] section')
+    if not air_sections:
+        if has_carrier:
+            raise ValueError('Carrier transfer needs one unambiguous [AirUnits] section')
+        air_records={}
+    else:
+        air_records=_flat_records(air_sections[0],'AU','AirUnitNo')
+    air_unit_changes={}
+    ship_destinations={ship.record_index:(source,target) for ship,source,target in planned}
+    for slot,unit in air_records.items():
+        base=unit.get('HomeBase')
+        if base is None or not base.isdigit() or int(base) not in ship_destinations:
+            continue
+        source,target=ship_destinations[int(base)]
+        if 'Nation' not in unit or unit['Nation']!=str(source.index):
+            raise ValueError(f'Air wing {slot+1} based on {ships[int(base)].name} has a missing or mismatched nation')
+        air_unit_changes[slot]=target.index
     raw_rosters={i:roster(working,working.nation(i)) for i in affected}
     libraries={i:library(working,working.nation(i)) for i in affected}
     raw_by_id={s.record_index:list(raw_rosters[n.index][1][s.local_slot])
@@ -149,6 +171,10 @@ def transfer_batch(save, assignments):
             if suffix in edits:raw_by_id[ship.record_index][index]=replace_line_value(line,edits[suffix])
         final_ids[source.index].remove(ship.record_index);final_ids[target.index].append(ship.record_index)
         working.audit.append(f'Transferred hull {ship.record_index} {ship.name}: Nation{source.index} -> Nation{target.index}; design {ship.design_ref_id} -> {edits["DesignRefId"]}; builder {ship.building_nation_index} preserved; commander {ship.section.fields()["CommanderId"]} -> {edits.get("CommanderId",ship.section.fields()["CommanderId"])}')
+    for slot,target_nation in air_unit_changes.items():
+        section=air_sections[0]
+        section.set(f'AU{slot}Nation',target_nation,working.documents[working.main_file].newline)
+        working.audit.append(f'Transferred air wing {slot+1} with hull {air_records[slot]["HomeBase"]}: Nation{air_records[slot]["Nation"]} -> Nation{target_nation}; aircraft and base references preserved')
     for i in affected:
         section,_,others=raw_rosters[i];lines=list(others)
         for slot,hull in enumerate(final_ids[i]):
@@ -174,6 +200,13 @@ def transfer_batch(save, assignments):
         expected=dict(fields);expected.update({k:str(v) for k,v in changes.get(hull,{}).items()})
         if after[hull]!=(assignments.get(hull,owner),expected):raise ValueError(f'Hull preservation failed: {hull}')
     for i in affected:roster(working,working.nation(i))
+    if air_sections:
+        final_air=_flat_records(air_sections[0],'AU','AirUnitNo')
+        for slot,unit in air_records.items():
+            expected=dict(unit)
+            if slot in air_unit_changes:expected['Nation']=str(air_unit_changes[slot])
+            if final_air[slot]!=expected:raise ValueError(f'Air-wing preservation failed: {slot+1}')
     for doc in working.documents.values():doc.to_bytes()  # Reject incompatible encodings before commit.
     save.documents,save.nations,save.audit=working.documents,working.nations,working.audit
     save.modified=True;save._ship_changes=True
+    if air_unit_changes:save._aircraft_changes=True
