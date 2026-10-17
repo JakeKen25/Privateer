@@ -11,6 +11,13 @@ from .ships_gui import transfer_block_reason
 
 def copy_block_reason(ship):
     reason = transfer_block_reason(ship)
+    fields = ship.section.fields()
+    try:
+        aircraft_capacity = int(fields.get('AircraftCapacity', '0') or '0')
+    except ValueError:
+        return 'Aircraft capacity is malformed.'
+    if aircraft_capacity > 0 or (ship.ship_type or '').upper() in {'CV', 'CVL', 'AV'}:
+        return 'Carrier and air-group copies between saves are not supported yet.'
     return reason.replace('transferred', 'copied').replace('transfers', 'copies') if reason else None
 
 

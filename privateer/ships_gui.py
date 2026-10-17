@@ -23,8 +23,6 @@ def transfer_block_reason(ship, fields=None) -> str | None:
         aircraft_capacity = int(fields.get("AircraftCapacity", "0") or "0")
     except ValueError:
         return "Aircraft capacity is malformed."
-    if aircraft_capacity > 0 or (ship.ship_type or "").upper() in {"CV", "CVL", "AV"}:
-        return "Carrier and air-group transfers are not supported yet."
     missing = [key for key in ("DesignRefId", "BuildingNationIdx", "CommanderId") if key not in fields]
     if missing:
         return "Missing required field(s): " + ", ".join(missing)
@@ -121,9 +119,9 @@ class ShipTransfersWindow(tk.Toplevel):
         ttk.Label(body, text="Ship ownership transfers", font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(
             body,
-            text=("Transfers keep the hull, original building nation, and all saved state while "
-                  "copying its design to the receiver. Historical losses, scrapped ships, and museum "
-                  "ships are omitted; carrier/air-group transfers are currently blocked."),
+            text=("Transfers keep the hull, original building nation, and saved state while copying "
+                  "its design to the receiver. Air wings based on a transferred carrier move with it. "
+                  "Historical losses, scrapped ships, and museum ships are omitted."),
             wraplength=1050,
         ).pack(anchor="w")
 

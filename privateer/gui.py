@@ -17,6 +17,7 @@ from .economy_gui import EconomyWindow
 from .infrastructure_gui import InfrastructureWindow
 from .admiral_gui import AdmiralWindow
 from .aircraft_gui import AircraftWindow
+from .air_wings_gui import AirWingWindow
 from .submarines_gui import SubmarineWindow
 from .busy import run_background, show_while_opening
 from .settings import AppSettings
@@ -94,6 +95,7 @@ class MainWindow(tk.Tk):
         self.nation_menu.add_command(label="Colony Manager", command=self._manage_colonies)
         self.nation_menu.add_command(label="Transfer Ships", command=self._manage_ships)
         self.nation_menu.add_command(label="Aircraft Manager", command=self._manage_aircraft)
+        self.nation_menu.add_command(label="Air Wing Manager", command=self._manage_air_wings)
         self.nation_menu.add_command(label="Submarine Manager", command=self._manage_submarines)
         self.nation_menu.add_separator()
         self.nation_menu.add_command(label="Ship Spawner", command=self._spawn_ships)
@@ -127,6 +129,9 @@ class MainWindow(tk.Tk):
 
     def _manage_aircraft(self):
         self._open_manager(AircraftWindow, "Loading aircraft models…")
+
+    def _manage_air_wings(self):
+        self._open_manager(AirWingWindow, "Loading air wings…")
 
     def _manage_submarines(self):
         self._open_manager(SubmarineWindow, "Loading submarine inventory…")

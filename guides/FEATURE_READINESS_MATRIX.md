@@ -1,8 +1,8 @@
 # Feature readiness after the content audit
 
-Implementation update, 2026-09-29: released 0.9.8 implements the read-only submarine
-inventory described below. Search, filters, sorting and raw details are available;
-creation and edits remain gated. See [Submarine Manager](SUBMARINES.md).
+Implementation update, 2026-10-17: 1.0.6 development adds an Air Wing Manager
+and same-campaign carrier air-group migration. The UI and save-level tests pass;
+in-game behavior remains to be verified. See [Air Wing Manager](AIR_WINGS.md).
 
 Updated 2026-09-26, through final research checkpoint 8. This is an implementation
 handoff, not a statement that the features have passed in-game validation.
@@ -16,7 +16,7 @@ Later checkpoint corrections take precedence over initial inventory-only notes.
 | Issue | Directly useful inputs / work now supportable | Remaining research or acceptance boundary |
 |---|---|---|
 | #22 Budget | Saved construction/maintenance fields, controlled budget screenshots, explicit intelligence rate, installation/submarine breakdowns; Tips.txt adds age and repair/rebuild cases. | Missing aircraft/submarine/academy formulas, maintenance residual, missile accounting, income adjustments and modifier order. Do not double-apply age costs or call subtotal complete. |
-| #27 Aircraft/fortification validation | AircraftTypes/AirUnits, all 4,055 observed HomeBase links, model sentinel cases, installed templates and FAQ base behavior. | In-game multi-turn evidence for generated roles, capacities, player/AI bases, automatic airships, financial effects and restore. Presence of a record is not functionality. |
+| #27 Aircraft/fortification validation | AircraftTypes/AirUnits, HomeBase links, model sentinel cases; 1.0.6 adds staged reassignment among owned aircraft-capable ships and same-campaign carrier migration. | In-game evidence for rebasing, capacity effects, carrier transfer, player/AI behavior, automatic airships, financial effects and turn progression. Unknown aircraft model IDs remain untouched. |
 | #28 War/alliance research | Existing controlled add-enemy and alliance evidence, scalar/pairwise relations, manual rules, event grammar. | First war from peace, ending wars, AI-only wars, conditional alliance timing and downstream effects. Event codes are not save-write recipes. |
 | #16 Current tutorials | Existing manager guides, manual/FAQ behavior and concrete caveats identified by the audit. | Current UI screenshots and verified recovery steps; distinguish public release from local test build. |
 | #29 Public-domain sourcing | Asset-family inventory and exact dependency names. | Rights evidence and actual asset selection remain unresearched. Installed/modded artwork is not automatically redistributable. |

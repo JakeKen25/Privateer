@@ -1,6 +1,6 @@
 # Privateer documentation
 
-Current released application: **0.9.8**. Start with the user guides below.
+Current released application: **1.0.5 Beta**. Start with the user guides below.
 Research records describe evidence at their stated date; they are not current
 operating instructions or proof that an experimental game formula is exact.
 
@@ -14,6 +14,7 @@ operating instructions or proof that an experimental game formula is exact.
 - [Budget estimates and built-in assumptions](BUDGET_ESTIMATES.md)
 - [Infrastructure and fortifications](FORTIFICATIONS.md)
 - [Aircraft models](AIRCRAFT.md)
+- [Air wings](AIR_WINGS.md)
 - [Colony ownership](COLONIES.md)
 - [Diplomacy and relationships](DIPLOMACY.md)
 - [Admiral name and prestige](ADMIRAL.md)

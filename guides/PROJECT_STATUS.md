@@ -1,15 +1,16 @@
 # Current project status and documentation policy
 
-Reviewed 2026-10-07 for **Privateer 0.9.9**. This release promotes the 0.9.8.1
-development features: relationship actions and compact matrix, dark mode,
-technology selection, colony and ship-status corrections, first-aircraft creation,
-and the simplified economy interface. See [release notes](../packaging/RELEASE_NOTES.md)
+Reviewed 2026-10-17 for **Privateer 1.0.5 Beta**. The 1.0.6 local development
+build adds an Air Wing Manager and same-campaign air-group migration for ship
+transfers; it is not published yet. See [release notes](../packaging/RELEASE_NOTES.md)
 and the [user wiki](https://github.com/JakeKen25/Privateer/wiki).
 
 ## Current boundaries
 
 - Ship transfers preserve the original builder nation, including unfinished
-  ships. Carrier/air-group and active player-division dependencies remain blocked.
+  ships. Same-campaign carrier transfers migrate linked air wings by updating
+  their nation while retaining aircraft references and base IDs. Cross-save
+  carrier copies and transfers involving active player divisions remain blocked.
 - Technology, caliber, economy/unrest, colonies, ordinary tensions, admiral,
   aircraft-model and infrastructure controls are implemented. Their user guides
   distinguish supported edits from unverified in-game consequences.
@@ -17,10 +18,10 @@ and the [user wiki](https://github.com/JakeKen25/Privateer/wiki).
   planning allowance. Missing formulas use disclosed assumptions; the allowance
   is not a measured confidence interval. See [current rules](BUDGET_ESTIMATES.md)
   and [later possession research](POSSESSION_BUDGET_RESEARCH.md).
-- Submarine inventory is shipped, with search, filters, sorting and raw details.
-  Creation, transfer, removal and editing remain unimplemented.
-- Ship Spawner is a placeholder. Custom nations and the
-  AAR logger are not shipped features. The custom-nation prototype is separate.
+- Submarine Manager supports spawning, renaming, deletion and repair with staged
+  Apply/Cancel changes; its generated behavior still needs in-game validation.
+- Ship Spawner supports cross-save copying and SDF import. Built-in design
+  spawning is not available. Custom nations and the AAR logger are not shipped.
 
 ## Which document to trust
 
@@ -39,7 +40,7 @@ effects of unfinished transfers remain a separate validation question.
 
 ## Remaining documentation work
 
-Current tutorials should target 0.9.8, including submarine inventory. Add actual
+Current tutorials should target the current published 1.0.5 Beta. Add actual
 UI screenshots, a first-edit walkthrough and verified backup-recovery steps.
 Future tutorials should cover submarine mutations and other future controls only
 when implemented. Existing external manual material has not been revalidated in
