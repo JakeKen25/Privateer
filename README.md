@@ -96,12 +96,11 @@ It assigns a valid destination-local design ID and updates the ship's design
 reference while leaving the donor design intact. `BuildingNationIdx` is preserved,
 so a transferred ship continues to show the nation that originally built it.
 
-Transfers involving aircraft carriers are currently blocked because their air
-groups have linked records that are not fully decoded. Transfers involving the
-player are also blocked while active campaign divisions are present. These
-restrictions prevent Privateer from silently producing incomplete save data.
-See [the ship-transfer guide](guides/SHIPS.md) for the technical behavior and
-known limits.
+When a carrier transfers within a campaign, air wings based on that hull follow
+it with their aircraft references and counts preserved. Cross-save copies of
+carriers remain blocked until their air-wing dependencies can be mapped safely.
+Transfers involving the player are also blocked while active campaign divisions
+are present. See [the ship-transfer guide](guides/SHIPS.md) for details.
 
 ## Installing and running
 
