@@ -119,7 +119,7 @@ class ShipTransferTests(unittest.TestCase):
         self.assertEqual(before, {name: document.to_bytes() for name, document in self.save.documents.items()})
         self.assertFalse(self.save.modified)
 
-    def test_ui_helpers_explain_state_and_carrier_gate(self):
+    def test_ui_helpers_explain_carriers_as_supported(self):
         ship = self.save.nation(1).ships[0]
         self.assertIsNone(transfer_block_reason(ship))
         details = ship_details(self.save, ship)
@@ -132,7 +132,49 @@ class ShipTransferTests(unittest.TestCase):
         self.assertEqual(stats["main_gun"], ship.section.fields()["MainCalibre"])
         self.assertEqual(stats["description"], ship.section.fields()["Description"])
         ship.section.set("AircraftCapacity", 20)
-        self.assertIn("Carrier", transfer_block_reason(ship))
+        ship.section.set("Type", "CV")
+        self.assertIsNone(transfer_block_reason(ship))
+
+    def test_carrier_transfer_moves_linked_air_units_and_preserves_unknown_model(self):
+        ship = self.save.nation(1).ships[0]
+        ship.section.set("AircraftCapacity", 20)
+        ship.section.set("Type", "CV")
+        air = next(s for s in self.save.documents[self.save.main_file].sections
+                   if s.name == "AirUnits")
+        air.set("AirUnitNo", 1)
+        for key, value in {
+            "AU0Id": 9001, "AU0AircraftTypeId": -1, "AU0AircraftNumber": 8,
+            "AU0DesiredAircraftNumber": 10, "AU0Role": 14, "AU0Nation": 1,
+            "AU0HomeBase": ship.record_index,
+        }.items():
+            air.set(key, value)
+        before = air.fields()
+        hull = ship.record_index
+        self.assertIsNone(transfer_block_reason(ship))
+        self.save.transfer_ship_batch({hull: 0})
+        after = next(s for s in self.save.documents[self.save.main_file].sections
+                     if s.name == "AirUnits").fields()
+        for key, value in before.items():
+            expected = "0" if key == "AU0Nation" else value
+            self.assertEqual(after[key], expected, key)
+        self.assertTrue(self.save._aircraft_changes)
+
+    def test_carrier_transfer_rejects_mismatched_air_unit_nation_atomically(self):
+        ship = self.save.nation(1).ships[0]
+        ship.section.set("AircraftCapacity", 20)
+        ship.section.set("Type", "CV")
+        air = next(s for s in self.save.documents[self.save.main_file].sections
+                   if s.name == "AirUnits")
+        air.set("AirUnitNo", 1)
+        for key, value in {"AU0Id": 901, "AU0Nation": 0,
+                           "AU0HomeBase": ship.record_index,
+                           "AU0AircraftTypeId": -1}.items():
+            air.set(key, value)
+        before = {name: doc.to_bytes() for name, doc in self.save.documents.items()}
+        with self.assertRaisesRegex(ValueError, "mismatched nation"):
+            self.save.transfer_ship_batch({ship.record_index: 0})
+        self.assertEqual(before, {name: doc.to_bytes() for name, doc in self.save.documents.items()})
+        self.assertFalse(self.save.modified)
 
     def test_verified_fleet_status_labels_and_construction(self):
         ship = self.save.nation(1).ships[0]
