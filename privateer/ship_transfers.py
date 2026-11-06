@@ -61,7 +61,7 @@ def positional_value(line,value):
     return re.sub(r'\S.*?(?=\r?\n|$)',str(value),line,count=1)
 
 
-def officer_check(save):
+def officer_check(save, *, validate_officers=False):
     name=Path(save.main_file).with_suffix('.off').name
     path=save.folder/name
     if not path.is_file():raise ValueError('Player transfers require the matching officer file for dependency inspection')
@@ -72,17 +72,115 @@ def officer_check(save):
     sections={s.name:s for s in doc.sections}
     if len(sections)!=len(doc.sections) or set(sections)!={'Officers','CampaignDivisions'}:
         raise ValueError('Unsupported officer-file sections; transfer dependencies need inspection')
-    if unique_integer(sections['CampaignDivisions'],'CampDivNo')!=0 or set(sections['CampaignDivisions'].fields())!={'CampDivNo'}:
-        raise ValueError('Active campaign divisions are not supported for player transfers; remove the ship from divisions in-game first')
-    allowed={'Name','Ability','AbilityKnown','Rank','YearsInRank','Special','Special2','BattleStars','Status','Fate','Id'}
-    fields=sections['Officers'].fields()
-    for key in fields:
-        m=re.fullmatch(r'Officer\d+(.+)',key)
-        if key!='OfficerNo' and (not m or m.group(1) not in allowed):
-            raise ValueError(f'Unrecognized officer assignment field: {key}')
-    ids=[int(v) for k,v in fields.items() if re.fullmatch(r'Officer\d+Id',k)]
-    if len(ids)!=len(set(ids)):raise ValueError('Duplicate officer IDs')
-    return set(ids)
+    campaign_divisions=sections['CampaignDivisions']
+    validate_campaign_divisions(campaign_divisions)
+    ids=None
+    if validate_officers:
+        allowed={'Name','Ability','AbilityKnown','Rank','YearsInRank','Special','Special2','BattleStars','Status','Fate','Id'}
+        fields=sections['Officers'].fields()
+        for key in fields:
+            m=re.fullmatch(r'Officer\d+(.+)',key)
+            if key!='OfficerNo' and (not m or m.group(1) not in allowed):
+                raise ValueError(f'Unrecognized officer assignment field: {key}')
+        raw_ids=[int(v) for k,v in fields.items() if re.fullmatch(r'Officer\d+Id',k)]
+        if len(raw_ids)!=len(set(raw_ids)):raise ValueError('Duplicate officer IDs')
+        ids=set(raw_ids)
+    return ids,name,doc,campaign_divisions
+
+
+def validate_campaign_divisions(section):
+    """Reject layouts we cannot safely update, while allowing populated divisions."""
+    fields=section.fields()
+    count=unique_integer(section,'CampDivNo')
+    if count<0:
+        raise ValueError('Invalid campaign division count in officer file')
+    allowed={'CDivId','Name','Abbreviation','DivisionType','DivisionExperience',
+             'Training','Commander','LeadDivision','Role','ShipCount'}
+    records={}
+    seen=set()
+    for line in section.lines:
+        match=FIELD.match(line)
+        if not match:
+            continue
+        key=match.group(2).strip()
+        if key.casefold()=='campdivno':
+            continue
+        record=re.fullmatch(r'CampDiv(\d+)(.+)',key)
+        if not record:
+            raise ValueError(f'Unrecognized campaign division field: {key}')
+        slot=int(record.group(1));suffix=record.group(2)
+        if key.casefold() in seen:
+            raise ValueError(f'Duplicate campaign division field: {key}')
+        seen.add(key.casefold())
+        if suffix not in allowed and not re.fullmatch(r'ShipId\d+',suffix):
+            raise ValueError(f'Unrecognized campaign division field: {key}')
+        records.setdefault(slot,{})[suffix]=match.group(4).strip()
+    if sorted(records)!=list(range(count)):
+        raise ValueError('Campaign division slots do not match the stored division count')
+    required=allowed
+    cdiv_ids=[]
+    for slot,record in records.items():
+        missing=required-record.keys()
+        if missing:
+            raise ValueError(f'Campaign division {slot} is missing required fields: {", ".join(sorted(missing))}')
+        try:
+            ship_count=int(record['ShipCount'])
+            cdiv_ids.append(int(record['CDivId']))
+            ship_ids={int(key.removeprefix('ShipId')):int(value)
+                      for key,value in record.items() if key.startswith('ShipId')}
+        except ValueError as exc:
+            raise ValueError(f'Invalid numeric data in campaign division {slot}') from exc
+        if ship_count<0 or sorted(ship_ids)!=list(range(ship_count)):
+            raise ValueError(f'Campaign division {slot} ship entries do not match its ship count')
+    if len(cdiv_ids)!=len(set(cdiv_ids)):
+        raise ValueError('Duplicate campaign division IDs')
+    return records
+
+
+def remove_hull_from_divisions(section,hull_id):
+    records=validate_campaign_divisions(section)
+    matches=[]
+    for slot,record in records.items():
+        ship_slots=[int(key.removeprefix('ShipId')) for key,value in record.items()
+                    if key.startswith('ShipId') and int(value)==hull_id]
+        if ship_slots:
+            if len(ship_slots)>1:
+                raise ValueError(f'Hull {hull_id} appears more than once in campaign division {slot}')
+            matches.append((slot,ship_slots[0],int(record['ShipCount'])))
+    if len(matches)>1:
+        raise ValueError(f'Hull {hull_id} appears in more than one campaign division')
+    if not matches:
+        return None
+    slot,removed_slot,ship_count=matches[0]
+    if not 0<=removed_slot<ship_count:
+        raise ValueError(f'Invalid division assignment for hull {hull_id}')
+    retained=[]
+    for old_slot in range(ship_count):
+        if old_slot==removed_slot:
+            continue
+        retained.append(records[slot][f'ShipId{old_slot}'])
+    updated=[]
+    for line in section.lines:
+        match=FIELD.match(line)
+        if not match:
+            updated.append(line)
+            continue
+        key=match.group(2).strip()
+        record=re.fullmatch(rf'CampDiv{slot}(ShipId\d+|ShipCount)',key)
+        if not record:
+            updated.append(line)
+            continue
+        suffix=record.group(1)
+        if suffix=='ShipCount':
+            updated.append(replace_line_value(line,len(retained)))
+            continue
+        old_slot=int(suffix.removeprefix('ShipId'))
+        if old_slot==removed_slot:
+            continue
+        new_slot=old_slot if old_slot<removed_slot else old_slot-1
+        updated.append(line[:match.start(2)]+f'CampDiv{slot}ShipId{new_slot}'+line[match.end(2):])
+    section.lines=updated
+    return slot,len(retained)
 
 
 def transfer_batch(save, assignments):
@@ -93,7 +191,7 @@ def transfer_batch(save, assignments):
     before={s.record_index:(n.index,dict(s.section.fields())) for n in working.nations for s in n.ships}
     ships={s.record_index:s for n in working.nations for s in n.ships}
     nation_indices={nation.index for nation in working.nations}
-    planned=[];affected=set()
+    planned=[];affected=set();officer_data=None
     for hull,dest in assignments.items():
         if (type(hull) is not int or hull not in ships or type(dest) is not int
                 or dest not in nation_indices):
@@ -107,8 +205,11 @@ def transfer_batch(save, assignments):
         for key in ('DesignRefId','BuildingNationIdx','CommanderId'):
             if key not in fields:raise ValueError(f'{ship.name}: missing {key}')
         commander=int(fields['CommanderId'])
+        needs_officer_ids=source.is_player or target.is_player
+        if officer_data is None or (needs_officer_ids and officer_data[0] is None):
+            officer_data=officer_check(working,validate_officers=needs_officer_ids)
+        officers,officer_name,officer_doc,campaign_divisions=officer_data
         if source.is_player or target.is_player:
-            officers=officer_check(working)
             if source.is_player and commander!=-1 and commander not in officers:
                 raise ValueError(f'{ship.name}: commander does not resolve in officer file')
         if not source.is_player and commander!=-1:
@@ -117,6 +218,17 @@ def transfer_batch(save, assignments):
             raise ValueError('Ambiguous player metadata')
         planned.append((ship,source,target));affected.update((source.index,target.index))
     if not planned:return
+    division_changes=[]
+    for ship,_,_ in planned:
+        if result:=remove_hull_from_divisions(campaign_divisions,ship.record_index):
+            slot,remaining=result
+            division_changes.append((ship,slot,remaining))
+            working.audit.append(
+                f'Removed hull {ship.record_index} {ship.name} from campaign division {slot}; '
+                f'{remaining} ship(s) remain'
+            )
+    if division_changes:
+        working.documents[officer_name]=officer_doc
     air_sections=[s for s in working.documents[working.main_file].sections
                   if s.name.casefold()=='airunits']
     has_carrier=any(int(ship.section.fields().get('AircraftCapacity','0') or '0')>0 or
@@ -210,3 +322,4 @@ def transfer_batch(save, assignments):
     save.documents,save.nations,save.audit=working.documents,working.nations,working.audit
     save.modified=True;save._ship_changes=True
     if air_unit_changes:save._aircraft_changes=True
+
