@@ -1,16 +1,21 @@
 # Current project status and documentation policy
 
-Reviewed 2026-10-17 for **Privateer 1.0.5 Beta**. The 1.0.6 local development
-build adds an Air Wing Manager and same-campaign air-group migration for ship
-transfers; it is not published yet. See [release notes](../packaging/RELEASE_NOTES.md)
-and the [user wiki](https://github.com/JakeKen25/Privateer/wiki).
+Reviewed 2026-11-06 for **Privateer 1.0.6.1 Beta**, a local development build.
+The 1.0.6 line adds an Air Wing Manager and same-campaign air-group migration;
+1.0.6.1 also removes transferred hulls from their campaign divisions. Neither
+version is published. See [release notes](../packaging/RELEASE_NOTES.md) and the
+[user wiki](https://github.com/JakeKen25/Privateer/wiki).
 
 ## Current boundaries
 
 - Ship transfers preserve the original builder nation, including unfinished
   ships. Same-campaign carrier transfers migrate linked air wings by updating
-  their nation while retaining aircraft references and base IDs. Cross-save
-  carrier copies and transfers involving active player divisions remain blocked.
+  their nation while retaining aircraft references and base IDs. When a hull is
+  transferred from a campaign division, its entry is removed and the remaining
+  ship IDs are compacted; empty division records are retained. Cross-save carrier
+  copies remain blocked until their air-wing dependencies can be mapped safely.
+  Division cleanup passed an initial user test and still needs rigorous in-game
+  validation.
 - Technology, caliber, economy/unrest, colonies, ordinary tensions, admiral,
   aircraft-model and infrastructure controls are implemented. Their user guides
   distinguish supported edits from unverified in-game consequences.
@@ -59,3 +64,4 @@ fixtures are used by tests and must remain immutable. Never add live campaigns
 or installed game assets. This cleanup does not alter the published 0.9.8 binary.
 
 War, ceasefire and alliance actions are now implemented on develop; see [Relations](RELATIONS.md) for tested behavior and limits.
+
