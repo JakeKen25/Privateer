@@ -99,8 +99,9 @@ so a transferred ship continues to show the nation that originally built it.
 When a carrier transfers within a campaign, air wings based on that hull follow
 it with their aircraft references and counts preserved. Cross-save copies of
 carriers remain blocked until their air-wing dependencies can be mapped safely.
-Transfers involving the player are also blocked while active campaign divisions
-are present. See [the ship-transfer guide](guides/SHIPS.md) for details.
+If the transferred ship belongs to a campaign division, Privateer removes it
+from the division and preserves the division record, including when no ships
+remain. See [the ship-transfer guide](guides/SHIPS.md) for details.
 
 ## Installing and running
 
@@ -160,4 +161,5 @@ year, with plausible values already filled in for missing years. No runtime
 interpolation is needed. Budget
 calculations remain estimates, and features identified as under development
 still require additional file-format research and in-game validation.
+
 

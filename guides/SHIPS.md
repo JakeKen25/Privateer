@@ -59,7 +59,13 @@ When a carrier or other aircraft-capable ship transfers, air wings whose
 `Nation` field. Their aircraft model IDs, counts, roles, and base reference are
 preserved. A missing, duplicate, or mismatched air-wing record blocks the batch
 instead of allowing the ship and its air groups to separate. Transfers involving
-the player remain blocked while active campaign divisions are present.
+the player require the matching officer file. If a transferred hull appears in
+an active campaign division, Privateer removes it from that division, compacts
+the remaining ship references, and updates its ship count. Empty division
+records are retained with a zero ship count so their IDs and any links to them
+remain intact. The `.off` file is staged and saved with the campaign and design
+library changes. The first user test succeeded, but the change still needs more
+rigorous in-game validation.
 
 Changes are staged in memory. **Save As** is recommended for the first game-level
 test. **Save** follows the configured backup policy before replacing the changed
@@ -76,3 +82,4 @@ This is user-reported in-game validation for this class and campaign pair. It
 supports further Ship Spawner work, but cross-save spawning is not yet a shipped
 manager feature. Carrier dependencies, other ship types and fresh-hull creation
 still need separate validation.
+

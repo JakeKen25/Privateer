@@ -536,16 +536,17 @@ class RTW3Save:
         return False
 
     def _validate_written_copy(self, folder: Path, aircraft_only: bool) -> None:
-        if not aircraft_only:
-            RTW3Save.load(folder).validate_or_raise()
-            return
         reloaded = RTW3Save.load(folder)
+        for name, document in self.documents.items():
+            path = folder / name
+            if not path.is_file() or path.read_bytes() != document.to_bytes():
+                raise ValueError(f"The written save file differs from the staged file: {name}")
+        if not aircraft_only:
+            reloaded.validate_or_raise()
+            return
         from .aircraft import aircraft_types
         if aircraft_types(reloaded) != aircraft_types(self):
             raise ValueError("The written aircraft records differ from the staged records")
-        for name, document in self.documents.items():
-            if reloaded.documents[name].to_bytes() != document.to_bytes():
-                raise ValueError(f"The written save file differs from the staged file: {name}")
 
     def save_as(self, destination: str | Path) -> Path:
         self._check_tension_source()
@@ -622,3 +623,4 @@ class RTW3Save:
             if (folder / name).read_bytes() != payload:
                 raise ValueError(f"Written save verification failed: {name}")
         (folder / "RTW3_SAVE_EDITOR_LOG.txt").write_text("RTW3 Save Editor\n\n" + "\n".join(self.audit), encoding="utf-8")
+
