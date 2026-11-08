@@ -107,11 +107,11 @@ def test_observed_ship_maintenance(raw, kind, radar, status, expected):
     assert project_budget(save.nation(0)).maintenance == expected
 
 
-def test_intelligence_levels_are_additive_and_independent_of_fleet_size():
+def test_intelligence_levels_scale_with_fleet_size():
     save = campaign(extra="[Nation1]\nName=A\nIntelligenceSpending=1\n[Nation2]\nName=B\nIntelligenceSpending=2\n[Nation3]\nName=C\nIntelligenceSpending=3\n")
     for fleet in [2, 8, 12]:
         next(s for s in save.documents['test.bcs'].sections if s.name == 'General').set('FleetSize', fleet)
-        assert budget_context(save, save.nation(0)).intelligence == 480
+        assert budget_context(save, save.nation(0)).intelligence == 60 * fleet
     save.nation(1).section.set('IntelligenceSpending', 9)
     assert budget_context(save, save.nation(0)).intelligence is None
 
@@ -156,7 +156,7 @@ def test_reference_aircraft_training_and_infrastructure_do_not_double_count():
     p = project_budget(save.nation(0), context=context)
     assert p.maintenance == 3424 + 4 + 94 + 20 + 55
     assert p.naval_aircraft == 18194
-    assert p.extra_training == 1436
+    assert p.extra_training == 1166
     assert p.total_expenses == sum((p.maintenance, p.construction, p.naval_aircraft, p.research, p.extra_training, p.intelligence))
     assert not save.modified
 
@@ -166,7 +166,7 @@ def test_adjustable_fallbacks_and_missing_income_are_explicit():
     a = BudgetAssumptions(aircraft_rate=2, academy_cost=99, income_factor='1.5')
     c = budget_context(save, save.nation(0), a)
     p = project_budget(save.nation(0), context=c, assumptions=a)
-    assert (p.naval_aircraft, p.extra_training, p.yearly_budget) == (20, 99, 129600)
+    assert (p.naval_aircraft, p.extra_training, p.yearly_budget) == (20, 110, 129600)
     p = project_budget(save.nation(0))
     assert p.yearly_budget == 0 and p.intelligence == 0
     assert any('0 fallback' in note for note in p.notes)
@@ -181,3 +181,4 @@ def test_all_active_estimate_is_separate_from_expenses():
     assert p.maintenance == 50
     assert p.all_active_maintenance == 100
     assert p.total_expenses == p.maintenance + p.research
+
