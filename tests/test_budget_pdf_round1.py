@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from privateer.document import TextDocument
-from privateer.economy import BudgetContext, budget_context, project_budget, _possession_income
+from privateer.economy import BudgetContext, budget_context, project_budget, _possession_income, _submarine_cost, _aircraft_cost
 from privateer.save import RTW3Save
 
 
@@ -34,6 +34,15 @@ class BudgetFormulaTests(unittest.TestCase):
         save = campaign(2, '[Nation1]\nName=Target\nIntelligenceSpending=3\n')
         self.assertEqual(budget_context(save, save.nation(0)).intelligence, 60)
 
+    def test_maintenance_era_multiplier_depends_on_government_and_war(self):
+        save = campaign()
+        self.assertEqual(budget_context(save, save.nation(0)).maintenance_multiplier, Decimal('1.25'))
+        save.nation(0).section.set('GovernmentType', 3)
+        self.assertEqual(budget_context(save, save.nation(0)).maintenance_multiplier, Decimal(1))
+        save.nation(0).section.set('GovernmentType', 0)
+        next(s for s in save.documents['example.bcs'].sections if s.name == 'General').set('War', 1)
+        self.assertEqual(budget_context(save, save.nation(0)).maintenance_multiplier, Decimal(1))
+
     def test_minimum_budget_modifier_and_rounding(self):
         save = campaign()
         save.nation(0).section.set('BudgetModifier', 1)
@@ -59,6 +68,39 @@ class BudgetFormulaTests(unittest.TestCase):
                            'UndevelopedShipbuildingIndustry': 1}.items():
             nation.section.set(key, value)
         self.assertEqual(budget_context(save, nation).additional_construction, 324)
+
+    def test_submarine_cost_by_type_year_and_war(self):
+        boat = {'SubType': '3'}
+        self.assertEqual(_submarine_cost(boat, 1938, {}), 55)
+        self.assertEqual(_submarine_cost(boat, 1945, {'PoorEducation': '1'}, construction=True), 295)
+        self.assertEqual(_submarine_cost(boat, 1971, {}, at_war=True), 102)
+        self.assertIsNone(_submarine_cost({'SubType': '999'}, 1971, {}))
+
+    def test_base_expansion_uses_fleet_and_base_size(self):
+        save = campaign()
+        p = SimpleNamespace(owner='USA', area=2, index=3, base='20')
+        section = SimpleNamespace(fields=lambda: {'MapArea2Possession3BuildingBase': '1'})
+        with patch('privateer.colonies.possessions', return_value=[p]), \
+             patch('privateer.colonies.map_document', return_value=('', None, section)):
+            self.assertEqual(budget_context(save, save.nation(0)).additional_construction, 1350)
+
+    def test_invasion_is_added_to_total(self):
+        save = campaign()
+        c = BudgetContext(fleet_size=8, intelligence=0, possession_income=1236,
+                          income_multipliers=(Decimal('.97'),), year=1971,
+                          invasion_active=True)
+        p = project_budget(save.nation(0), context=c)
+        self.assertEqual(p.invasion, 6597)
+        self.assertEqual(p.total_expenses, p.maintenance + p.construction + p.naval_aircraft +
+                         p.research + p.extra_training + p.intelligence + p.invasion)
+
+    def test_aircraft_unit_modifiers_and_reserve(self):
+        units = [{'Nation':'0', 'Role':'10', 'AircraftNumber':'10', 'CarrierCapable':'1',
+                  'NightCapable':'1', 'HomeBase':'7'}]
+        ships = [{'Id':'7', 'Status':'1', 'InPlay':'1', 'ShipType':'CV', 'AircraftCapacity':'30'}]
+        self.assertEqual(_aircraft_cost(units, ships, (), 0, {}, 1971, False), 129)
+        self.assertIsNone(_aircraft_cost([{'Nation':'0', 'Role':'99'}], (), (), 0, {}, 1971, False))
+        self.assertIsNone(_aircraft_cost(units, (), (), 0, {}, 1971, False))
 
 
 if __name__ == '__main__':

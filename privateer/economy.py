@@ -71,6 +71,77 @@ class BudgetContext:
     possession_income: int | None = None
     income_multipliers: tuple[Decimal, ...] = ()
     year: int | None = None
+    invasion_active: bool = False
+    aircraft_cost: int | None = None
+    maintenance_multiplier: Decimal = Decimal(1)
+
+
+def _submarine_cost(fields, year, nation_fields, *, construction=False, at_war=False):
+    """Calculate the documented submarine rate; unknown types require a fallback."""
+    kind = _field_integer(fields, 'SubType', default=None)
+    base = {0: 40, 1: 50, 2: 20, 3: 55, 4: 55}.get(kind)
+    if base is None or year is None:
+        return None
+    if construction:
+        if year > 1930: base += 2
+        if year > 1940: base += 4
+        for threshold in (1950, 1955, 1960):
+            if year > threshold: base = int(base * Decimal('1.1'))
+        if _field_integer(nation_fields, 'EfficientShipbuildingIndustry'): base += 2
+        if _field_integer(nation_fields, 'PoorEducation'): base -= 2
+        return base * 5
+    if year > 1950: base += 2
+    for threshold in (1955, 1960):
+        if year > threshold: base = int(base * Decimal('1.1'))
+    return round(Decimal(base) * Decimal('1.5')) if at_war else base
+
+
+def _aircraft_cost(units, ships, installations, nation_index, nation_fields, year, at_war):
+    if year > 1999: return None
+    rates = {0:8, 1:8, 2:8, 3:6, 4:12, 5:12, 6:8, 7:8,
+             8:8, 9:8, 10:10, 11:18, 12:18, 13:8, 14:12}
+    bases = {}
+    for fields in (*ships, *installations):
+        identity = _field_integer(fields, 'Id', default=None)
+        if identity is not None: bases[identity] = fields
+    total = 0
+    for unit in units:
+        if _field_integer(unit, 'Nation', default=-1) != nation_index: continue
+        role = _field_integer(unit, 'Role', default=None)
+        if role not in rates: return None
+        rate = 14 if role == 5 and year >= 1952 else rates[role]
+        cost = _field_integer(unit, 'AircraftNumber') * rate
+        if _field_integer(nation_fields, 'AirSeaRescue'): cost = round(Decimal(cost) * Decimal('1.06'))
+        if _field_integer(nation_fields, 'PilotTraining'):
+            cost = round(Decimal(cost) * (Decimal('1.02') if _field_integer(nation_fields, 'Kamikaze') else Decimal('1.1')))
+        if not at_war:
+            cost = round(Decimal(cost) * Decimal('.8'))
+            factor = (Decimal('1.01') if 1950 <= year <= 1956 else
+                      Decimal('1.02') if 1957 <= year <= 1964 else
+                      Decimal('1.03') if 1965 <= year <= 1968 else
+                      Decimal('1.04') if 1969 <= year <= 1975 else
+                      Decimal('1.05') if 1976 <= year <= 1999 else Decimal(1))
+            cost = round(Decimal(cost) * factor)
+        if _field_integer(unit, 'CarrierCapable'): cost = round(Decimal(cost) * Decimal('1.5'))
+        if _field_integer(unit, 'NightCapable'):
+            cost = round(Decimal(cost) * (Decimal('1.3') if role in (10,11,12) else Decimal('1.5')))
+        home = _field_integer(unit, 'HomeBase', default=-1)
+        base = bases.get(home)
+        if home >= 0 and base is None: return None
+        if (base and _field_integer(base, 'Status') in (1,2)) or (home < 0 and not at_war):
+            cost = round(Decimal(cost) * Decimal('.8'))
+        total += cost
+    for ship in ships:
+        if _field_integer(ship, 'InPlay', default=1) != 1 or _field_integer(ship, 'RepairTime') >= 100: continue
+        if ship.get('ShipType', '').strip().upper() not in ('CV','CVL'):
+            capacity = _field_integer(ship, 'AircraftCapacity')
+            total += capacity * ((10 if at_war else 8) if _field_integer(ship, 'Helipad') else (8 if at_war else 6))
+    for installation in installations:
+        if _field_integer(installation, 'InPlay', default=1) != 1 or _field_integer(installation, 'RepairTime') >= 100: continue
+        capacity = _field_integer(installation, 'AircraftCapacity')
+        if 0 < capacity <= 16:
+            total += capacity * (20 if year < 1939 else 25 if year <= 1945 else 30)
+    return total
 
 
 def _possession_income(save, nation, year, install_directory):
@@ -142,6 +213,12 @@ def budget_context(save, nation, assumptions=None, install_directory=None):
     gov = _field_integer(nf, 'GovernmentType', default=-1)
     if _field_integer(game, 'TotalWar') and gov in (4,5): factors.append(Decimal('1.05'))
     if year is not None and year > 1920 and _field_integer(game, 'War') < -6 and gov in (0,1): factors.append(Decimal('0.97'))
+    maintenance_multiplier = Decimal(1)
+    if year is not None and _field_integer(game, 'War') <= 0 and gov not in (3, 5):
+        maintenance_multiplier = next((Decimal(factor) for start,end,factor in
+            ((1922,1949,'1.02'),(1950,1955,'1.05'),(1956,1960,'1.1'),
+             (1961,1965,'1.15'),(1966,1970,'1.2'),(1971,1999,'1.25'))
+            if start <= year <= end), Decimal(1))
     intelligence = None
     # The target-nation spending fields describe the player's intelligence only.
     if nation.index == 0:
@@ -152,6 +229,17 @@ def budget_context(save, nation, assumptions=None, install_directory=None):
     construction, maintenance, notes = [], [], []
     if income_warning: notes.append(income_warning)
     additional_construction = additional_maintenance = 0
+    if fleet is not None:
+        try:
+            from .colonies import map_document, possessions
+            map_fields = map_document(save)[2].fields()
+            for p in possessions(save):
+                if p.owner.casefold() != nation.name.casefold(): continue
+                key = f'MapArea{p.area}Possession{p.index}BuildingBase'
+                if _field_integer(map_fields, key) > 0:
+                    additional_construction += (fleet + 1) * (150 if int(p.base) >= 20 else 100)
+        except (ValueError, KeyError) as exc:
+            notes.append(f'Base expansion unavailable: {exc}')
     if _field_integer(nation.section.fields(), "DockBuilding") > 0:
         size = _field_integer(nf, 'DockSize', default=None)
         if fleet is None or size is None:
@@ -176,21 +264,24 @@ def budget_context(save, nation, assumptions=None, install_directory=None):
             construction.append(label + " (roster unavailable)")
             continue
         for fields in _records(section.fields(), prefix):
-            if not appears_in_transfer_window(fields) or _field_integer(fields, "Sunk"):
+            if (prefix != 'Sub' and not appears_in_transfer_window(fields)) or _field_integer(fields, "Sunk"):
                 continue
             if _field_integer(fields, "InPlay", default=1):
                 raw = _field_integer(fields, "Maintenance", default=None)
                 if prefix == "Sub":
-                    additional_maintenance += raw if raw is not None else _whole(assumptions.submarine_maintenance)
-                    if raw is None:
-                        notes.append(f"Submarine maintenance fallback: {assumptions.submarine_maintenance:,.0f} each, from Game3 long-range boats; other types/eras unverified.")
+                    cost = _submarine_cost(fields, year, nf, at_war=_field_integer(game, 'War') > 0)
+                    if cost is None:
+                        cost = raw if raw is not None else _whole(assumptions.submarine_maintenance)
+                        notes.append('Unknown submarine type or year uses a maintenance fallback.')
+                    additional_maintenance += cost
                 elif raw is not None:
                     factor = Decimal(1) if "mtb" in fields.get("Classname", "").casefold() else assumptions.infrastructure_factor
                     additional_maintenance += int((Decimal(raw) * factor).quantize(Decimal(1), rounding=ROUND_HALF_EVEN))
                 else:
                     maintenance.append("installation with no Maintenance (0 fallback)")
             else:
-                cost = _field_integer(fields, "MonthlyCost", default=None)
+                cost = (_submarine_cost(fields, year, nf, construction=True)
+                        if prefix == 'Sub' else _field_integer(fields, "MonthlyCost", default=None))
                 if cost is None:
                     cost = _whole(assumptions.submarine_construction) if prefix == "Sub" else 0
                     notes.append(f"{label.capitalize()} construction: missing MonthlyCost uses {cost:,} per unit; reference fallback, not a verified formula.")
@@ -198,7 +289,7 @@ def budget_context(save, nation, assumptions=None, install_directory=None):
                     raw = _field_integer(fields, "Maintenance", default=_whole(assumptions.submarine_maintenance) if prefix == "Sub" else 0)
                     cost = raw // 2
                     notes.append("Halted submarine/installation construction borrows the surface half-maintenance rule (unverified).")
-                elif _field_integer(fields, "Hurry"):
+                elif prefix != 'Sub' and _field_integer(fields, "Hurry"):
                     cost = _whole(Decimal(cost) * Decimal("1.15"))
                     notes.append("Hurried submarine/installation construction borrows the surface 1.15 multiplier (unverified).")
                 additional_construction += cost
@@ -210,9 +301,20 @@ def budget_context(save, nation, assumptions=None, install_directory=None):
                     if _field_integer(f, "Nation", default=-1) == nation.index) if models else 0
     if units is None:
         notes.append("Air-unit roster unavailable: aircraft count falls back to 0.")
+    aircraft_cost = None
+    if units is not None and year is not None:
+        fort_section = sections.get(f'nation{nation.index}coastalartillery')
+        if fort_section is not None:
+            aircraft_cost = _aircraft_cost(_records(units.fields(), 'AU'),
+                tuple(ship.section.fields() for ship in nation.ships),
+                _records(fort_section.fields(), 'Ship'), nation.index, nf, year,
+                _field_integer(game, 'War') > 0)
+            if aircraft_cost is None: notes.append('Unknown air-unit role, base or year uses the aircraft fallback.')
     return BudgetContext(fleet, intelligence, tuple(dict.fromkeys(construction)),
                          tuple(dict.fromkeys(maintenance)), additional_construction,
-                         additional_maintenance, aircraft, available, tuple(dict.fromkeys(notes)), income, tuple(factors), year)
+                         additional_maintenance, aircraft, available, tuple(dict.fromkeys(notes)), income, tuple(factors), year,
+                         game.get('InvasionTargetName', '').strip().casefold() not in ('', 'xxx'), aircraft_cost,
+                         maintenance_multiplier)
 
 
 @dataclass(frozen=True)
@@ -232,6 +334,7 @@ class BudgetProjection:
     notes: tuple[str, ...] = ()
     incomplete: bool = True
     all_active_maintenance: int = 0
+    invasion: int = 0
 
 
 def project_budget(nation, *, context=None, base_resources=None, funds=None, assumptions=None):
@@ -290,8 +393,12 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
     extra_training = _field_integer(fields, "ExtraTrainingSpending", "TrainingSpending", default=None)
     intelligence = context.intelligence
     if naval_aircraft is None:
-        naval_aircraft = _whole(context.aircraft_count * assumptions.aircraft_rate)
-        notes.append(f"Aircraft: {context.aircraft_count:,} assigned × {assumptions.aircraft_rate:.6f}; reference average 18,194 / 1,956. Pools ({context.aircraft_available:,}), development, role, pilot and carrier-readiness effects are not separately priced.")
+        if context.aircraft_cost is not None:
+            naval_aircraft = context.aircraft_cost
+            notes.append('Aircraft use the supplied role and modifier rules; the result is under validation.')
+        else:
+            naval_aircraft = _whole(context.aircraft_count * assumptions.aircraft_rate)
+            notes.append(f"Aircraft: {context.aircraft_count:,} assigned × {assumptions.aircraft_rate:.6f}; reference average 18,194 / 1,956. Pools ({context.aircraft_available:,}), development, role, pilot and carrier-readiness effects are not separately priced.")
     else:
         notes.append("Aircraft: explicit saved spending field.")
     if extra_training is None:
@@ -307,6 +414,8 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
         notes.append("Intelligence: 0 fallback; AI-owned spending or invalid target levels cannot be inferred from the player's target fields.")
     maintenance += context.additional_maintenance
     all_active += context.additional_maintenance
+    maintenance = round(Decimal(maintenance) * context.maintenance_multiplier)
+    all_active = round(Decimal(all_active) * context.maintenance_multiplier)
     notes.extend(context.estimate_notes)
     if context.construction_notes:
         notes.append("Construction uses 0 for " + ", ".join(context.construction_notes) + ".")
@@ -314,9 +423,10 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
         notes.append("Maintenance uses 0 for " + ", ".join(context.maintenance_notes) + ".")
     notes.append(f"Infrastructure: saved maintenance × {assumptions.infrastructure_factor}, nearest-even; MTB uses full value. Cross-save applicability unverified. Missile storage is not added separately because its accounting is unresolved.")
     notes.append("Ship maintenance includes observed class-2 search radar charges for DD/CL/CV; other equipment, repair and officer modifiers remain unverified.")
-    total = maintenance + construction + sum(v for v in
+    invasion = yearly // 300 + 100 if context.invasion_active else 0
+    total = maintenance + construction + invasion + sum(v for v in
         (naval_aircraft, research, extra_training, intelligence) if v is not None)
     return BudgetProjection(yearly, monthly, maintenance, construction, naval_aircraft,
         research, extra_training, intelligence, total, monthly - total, available_funds or 0,
-        research_percent, tuple(notes), True, all_active)
+        research_percent, tuple(notes), True, all_active, invasion)
 

@@ -49,8 +49,8 @@ class EconomyWindow(tk.Toplevel):
             ("maintenance", "Maintenance (estimated)"),
             ("all_active_maintenance", "All-active maintenance (estimated)"),
             ("construction", "Construction (estimated)"),
-            ("naval_aircraft", "Naval aircraft"), ("research", "Research"),
-            ("extra_training", "Extra training"), ("intelligence", "Intelligence"),
+            ("naval_aircraft", "Naval aircraft (estimated)"), ("research", "Research"),
+            ("extra_training", "Extra training"), ("intelligence", "Intelligence"), ("invasion", "Invasion"),
             ("total_expenses", "Total expenses (estimated)"), ("monthly_balance", "Monthly balance (estimated)"),
             ("funds", "Funds"),
         )
