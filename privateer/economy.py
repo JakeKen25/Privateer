@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 import re
+from pathlib import Path
 
 from .ship_status import appears_in_transfer_window
 
@@ -67,26 +68,106 @@ class BudgetContext:
     aircraft_count: int = 0
     aircraft_available: int = 0
     estimate_notes: tuple[str, ...] = ()
+    possession_income: int | None = None
+    income_multipliers: tuple[Decimal, ...] = ()
+    year: int | None = None
 
 
-def budget_context(save, nation, assumptions=None):
+def _possession_income(save, nation, year, install_directory):
+    from .colonies import possessions
+    from .document import TextDocument
+    if not install_directory:
+        raise ValueError('Set the game installation directory to calculate possession income.')
+    path = Path(install_directory) / 'Data' / 'MapData.dat'
+    try:
+        data = path.read_bytes()
+        try: text = data.decode('utf-8-sig')
+        except UnicodeDecodeError: text = data.decode('cp1252')
+    except OSError as exc:
+        raise ValueError(f'Cannot read the game map data: {path}') from exc
+    natural = {}
+    names = {}
+    for section in TextDocument.parse(text).sections:
+        for key, value in section.fields().items():
+            m = re.fullmatch(r'MapArea(\d+)Possession(\d+)(NaturalOwnerName|Name)', key, re.I)
+            if m:
+                target = natural if m.group(3).casefold() == 'naturalownername' else names
+                target[(int(m.group(1)), int(m.group(2)))] = value
+    brackets = ((1899,29),(1904,28),(1906,27),(1908,26),(1910,25),(1912,24),
+                (1914,23),(1918,22),(1925,21),(1930,20),(1936,19),(1940,18),
+                (1944,17),(1945,16),(1946,15),(1947,14),(1948,13),(1949,12),
+                (1950,10),(1951,8),(1952,6),(1999,4))
+    rate = next((value for end,value in brackets if year <= end), None)
+    if rate is None: raise ValueError('Possession income is not specified after 1999.')
+    owned = [p for p in possessions(save) if p.owner.casefold() == nation.name.casefold()]
+    homes = {p.area for p in owned if int(p.value) >= 200}
+    total = 0
+    for p in owned:
+        value = int(p.value)
+        if p.area in homes:
+            if value < 200: total += value * 25
+            continue
+        key = (p.area, p.index)
+        if names.get(key, '').casefold() != p.name.casefold():
+            matches = [k for k, name in names.items()
+                       if k[0] == p.area and name.casefold() == p.name.casefold()]
+            if len(matches) != 1:
+                raise ValueError(f'Cannot uniquely match {p.name} in game map data.')
+            key = matches[0]
+        if key not in natural:
+            raise ValueError(f'Cannot match natural ownership for {p.name} in game map data.')
+        total += value * (25 if natural[key].casefold() == nation.name.casefold() else rate)
+    return total
+
+
+def budget_context(save, nation, assumptions=None, install_directory=None):
     """Read campaign-level inputs once when opening the modal editor."""
     assumptions = assumptions or BudgetAssumptions()
     sections = {s.name.casefold(): s for s in save.documents[save.main_file].sections}
     general = sections.get("general")
     fleet = _field_integer(general.fields(), "FleetSize", default=None) if general else None
+    game = general.fields() if general else {}
+    year = _field_integer(game, 'Year', default=None)
+    nf = nation.section.fields()
+    income_warning = None
+    try:
+        income = _possession_income(save, nation, year, install_directory) if year is not None else None
+    except (ValueError, KeyError) as exc:
+        income = None
+        income_warning = str(exc)
+    factors = []
+    if fleet is not None and fleet <= 3: factors.append(Decimal('1.08'))
+    if _field_integer(game, 'ArmyOffensive') > 0: factors.append(Decimal('0.9'))
+    if _field_integer(game, 'CRI') > 0: factors.append(Decimal('0.99'))
+    gov = _field_integer(nf, 'GovernmentType', default=-1)
+    if _field_integer(game, 'TotalWar') and gov in (4,5): factors.append(Decimal('1.05'))
+    if year is not None and year > 1920 and _field_integer(game, 'War') < -6 and gov in (0,1): factors.append(Decimal('0.97'))
     intelligence = None
     # The target-nation spending fields describe the player's intelligence only.
     if nation.index == 0:
         levels = [_field_integer(n.section.fields(), "IntelligenceSpending", default=None)
                   for n in save.nations if n.index != 0]
         if all(level in (0, 1, 2, 3) for level in levels):
-            intelligence = sum(levels) * 80
+            intelligence = sum(levels) * 10 * fleet if fleet is not None else None
     construction, maintenance, notes = [], [], []
+    if income_warning: notes.append(income_warning)
     additional_construction = additional_maintenance = 0
     if _field_integer(nation.section.fields(), "DockBuilding") > 0:
-        additional_construction += _whole(assumptions.dock_construction)
-        notes.append(f"Dock expansion: {assumptions.dock_construction:,.0f}/month fallback from the Game8 observation; not a general formula.")
+        size = _field_integer(nf, 'DockSize', default=None)
+        if fleet is None or size is None:
+            additional_construction += _whole(assumptions.dock_construction)
+            notes.append('Dock expansion uses the reference fallback because fleet size or dock size is missing.')
+        else:
+            dock = (fleet + 1) * 150
+            for condition, factor in ((size < 15000, Decimal('.9')),
+                                      (size < 10000, Decimal('.9'))):
+                if condition: dock = int(dock * factor)
+            for threshold in (30000, 40000, 50000, 60000, 65000):
+                if size >= threshold: dock = int(dock * Decimal('1.1'))
+            if _field_integer(nf, 'UndevelopedShipbuildingIndustry'):
+                dock = int(dock * Decimal('.8'))
+            additional_construction += dock
+            notes.append(f'Dock expansion: {dock:,}/month from the supplied rule; under validation.')
     for suffix, prefix, label in (("Submarines", "Sub", "submarines"),
                                    ("CoastalArtillery", "Ship", "fortifications")):
         section = sections.get(f"nation{nation.index}{suffix}".casefold())
@@ -131,7 +212,7 @@ def budget_context(save, nation, assumptions=None):
         notes.append("Air-unit roster unavailable: aircraft count falls back to 0.")
     return BudgetContext(fleet, intelligence, tuple(dict.fromkeys(construction)),
                          tuple(dict.fromkeys(maintenance)), additional_construction,
-                         additional_maintenance, aircraft, available, tuple(dict.fromkeys(notes)))
+                         additional_maintenance, aircraft, available, tuple(dict.fromkeys(notes)), income, tuple(factors), year)
 
 
 @dataclass(frozen=True)
@@ -161,15 +242,25 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
     available_funds = nation.funds if funds is None else funds
     fields = nation.section.fields()
     modifier = _field_integer(fields, "BudgetModifier", default=None)
-    notes = ["Income: BaseResources × BudgetModifier × FleetSize / 10, with the adjustable income factor. Possession and other adjustments remain unresolved."]
+    notes = ["Income follows the supplied formula when possession and campaign data are available; other budget lines remain estimates."]
     if resources is None or modifier is None or context.fleet_size is None:
         yearly = monthly = 0
         notes.append("Income inputs missing: income and research use a 0 fallback.")
     else:
-        yearly = _whole(Decimal(resources) * modifier * context.fleet_size / 10 * assumptions.income_factor)
-        monthly = _whole(Decimal(yearly) / 12)
+        if context.possession_income is None:
+            yearly = _whole(Decimal(resources) * modifier * context.fleet_size / 10 * assumptions.income_factor)
+            notes.append('Possession data unavailable: income uses the earlier estimate.')
+        else:
+            yearly = round(Decimal(resources + context.possession_income) / 101 * max(3, modifier)) * context.fleet_size
+            for factor in context.income_multipliers:
+                yearly = round(Decimal(yearly) * factor)
+            yearly *= 10
+        monthly = round(Decimal(yearly) / 12)
     research_percent = _field_integer(fields, "ResearchPct")
-    research = _whole(Decimal(monthly) * research_percent / 100)
+    research_yearly = round(Decimal(yearly) * research_percent / 100)
+    if _field_integer(fields, 'HFR') == 3 and context.fleet_size is not None:
+        research_yearly += 1200 * context.fleet_size
+    research = round(Decimal(research_yearly) / 12)
     maintenance = 0
     all_active = 0
     construction = context.additional_construction
@@ -206,9 +297,9 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
     if extra_training is None:
         percent = sum(rate for name, rate in (("GunneryTraining", 30), ("NightFighting", 20),
                       ("TorpedoWarfare", 20), ("DamageControl", 20)) if _field_integer(fields, name))
-        academy = _whole(assumptions.academy_cost) if _field_integer(fields, "NavalAcademy") else 0
+        academy = (round(Decimal(yearly // 95) / 12) // 10 * 10) if _field_integer(fields, "NavalAcademy") else 0
         extra_training = _whole(Decimal(maintenance) * assumptions.training_base_factor * percent / 100) + academy
-        notes.append(f"Training: {percent}% × {assumptions.training_base_factor} × estimated surface maintenance + academy {academy:,}. The 0.8 base factor and 340 academy default are Game3 approximations; current flags only, pending timing unresolved.")
+        notes.append(f"Training: {percent}% × {assumptions.training_base_factor} × estimated surface maintenance + academy {academy:,} derived from yearly budget. The training factor and pending timing remain unverified.")
     else:
         notes.append("Training: explicit saved spending field.")
     if intelligence is None:
@@ -228,3 +319,4 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
     return BudgetProjection(yearly, monthly, maintenance, construction, naval_aircraft,
         research, extra_training, intelligence, total, monthly - total, available_funds or 0,
         research_percent, tuple(notes), True, all_active)
+
