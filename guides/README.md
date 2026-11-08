@@ -12,6 +12,7 @@ operating instructions or proof that an experimental game formula is exact.
 - [Technology and gun caliber](TECHNOLOGY_WIP.md)
 - [Economy and unrest](ECONOMY.md)
 - [Budget estimates and built-in assumptions](BUDGET_ESTIMATES.md)
+- [Budget formula first pass and comparison](BUDGET_FORMULA_FIRST_PASS.md)
 - [Infrastructure and fortifications](FORTIFICATIONS.md)
 - [Aircraft models](AIRCRAFT.md)
 - [Air wings](AIR_WINGS.md)
@@ -47,3 +48,4 @@ feature guides take precedence over old implementation-status statements.
 - [Development fixtures and original prototype notes](../developmentResources/README.md)
 
 - [Relations: tensions, alliances and experimental wars](RELATIONS.md)
+

@@ -12,7 +12,9 @@ class EconomyWindow(tk.Toplevel):
     def __init__(self, parent, save, nation_index):
         super().__init__(parent)
         self.save, self.nation = save, save.nation(nation_index)
-        self.budget_context = budget_context(save, self.nation)
+        settings = getattr(parent, 'settings', None)
+        install = getattr(settings, 'rtw3_install_directory', '')
+        self.budget_context = budget_context(save, self.nation, install_directory=install)
         self.title(f"Economy and Unrest Manager — {self.nation.name}")
         self.resizable(False, False)
         self.transient(parent)
@@ -52,6 +54,10 @@ class EconomyWindow(tk.Toplevel):
             ("total_expenses", "Total expenses (estimated)"), ("monthly_balance", "Monthly balance (estimated)"),
             ("funds", "Funds"),
         )
+        if self.budget_context.possession_income is None:
+            labels = tuple((key, label.replace('(provisional)', '(fallback)'))
+                           if key in ('yearly_budget', 'monthly_budget') else (key, label)
+                           for key, label in labels)
         for row, (key, label) in enumerate(labels):
             ttk.Label(panel, text=label).grid(row=row, column=0, sticky="w", padx=(0, 24), pady=2)
             variable = tk.StringVar()
@@ -124,3 +130,4 @@ class EconomyWindow(tk.Toplevel):
         self.master.render_main_table(str(self.nation.index))
         self.master.status.set("Unsaved changes")
         self.destroy()
+
