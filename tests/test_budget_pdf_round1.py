@@ -76,6 +76,33 @@ class BudgetFormulaTests(unittest.TestCase):
         self.assertEqual(_submarine_cost(boat, 1945, {'PoorEducation': '1'}, construction=True), 295)
         self.assertEqual(_submarine_cost(boat, 1971, {}, at_war=True), 102)
         self.assertIsNone(_submarine_cost({'SubType': '999'}, 1971, {}))
+        self.assertEqual(_submarine_cost({'SubType': '3', 'Halted': '1'}, 1945, {}, construction=True), 2)
+
+    def test_surface_construction_uses_calculated_halted_cost_and_even_rounding(self):
+        save = campaign()
+        nation = save.nation(0)
+        def vessel(idx, **values):
+            values.setdefault('Status', '0')
+            return SimpleNamespace(record_index=idx, under_construction=True,
+                                   section=SimpleNamespace(fields=lambda: values))
+        nation.ships = [vessel(1, Halted='1', Maintenance='100'),
+                        vessel(2, MonthlyCost='30', Hurry='1'),
+                        vessel(3, MonthlyCost='10', Hurry='1'),
+                        vessel(4, MonthlyCost='999', RepairTime='100')]
+        model = MaintenanceModel(0, 0, 0, 0, 0, Decimal('.08'), {1: 143})
+        result = project_budget(nation, context=BudgetContext(maintenance_model=model))
+        self.assertEqual(result.construction, 71 + 34 + 12)
+
+    def test_installation_halted_costs_zero_and_hurry_rounds_even(self):
+        save = campaign()
+        section = next(s for s in save.documents['example.bcs'].sections
+                       if s.name == 'Nation0CoastalArtillery')
+        for key, value in {'Ship0InPlay': '0', 'Ship0Halted': '1',
+                           'Ship0MonthlyCost': '100', 'Ship0Maintenance': '80',
+                           'Ship1InPlay': '0', 'Ship1Hurry': '1',
+                           'Ship1MonthlyCost': '30'}.items():
+            section.set(key, value)
+        self.assertEqual(budget_context(save, save.nation(0)).additional_construction, 34)
 
     def test_base_expansion_uses_fleet_and_base_size(self):
         save = campaign()
@@ -166,6 +193,21 @@ class BudgetFormulaTests(unittest.TestCase):
             fields['PoorEducation'] = '1'
             self.assertEqual(fleet_maintenance(save, nation, game, sections).training_rate, Decimal('.05'))
 
+    def test_halted_ship_uses_its_calculated_maintenance(self):
+        values = {'InPlay':'0', 'Halted':'1', 'Maintenance':'100', 'RepairTime':'0',
+                  'Status':'1', 'ShipType':'DD', 'LocationAreaName':'Northeast Asia',
+                  'YearBuilt':'1920', 'SearchRadarClass':'2', 'CommanderId':'-1'}
+        vessel = SimpleNamespace(record_index=42, name='Example', under_construction=True,
+                                 section=SimpleNamespace(fields=lambda: values))
+        nation = SimpleNamespace(index=0, name='USA', section=SimpleNamespace(fields=lambda: {}), ships=[vessel])
+        save = SimpleNamespace(main_file='RTWGame1.bcs', documents={'RTWGame1.off':TextDocument.parse('[Officers]\n')})
+        sections = {'nation0coastalartillery':TextDocument.parse('[Nation0CoastalArtillery]\n').sections[0]}
+        home = SimpleNamespace(area=5, owner='USA', value='200', name='Home')
+        with patch('privateer.maintenance.possessions', return_value=[home]):
+            model = fleet_maintenance(save, nation, {'Year':'1945','Month':'12','Day':'1','War':'-20'}, sections)
+        self.assertEqual(model.halted_ship_costs[42], 56)
+        self.assertEqual(model.surface, 0)
+
     def test_ke_date_boundary_uses_fallback_instead_of_guessing(self):
         f = {'Maintenance':'100', 'RepairTime':'0', 'Status':'0', 'ShipType':'KE',
              'LocationAreaName':'Northeast Asia', 'YearBuilt':'1940', 'CommanderId':'-1',
@@ -177,4 +219,3 @@ class BudgetFormulaTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
