@@ -37,10 +37,9 @@ Funds, resources and unrest edits still require the normal Apply and Save flow.
 | All-active maintenance | Apply the all-active calculation to surface ships and ordinary maintenance to installations and submarines | Matches available displayed reference figures; wartime behavior remains unverified. |
 | Maintenance era adjustment | Apply peacetime multiplier based on year and government to the maintenance subtotal | Supplied rule; Game8 total now matches. Other maintenance components remain estimated. |
 | Submarine maintenance | Type-based rate with year and war modifiers | Supplied rule; unknown types or missing years use a fallback. Broader validation pending. |
-| Surface construction | MonthlyCost; accelerated ×1.15 with half-up rounding; halted floor(Maintenance / 2) takes precedence | Controlled comparisons. Monthly premium is not a claim about total build-cost premium. |
-| Installation construction | Saved MonthlyCost for unfinished live records | Completed records excluded even if MonthlyCost remains positive. |
-| Submarine construction | Type-based rate with year and industry modifiers | Supplied rule for active construction; unknown types use a fallback. Halted construction remains provisional. |
-| Special sub/installation construction | Halted entries use a provisional half-maintenance fallback; hurried installations use 1.15 | These cases still need the supplied rules implemented and validated. |
+| Surface construction | MonthlyCost; hurried ×1.15 rounded to even; halted uses half the fully calculated ship maintenance, truncated | Missing calculation inputs use half saved Maintenance as a fallback. |
+| Installation construction | MonthlyCost; hurried ×1.15 rounded to even; halted costs zero | The halted rule needs an in-game comparison. |
+| Submarine construction | Type-based rate with year and industry modifiers; multiplied by 5 | The PDF says halted submarines divide by 25 instead; Privateer interprets this literally as the adjusted base rate ÷ 25, truncated. This interpretation needs an in-game comparison. Unknown types use a fallback. |
 | Dock expansion | Fleet-size base adjusted by dock size and industry | Supplied rule reproduces Game8's 324; other cases need validation. |
 | Base expansion | (FleetSize + 1) × 100, or × 150 for base value ≥ 20, per owned expansion | Supplied rule; more in-game examples needed. |
 | Naval aircraft | Role-based air-unit rates and modifiers, plus ship aircraft and airship sheds | Matches available aircraft screenshots for Games 1–6, 8 and 9. Unknown role, base or year uses the earlier blended fallback. |
@@ -75,7 +74,8 @@ but users cannot change these rates in the manager. The rules and limitations in
 this guide document the fallbacks previously explained inside the window.
 Published 0.9.8 still contains the older assumption controls and information panel.
 
-Halted ship, submarine and installation construction remains provisional.
+Halted construction follows the supplied rules, but still needs independent
+in-game validation; the halted submarine wording is ambiguous as explained above.
 The inferred KE date encoding, officer effects, war and surprise attack cases,
 and AI-nation differences need additional validation. Issue #22 stays open until
 the remaining rules have been implemented and checked.
@@ -86,4 +86,3 @@ implementation-status statements do not describe this numeric-estimate mode.
 
 The current development calculator shows a single estimated monthly balance.
 The former ±10% planning range has been removed.
-

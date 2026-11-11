@@ -90,7 +90,9 @@ def _submarine_cost(fields, year, nation_fields, *, construction=False, at_war=F
             if year > threshold: base = int(base * Decimal('1.1'))
         if _field_integer(nation_fields, 'EfficientShipbuildingIndustry'): base += 2
         if _field_integer(nation_fields, 'PoorEducation'): base -= 2
-        return base * 5
+        # The supplied notes say to divide by 25 instead of multiplying by 5.
+        # This literal interpretation has not yet been checked in-game.
+        return base // 25 if _field_integer(fields, 'Halted') else base * 5
     if year > 1950: base += 2
     for threshold in (1955, 1960):
         if year > threshold: base = int(base * Decimal('1.1'))
@@ -289,18 +291,20 @@ def budget_context(save, nation, assumptions=None, install_directory=None):
                     cost = _whole(assumptions.submarine_construction) if prefix == "Sub" else 0
                     notes.append(f"{label.capitalize()} construction: missing MonthlyCost uses {cost:,} per unit; reference fallback, not a verified formula.")
                 if _field_integer(fields, "Halted"):
-                    raw = _field_integer(fields, "Maintenance", default=_whole(assumptions.submarine_maintenance) if prefix == "Sub" else 0)
-                    cost = raw // 2
-                    notes.append("Halted submarine/installation construction borrows the surface half-maintenance rule (unverified).")
+                    if prefix == 'Sub':
+                        notes.append('Halted submarine construction uses the supplied base-rate / 25 interpretation; not yet verified in-game.')
+                    else:
+                        cost = 0
                 elif prefix != 'Sub' and _field_integer(fields, "Hurry"):
-                    cost = _whole(Decimal(cost) * Decimal("1.15"))
-                    notes.append("Hurried submarine/installation construction borrows the surface 1.15 multiplier (unverified).")
+                    cost = round(Decimal(cost) * Decimal("1.15"))
                 additional_construction += cost
     maintenance_model = None
     if year is not None and nation.index == 0:
         try:
             from .maintenance import fleet_maintenance
             maintenance_model = fleet_maintenance(save, nation, game, sections)
+            for error in maintenance_model.halted_ship_errors:
+                notes.append(f'Halted ship construction uses saved maintenance as a fallback: {error}')
             additional_maintenance = submarine_maintenance + maintenance_model.installations
             notes.append('Ship maintenance follows the supplied rules; KE date interpretation and unusual cases remain under validation.')
         except (ValueError, KeyError) as exc:
@@ -385,11 +389,17 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
             continue
         charge = _field_integer(f, "Maintenance")
         if ship.under_construction:
+            if _field_integer(f, 'RepairTime') >= 100:
+                continue
             if _field_integer(f, "Halted"):
-                construction += charge // 2
+                modeled = (context.maintenance_model.halted_ship_costs.get(ship.record_index)
+                           if context.maintenance_model is not None else None)
+                construction += (charge if modeled is None else modeled) // 2
+                if modeled is None:
+                    notes.append('Halted ship construction uses saved maintenance as a fallback.')
             else:
                 cost = _field_integer(f, "MonthlyCost")
-                construction += (_whole(Decimal(cost) * Decimal("1.15"))
+                construction += (round(Decimal(cost) * Decimal("1.15"))
                                  if _field_integer(f, "Hurry") else cost)
         else:
             status = str(f.get("Status", "0")).strip()
@@ -449,4 +459,3 @@ def project_budget(nation, *, context=None, base_resources=None, funds=None, ass
     return BudgetProjection(yearly, monthly, maintenance, construction, naval_aircraft,
         research, extra_training, intelligence, total, monthly - total, available_funds or 0,
         research_percent, tuple(notes), True, all_active, invasion)
-

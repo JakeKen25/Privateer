@@ -1,5 +1,5 @@
 """Provisional player-fleet maintenance rules from the supplied formula notes."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
 
@@ -16,6 +16,8 @@ class MaintenanceModel:
     training_base: int
     training_points: int
     training_rate: Decimal
+    halted_ship_costs: dict = field(default_factory=dict)
+    halted_ship_errors: tuple = ()
 
 
 def ship_maintenance(fields, *, year, month, day, at_war, home_areas,
@@ -141,5 +143,16 @@ def fleet_maintenance(save, nation, game, sections):
                  if _field_integer(nf, current_key) or _field_integer(nf, pending_key))
     rate = (Decimal('.06') if _field_integer(nf, 'SurpriseAttack') and not _field_integer(nf, 'PoorEducation')
             else Decimal('.05') if at_war else Decimal('.08'))
-    return MaintenanceModel(surface, active, installation_total, training_base, points, rate)
-
+    halted_costs, halted_errors = {}, []
+    from .ship_status import appears_in_transfer_window
+    for ship in nation.ships:
+        f = ship.section.fields()
+        if (not getattr(ship, 'under_construction', False) or not _field_integer(f, 'Halted') or
+                _field_integer(f, 'RepairTime') >= 100 or not appears_in_transfer_window(f)):
+            continue
+        try:
+            halted_costs[ship.record_index] = ship_maintenance(f, **kwargs)
+        except (ValueError, KeyError) as exc:
+            halted_errors.append(f'{ship.name}: {exc}')
+    return MaintenanceModel(surface, active, installation_total, training_base, points, rate,
+                            halted_costs, tuple(halted_errors))
