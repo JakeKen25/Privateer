@@ -66,7 +66,8 @@ retains the incomplete/estimated flag even when an example happens to match.
 Privateer 0.9.9 removes the bottom disclaimer, scrollable calculation notes,
 and **Estimate assumptions…** button and dialog. The calculator uses the same
 built-in default rates and formulas; this interface cleanup does not change
-estimated totals or the ±10% balance range. Estimated/provisional row labels remain.
+estimated totals. Estimated/provisional row labels remain. The later development
+calculator removes the former ±10% balance range and marks improved accuracy.
 Only Funds, Base resources and Unrest level are editable campaign values here.
 
 The backend still accepts explicit assumptions for research and automated checks,
@@ -83,8 +84,6 @@ Historical measurements remain in [Game3 experiments](BUDGET_GAME3_EXPERIMENTS.m
 and the [0.9.4 comparison](BUDGET_CALCULATOR_RESEARCH.md); those documents' earlier
 implementation-status statements do not describe this numeric-estimate mode.
 
-The monthly balance also shows a planning range of balance minus/plus 10% of
-its absolute value, displayed to one decimal place. Negative balances retain
-ordered lower/upper bounds; zero gives 0.0 to 0.0. This is a chosen planning
-allowance, not a measured confidence interval or a change to income/expenses.
+The current development calculator shows a single estimated monthly balance.
+The former ±10% planning range has been removed.
 
