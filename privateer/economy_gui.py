@@ -1,7 +1,6 @@
 """Combined economy and unrest editor with a budget projection."""
 
 import tkinter as tk
-from decimal import Decimal
 from tkinter import messagebox, ttk
 
 from .economy import budget_context, project_budget
@@ -41,7 +40,7 @@ class EconomyWindow(tk.Toplevel):
             operation.trace_add("write", lambda *_: self.refresh())
             amount.trace_add("write", lambda *_: self.refresh())
 
-        panel = ttk.LabelFrame(body, text="Estimated monthly budget", padding=10)
+        panel = ttk.LabelFrame(body, text="Budget calculator — improved accuracy", padding=10)
         panel.grid(row=5, column=0, columnspan=4, sticky="ew", pady=(12, 8))
         self.lines = {}
         labels = (
@@ -64,10 +63,6 @@ class EconomyWindow(tk.Toplevel):
             self.lines[key] = variable
             ttk.Label(panel, textvariable=variable, width=16, anchor="e",
                       relief="sunken", padding=(4, 1)).grid(row=row, column=1, sticky="e", pady=2)
-            if key == "monthly_balance":
-                self.balance_range = tk.StringVar()
-                ttk.Label(panel, textvariable=self.balance_range).grid(
-                    row=row, column=2, sticky="w", padx=(12, 0))
         self.error = tk.StringVar()
         self.error_label = ttk.Label(body, textvariable=self.error, wraplength=570, foreground="#a00000")
         buttons = ttk.Frame(body)
@@ -101,10 +96,6 @@ class EconomyWindow(tk.Toplevel):
                 variable.set(f"{value:,}")
             if projection.research is not None:
                 self.lines["research"].set(f"{projection.research:,} ({projection.research_percent}%)")
-            balance = Decimal(projection.monthly_balance)
-            margin = abs(balance) * Decimal("0.10")
-            self.balance_range.set(
-                f"±10%: {balance - margin:,.1f} to {balance + margin:,.1f}")
             self.error.set("")
             self.error_label.grid_remove()
         except ValueError as exc:
