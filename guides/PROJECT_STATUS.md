@@ -1,10 +1,10 @@
 # Current project status and documentation policy
 
-Reviewed 2026-11-06 for **Privateer 1.0.6.1 Beta**, a local development build.
-The 1.0.6 line adds an Air Wing Manager and same-campaign air-group migration;
-1.0.6.1 also removes transferred hulls from their campaign divisions. Neither
-version is published. See [release notes](../packaging/RELEASE_NOTES.md) and the
-[user wiki](https://github.com/JakeKen25/Privateer/wiki).
+Reviewed 2026-11-10 for **Privateer 1.0.6.5 Beta**, a local development build.
+The 1.0.6 line adds an Air Wing Manager, same-campaign air-group migration,
+division-aware transfers, and a more accurate budget calculator. It is not
+published. See the [user wiki](https://github.com/JakeKen25/Privateer/wiki) for
+the current published release.
 
 ## Current boundaries
 
@@ -19,9 +19,9 @@ version is published. See [release notes](../packaging/RELEASE_NOTES.md) and the
 - Technology, caliber, economy/unrest, colonies, ordinary tensions, admiral,
   aircraft-model and infrastructure controls are implemented. Their user guides
   distinguish supported edits from unverified in-game consequences.
-- The budget calculator displays numeric estimates and a ±10% monthly-balance
-  planning allowance. Missing formulas use disclosed assumptions; the allowance
-  is not a measured confidence interval. See [current rules](BUDGET_ESTIMATES.md)
+- The budget calculator displays estimates with improved accuracy, matching eight
+  available save and screenshot comparisons. Some cases still use fallbacks and
+  need further validation. See [current rules](BUDGET_ESTIMATES.md)
   and [later possession research](POSSESSION_BUDGET_RESEARCH.md).
 - Submarine Manager supports spawning, renaming, deletion and repair with staged
   Apply/Cancel changes; its generated behavior still needs in-game validation.
