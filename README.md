@@ -10,7 +10,7 @@ The calculator shows numeric estimates in every budget field,
 including total expenses and monthly balance. Unresolved costs use built-in
 reference assumptions. The 0.9.9 interface has no bottom information panel
 or estimate-assumption controls. See [budget estimates](guides/BUDGET_ESTIMATES.md).
-The final monthly balance includes a ±10% planning range alongside its estimate because the underlying calculations are still under review. This is not a validated confidence interval.
+The development calculator has improved accuracy: its budget values match eight available save and screenshot comparisons. Some cases remain under review, so totals and balances are still estimates.
 
 Privateer is a save editor for **Rule the Waves 3**. It turns many manual,
 error-prone save-file edits into guided tools so players can spend less time
