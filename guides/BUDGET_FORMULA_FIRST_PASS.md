@@ -6,7 +6,7 @@ intelligence, academy costs and dock expansion. A second pass adds aircraft,
 in-service submarine maintenance, active submarine construction, base expansion,
 invasion, and the peace-era maintenance multiplier. A third pass implements player
 ship and installation maintenance, all-active maintenance, and training priorities.
-The monthly balance range remains while untested cases are investigated.
+The former monthly balance range has been removed. Untested cases remain under investigation.
 
 ## Comparison with saved campaigns
 
