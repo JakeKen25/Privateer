@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from privateer.document import TextDocument
 from privateer.economy import BudgetContext, budget_context, project_budget, _possession_income, _submarine_cost, _aircraft_cost
+from privateer.maintenance import MaintenanceModel, ship_maintenance, fleet_maintenance
 from privateer.save import RTW3Save
 
 
@@ -101,6 +102,77 @@ class BudgetFormulaTests(unittest.TestCase):
         self.assertEqual(_aircraft_cost(units, ships, (), 0, {}, 1971, False), 129)
         self.assertIsNone(_aircraft_cost([{'Nation':'0', 'Role':'99'}], (), (), 0, {}, 1971, False))
         self.assertIsNone(_aircraft_cost(units, (), (), 0, {}, 1971, False))
+
+    def test_ship_age_radar_status_and_all_active(self):
+        f = {'Maintenance':'100', 'RepairTime':'0', 'Status':'1', 'ShipType':'DD',
+             'LocationAreaName':'Northeast Asia', 'YearBuilt':'1920', 'SearchRadarClass':'2',
+             'CommanderId':'-1'}
+        args = dict(year=1945, month=12, day=1, at_war=False,
+                    home_areas={'northeast asia'}, possession_areas={}, officers={})
+        self.assertEqual(ship_maintenance(f, **args), 56)
+        self.assertEqual(ship_maintenance(f, all_active=True, **args), 113)
+
+    def test_repairs_replace_commander_modifier(self):
+        f = {'Maintenance':'100', 'RepairTime':'2', 'Status':'0', 'ShipType':'DD',
+             'LocationAreaName':'Northeast Asia', 'YearBuilt':'1940', 'SearchRadarClass':'0',
+             'CommanderId':'5'}
+        args = dict(year=1945, month=12, day=1, at_war=False,
+                    home_areas={'northeast asia'}, possession_areas={},
+                    officers={5:{'Special':'17','Special2':'0'}})
+        self.assertEqual(ship_maintenance(f, **args), 200)
+
+    def test_foreign_airship_base_receives_airbase_modifier(self):
+        f = {'Maintenance':'43', 'RepairTime':'0', 'Status':'0', 'ShipType':'LT',
+             'Classname':'Airship base', 'LocationAreaName':'Fiji', 'CommanderId':'-1'}
+        args = dict(year=1926, month=12, day=1, at_war=False,
+                    home_areas={'northeast asia'}, possession_areas={'fiji':'south pacific'}, officers={})
+        self.assertEqual(ship_maintenance(f, installation=True, **args), 46)
+
+    def test_maintenance_and_training_share_eligible_ship_costs(self):
+        save = campaign()
+        nation = save.nation(0)
+        nation.base_resources = 30162
+        nation.section.set('BudgetModifier', 16)
+        nation.section.set('ResearchPct', 12)
+        model = MaintenanceModel(3445, 3531, 2214, 3424, 4, Decimal('.08'))
+        c = BudgetContext(fleet_size=8, intelligence=0, possession_income=1050,
+                          additional_maintenance=2599, year=1945, maintenance_model=model)
+        p = project_budget(nation, context=c)
+        self.assertEqual((p.maintenance, p.all_active_maintenance, p.extra_training), (6044, 6130, 1436))
+
+    def test_pending_training_excludes_repairs_and_status_seven(self):
+        def vessel(maintenance, repair, status):
+            values = {'InPlay':'1', 'Maintenance':str(maintenance), 'RepairTime':str(repair),
+                      'Status':str(status), 'ShipType':'DD', 'LocationAreaName':'Northeast Asia',
+                      'YearBuilt':'1940', 'CommanderId':'-1'}
+            return SimpleNamespace(section=SimpleNamespace(fields=lambda: values))
+        fields = {'PendingGunneryTraining':'1', 'NightFighting':'1', 'PendingNightFighting':'1'}
+        nation = SimpleNamespace(index=0, name='USA', section=SimpleNamespace(fields=lambda: fields),
+                                 ships=[vessel(100,0,0), vessel(20,1,0), vessel(30,0,7)])
+        doc = TextDocument.parse('[Officers]\nOfficerNo=0\n')
+        save = SimpleNamespace(main_file='RTWGame1.bcs', documents={'RTWGame1.off':doc})
+        sections = {'nation0coastalartillery':TextDocument.parse('[Nation0CoastalArtillery]\n').sections[0]}
+        home = SimpleNamespace(area=5, owner='USA', value='200', name='Home')
+        game = {'Year':'1945', 'Month':'12', 'Day':'1', 'War':'-20'}
+        with patch('privateer.maintenance.possessions', return_value=[home]):
+            model = fleet_maintenance(save, nation, game, sections)
+        self.assertEqual((model.surface, model.surface_all_active, model.training_base, model.training_points),
+                         (155, 170, 100, 5))
+        self.assertEqual(model.training_rate, Decimal('.08'))
+        fields['SurpriseAttack'] = '1'
+        game['War'] = '1'
+        with patch('privateer.maintenance.possessions', return_value=[home]):
+            self.assertEqual(fleet_maintenance(save, nation, game, sections).training_rate, Decimal('.06'))
+            fields['PoorEducation'] = '1'
+            self.assertEqual(fleet_maintenance(save, nation, game, sections).training_rate, Decimal('.05'))
+
+    def test_ke_date_boundary_uses_fallback_instead_of_guessing(self):
+        f = {'Maintenance':'100', 'RepairTime':'0', 'Status':'0', 'ShipType':'KE',
+             'LocationAreaName':'Northeast Asia', 'YearBuilt':'1940', 'CommanderId':'-1',
+             'ObsoleteDate':str((1945-1900)*365 + 11*30)}
+        with self.assertRaisesRegex(ValueError, 'date boundary'):
+            ship_maintenance(f, year=1945, month=12, day=1, at_war=False,
+                             home_areas={'northeast asia'}, possession_areas={}, officers={})
 
 
 if __name__ == '__main__':
