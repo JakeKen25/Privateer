@@ -1,4 +1,4 @@
-# Numeric budget estimates (development first pass)
+# Numeric budget estimates (development calculator)
 
 Development update, 2026-11-07: income, research, intelligence, academy and
 dock expansion now use the supplied formula document where the required inputs
@@ -7,6 +7,12 @@ budget and research amounts. A second pass implements aircraft, in-service
 submarine costs, unhalted submarine construction, base expansion, invasion,
 and the peacetime maintenance era adjustment. Expense totals remain estimates.
 The player-nation rules have not established the AI-nation differences.
+
+Development update, 2026-11-10: a third pass adds player surface-ship and
+installation maintenance, all-active maintenance, and current/pending training.
+Eight available player budget comparisons now match every displayed component.
+Keep all rows provisional while untested cases and save/screenshot alignment
+are investigated; this is not independent proof of the supplied formulas.
 
 Updated 2026-10-07. The owner requested a value in every calculator field while
 awaiting formulas from the RTW3 developer. This supersedes the earlier policy of
@@ -26,8 +32,9 @@ Funds, resources and unrest edits still require the normal Apply and Save flow.
 | Annual income | Add possession income, divide by 101, apply minimum budget modifier, fleet size and campaign modifiers, rounding as documented | Matches eight matching screenshots. If game map data cannot be matched, falls back to the earlier estimate; UI labels those rows as fallback. |
 | Monthly income | Annual estimate / 12, nearest even | Matches the supplied examples. |
 | Research | Round annual budget × ResearchPct / 100, add HFR bonus if applicable, then divide by 12 and round | Matches eight matching screenshots; HFR bonus needs further validation. |
-| Surface maintenance | Saved Maintenance plus class-2 radar adjustment (DD +2, CL/CV +4); AF full, RF half, MB fifth, nearest-even | Measured examples; other equipment, officers, age, repair and war effects unresolved. Historical/museum hulls excluded. |
-| Battery/airbase maintenance | Saved Maintenance × 0.75, nearest-even | Game3 fit, generalized as a reference assumption. MTB uses full saved value. Other installation families use the same provisional factor. |
+| Surface maintenance | Apply officer, repair, age, radar, status, location and applicable peace-era rules | Matches available player screenshots. KE date encoding is inferred and uncertain near the boundary; missing map or officer data uses the earlier estimate. |
+| Battery/airbase maintenance | Apply installation repair, location and status rules; include airship bases as airbases for the foreign-area multiplier | Game3 and Game9 match, including the four foreign airship bases responsible for the earlier 36 difference. |
+| All-active maintenance | Apply the all-active calculation to surface ships and ordinary maintenance to installations and submarines | Matches available displayed reference figures; wartime behavior remains unverified. |
 | Maintenance era adjustment | Apply peacetime multiplier based on year and government to the maintenance subtotal | Supplied rule; Game8 total now matches. Other maintenance components remain estimated. |
 | Submarine maintenance | Type-based rate with year and war modifiers | Supplied rule; unknown types or missing years use a fallback. Broader validation pending. |
 | Surface construction | MonthlyCost; accelerated ×1.15 with half-up rounding; halted floor(Maintenance / 2) takes precedence | Controlled comparisons. Monthly premium is not a claim about total build-cost premium. |
@@ -37,7 +44,7 @@ Funds, resources and unrest edits still require the normal Apply and Save flow.
 | Dock expansion | Fleet-size base adjusted by dock size and industry | Supplied rule reproduces Game8's 324; other cases need validation. |
 | Base expansion | (FleetSize + 1) × 100, or × 150 for base value ≥ 20, per owned expansion | Supplied rule; more in-game examples needed. |
 | Naval aircraft | Role-based air-unit rates and modifiers, plus ship aircraft and airship sheds | Matches available aircraft screenshots for Games 1–6, 8 and 9. Unknown role, base or year uses the earlier blended fallback. |
-| Extra training | Explicit saved spending if supplied; otherwise surface maintenance × 0.8 × combined priority percentage, plus academy | Percentages: gunnery 30%, night/torpedo/damage control 20% each. The 0.8 base factor fits Game3, not universally verified. Uses current flags, not pending flags. |
+| Extra training | Eligible ship maintenance × priority points × rate, plus academy | Current or pending priorities count once; excludes repairs and statuses 7 and 9. Matches available player screenshots. War and surprise attack cases need validation. |
 | Academy | Annual budget / 95, truncated; divide by 12, round, then round down to multiple of 10 | Reproduces Game3's 340 and Game8's 10; broader validation pending. |
 | Player intelligence | 10 × fleet size × sum of target spending levels 0–3 | Reproduces Game8's 60 and Game9's 1,920. The previously observed 80 per level applies to fleet size 8. AI intelligence is unresolved. |
 | Invasion | Yearly budget ÷ 300, truncated, plus 100 when a target is active | Supplied rule; not yet checked against an active invasion screenshot. |
@@ -46,8 +53,8 @@ When the aircraft formula cannot resolve required data, a blended reference
 average is used instead. Aircraft pools are not separately priced. Missile
 storage is not added separately: the Game3 tooltip's
 other four maintenance categories already sum to the displayed maintenance total.
-The unexplained 21 difference between ship rows and aggregate ship maintenance
-is not patched with a fixed surcharge.
+The previous Game3 difference of 21 was accounted for by the calculated ship
+maintenance and training eligibility rules, without a fixed surcharge.
 
 Unavailable income inputs, invalid/unknown intelligence, missing rosters and
 installation charges lacking a saved value use a disclosed zero fallback.
@@ -67,10 +74,10 @@ but users cannot change these rates in the manager. The rules and limitations in
 this guide document the fallbacks previously explained inside the window.
 Published 0.9.8 still contains the older assumption controls and information panel.
 
-The supplied ship age, officer, repair, full status and full training formulas
-are not yet implemented. Aircraft and other newly added rules need broader
-validation, especially wartime and unusual states. Issue #22 stays open until
-the full calculation has been implemented and checked.
+Halted ship, submarine and installation construction remains provisional.
+The inferred KE date encoding, officer effects, war and surprise attack cases,
+and AI-nation differences need additional validation. Issue #22 stays open until
+the remaining rules have been implemented and checked.
 
 Historical measurements remain in [Game3 experiments](BUDGET_GAME3_EXPERIMENTS.md)
 and the [0.9.4 comparison](BUDGET_CALCULATOR_RESEARCH.md); those documents' earlier
