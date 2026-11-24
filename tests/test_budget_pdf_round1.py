@@ -76,7 +76,14 @@ class BudgetFormulaTests(unittest.TestCase):
         self.assertEqual(_submarine_cost(boat, 1945, {'PoorEducation': '1'}, construction=True), 295)
         self.assertEqual(_submarine_cost(boat, 1971, {}, at_war=True), 102)
         self.assertIsNone(_submarine_cost({'SubType': '999'}, 1971, {}))
-        self.assertEqual(_submarine_cost({'SubType': '3', 'Halted': '1'}, 1945, {}, construction=True), 2)
+        self.assertEqual(_submarine_cost({'SubType': '3', 'Halted': '1'}, 1945, {}, construction=True), 12)
+
+    def test_game7_halted_missile_submarine(self):
+        boat = {'SubType': '4'}
+        industry = {'EfficientShipbuildingIndustry': '1'}
+        self.assertEqual(_submarine_cost(boat, 1971, industry, construction=True), 410)
+        boat['Halted'] = '1'
+        self.assertEqual(_submarine_cost(boat, 1971, industry, construction=True), 16)
 
     def test_surface_construction_uses_calculated_halted_cost_and_even_rounding(self):
         save = campaign()
