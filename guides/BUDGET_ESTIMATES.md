@@ -19,11 +19,13 @@ awaiting formulas from the RTW3 developer. This supersedes the earlier policy of
 showing unavailable costs and withholding monthly balance. It does not establish
 that the missing game formulas have been solved.
 
-Open Economy and Unrest Manager. All rows show numbers; total expenses sum the
+Open Economy and Unrest Manager. For the player nation, all rows show numbers; total expenses sum the
 displayed expense components and estimated balance is monthly income minus that
 total. All-active maintenance is a separate reference and is never added again.
 The calculator reads saves but does not write projected costs or assumptions.
 Funds, resources and unrest edits still require the normal Apply and Save flow.
+For AI nations, the budget panel displays a placeholder rather than calculated
+figures; economy and unrest editing remains available.
 
 ## Calculation rules and their evidence
 
