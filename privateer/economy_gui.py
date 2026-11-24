@@ -13,7 +13,8 @@ class EconomyWindow(tk.Toplevel):
         self.save, self.nation = save, save.nation(nation_index)
         settings = getattr(parent, 'settings', None)
         install = getattr(settings, 'rtw3_install_directory', '')
-        self.budget_context = budget_context(save, self.nation, install_directory=install)
+        self.budget_context = (budget_context(save, self.nation, install_directory=install)
+                               if self.nation.index == 0 else None)
         self.title(f"Economy and Unrest Manager — {self.nation.name}")
         self.resizable(False, False)
         self.transient(parent)
@@ -21,7 +22,10 @@ class EconomyWindow(tk.Toplevel):
         body.pack(fill="both", expand=True)
         ttk.Label(body, text=f"Economy and Unrest — {self.nation.name}",
                   font=("Segoe UI", 13, "bold")).grid(row=0, column=0, columnspan=4, sticky="w")
-        ttk.Label(body, text="Funds, base resources, and unrest are staged together. The budget panel updates as you type.").grid(
+        description = ("Funds, base resources, and unrest are staged together. The budget panel updates as you type."
+                       if self.budget_context is not None else
+                       "Funds, base resources, and unrest are staged together.")
+        ttk.Label(body, text=description).grid(
             row=1, column=0, columnspan=4, sticky="w", pady=(2, 12))
         self.operations, self.amounts, self.projected = {}, {}, {}
         for row, (key, label, current) in enumerate((
@@ -53,7 +57,11 @@ class EconomyWindow(tk.Toplevel):
             ("total_expenses", "Total expenses (estimated)"), ("monthly_balance", "Monthly balance (estimated)"),
             ("funds", "Funds"),
         )
-        if self.budget_context.possession_income is None:
+        if self.budget_context is None:
+            panel.configure(text="Budget calculator")
+            ttk.Label(panel, text="AI budgets are currently not calculated.").grid(row=0, column=0, sticky="w")
+            labels = ()
+        elif self.budget_context.possession_income is None:
             labels = tuple((key, label.replace('(provisional)', '(fallback)'))
                            if key in ('yearly_budget', 'monthly_budget') else (key, label)
                            for key, label in labels)
@@ -89,17 +97,19 @@ class EconomyWindow(tk.Toplevel):
             self.projected["funds"].set(f"Projected: {self._number(funds)}")
             self.projected["base_resources"].set(f"Projected: {self._number(resources)}")
             self.projected["unrest_level"].set(f"Projected: {self._number(unrest)}")
-            projection = project_budget(self.nation, context=self.budget_context,
-                                        base_resources=resources, funds=funds)
-            for key, variable in self.lines.items():
-                value = getattr(projection, key)
-                variable.set(f"{value:,}")
-            if projection.research is not None:
-                self.lines["research"].set(f"{projection.research:,} ({projection.research_percent}%)")
+            if self.budget_context is not None:
+                projection = project_budget(self.nation, context=self.budget_context,
+                                            base_resources=resources, funds=funds)
+                for key, variable in self.lines.items():
+                    value = getattr(projection, key)
+                    variable.set(f"{value:,}")
+                if projection.research is not None:
+                    self.lines["research"].set(f"{projection.research:,} ({projection.research_percent}%)")
             self.error.set("")
             self.error_label.grid_remove()
         except ValueError as exc:
-            self.error.set(f"{exc}\nDisplayed budget retains the last valid estimate.")
+            suffix = "\nDisplayed budget retains the last valid estimate." if self.budget_context is not None else ""
+            self.error.set(f"{exc}{suffix}")
             self.error_label.grid(row=6, column=0, columnspan=4, sticky="w", pady=(0, 8))
 
     def apply(self):
@@ -121,4 +131,3 @@ class EconomyWindow(tk.Toplevel):
         self.master.render_main_table(str(self.nation.index))
         self.master.status.set("Unsaved changes")
         self.destroy()
-
