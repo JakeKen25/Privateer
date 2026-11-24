@@ -90,9 +90,8 @@ def _submarine_cost(fields, year, nation_fields, *, construction=False, at_war=F
             if year > threshold: base = int(base * Decimal('1.1'))
         if _field_integer(nation_fields, 'EfficientShipbuildingIndustry'): base += 2
         if _field_integer(nation_fields, 'PoorEducation'): base -= 2
-        # The supplied notes say to divide by 25 instead of multiplying by 5.
-        # This literal interpretation has not yet been checked in-game.
-        return base // 25 if _field_integer(fields, 'Halted') else base * 5
+        normal_cost = base * 5
+        return normal_cost // 25 if _field_integer(fields, 'Halted') else normal_cost
     if year > 1950: base += 2
     for threshold in (1955, 1960):
         if year > threshold: base = int(base * Decimal('1.1'))
@@ -292,7 +291,7 @@ def budget_context(save, nation, assumptions=None, install_directory=None):
                     notes.append(f"{label.capitalize()} construction: missing MonthlyCost uses {cost:,} per unit; reference fallback, not a verified formula.")
                 if _field_integer(fields, "Halted"):
                     if prefix == 'Sub':
-                        notes.append('Halted submarine construction uses the supplied base-rate / 25 interpretation; not yet verified in-game.')
+                        notes.append('Halted submarine construction uses normal cost / 25, truncated; observed in Game 7.')
                     else:
                         cost = 0
                 elif prefix != 'Sub' and _field_integer(fields, "Hurry"):
