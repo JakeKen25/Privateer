@@ -1,6 +1,6 @@
 # Economy and infrastructure managers
 
-**Development interface: 1.0.6.5 Beta.** Every budget row displays a numeric
+**Development interface.** Player budget rows display a numeric
 estimate. The calculator has improved accuracy; [Budget estimates](BUDGET_ESTIMATES.md)
 describes the current rules, evidence and remaining fallbacks.
 
@@ -13,8 +13,9 @@ The lower panel is a read-only planning calculator. It uses the supplied budget
 rules for income, aircraft, maintenance, training and several other costs when
 the necessary data can be resolved. Eight save and screenshot comparisons match
 the displayed values. If possession data is unavailable, the income rows are
-marked as fallback. AI nation budgets, halted construction and other unusual
-conditions need further validation.
+marked as fallback. For AI nations, the panel says their budgets are not currently
+calculated; the economy and unrest controls remain available. Unusual player
+budget conditions need further validation.
 
 **Total expenses (estimated)** sums the expense rows; **Monthly balance
 (estimated)** subtracts that total from estimated income. All-active maintenance
@@ -36,4 +37,3 @@ see [Ship Spawner](SHIP_SPAWNER.md). **Admiral Manager** appears only for Nation
 which RTW3 always uses as the player nation, and edits the stored `AdmiralName`
 and `Prestige` fields.
 All edits remain in memory until Save or Save As is selected in the main window.
-
