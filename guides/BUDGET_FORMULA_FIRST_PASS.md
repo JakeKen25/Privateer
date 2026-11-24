@@ -57,9 +57,10 @@ fall back to the earlier maintenance estimate.
 
 ## Remaining work
 
-Halted ship, submarine and installation construction rules are implemented;
-compare them in-game, especially whether the halted-submarine divisor applies
-to the base rate or the usual five-times construction cost. Validate base expansion
+Halted ship, submarine and installation construction rules are implemented.
+Game 7 missile submarine Target cost 410 normally and 16 halted, supporting
+division of the normal charge by 25; check further submarine types and halted
+installations. Validate base expansion
 and invasion costs. Validate pending training flags,
 age and repair cases, war modifiers, officer effects, KE date encoding and AI
 budgets against additional examples. Do not treat the total or monthly balance
